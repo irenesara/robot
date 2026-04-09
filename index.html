@@ -16,51 +16,39 @@
             font-family: Arial, sans-serif;
             background: #1a1a1a;
             color: #fff;
-            overflow: auto;
-        }
-
-        @media (orientation: landscape) and (max-width: 1200px) {
-            body {
-                overflow-y: auto;
-            }
+            overflow: hidden;
         }
 
         .main-container {
             display: flex;
-            min-height: 100vh;
+            height: 100vh;
             gap: 10px;
             padding: 10px;
-            flex-wrap: wrap;
-            align-content: flex-start;
         }
 
         @media (orientation: landscape) and (max-width: 1200px) {
             .main-container {
-                flex-direction: column;
-                min-height: auto;
-                padding: 5px;
+                flex-direction: row;
+                height: 100vh;
                 gap: 5px;
+                padding: 5px;
             }
         }
 
         .robot-section {
-            flex: 1;
+            flex: 0 0 40%;
             background: linear-gradient(135deg, #1a3a4a, #0a1a2a);
             border-radius: 10px;
             border: 2px solid #444;
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            min-height: 300px;
-            min-width: 300px;
         }
 
         @media (orientation: landscape) and (max-width: 1200px) {
             .robot-section {
-                height: 20vh;
-                min-height: 150px;
-                width: 100%;
-                min-width: auto;
+                flex: 0 0 35%;
+                height: 100%;
             }
         }
 
@@ -84,9 +72,9 @@
         }
 
         .console-wrapper {
-            width: 680px;
-            max-height: none;
-            overflow-y: visible;
+            flex: 0 0 60%;
+            max-height: 100vh;
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
             gap: 10px;
@@ -94,10 +82,10 @@
 
         @media (orientation: landscape) and (max-width: 1200px) {
             .console-wrapper {
-                width: 100%;
-                max-height: none;
-                overflow-y: visible;
-                gap: 5px;
+                flex: 0 0 65%;
+                max-height: 100vh;
+                overflow-y: auto;
+                gap: 3px;
             }
         }
 
@@ -112,7 +100,7 @@
         @media (orientation: landscape) and (max-width: 1200px) {
             .console-container {
                 border-radius: 15px;
-                padding: 8px;
+                padding: 12px;
                 border: 4px solid #555;
             }
         }
@@ -128,9 +116,9 @@
 
         @media (orientation: landscape) and (max-width: 1200px) {
             .console-title {
-                font-size: 8px;
-                letter-spacing: 0.5px;
-                margin-bottom: 4px;
+                font-size: 9px;
+                letter-spacing: 1px;
+                margin-bottom: 8px;
             }
         }
 
@@ -153,12 +141,12 @@
 
         @media (orientation: landscape) and (max-width: 1200px) {
             .lcd-display {
-                height: 35px;
-                border: 2px solid #222;
-                padding: 3px;
-                font-size: 7px;
-                line-height: 1.1;
-                margin-bottom: 5px;
+                height: 60px;
+                border: 3px solid #222;
+                padding: 6px;
+                font-size: 8px;
+                line-height: 1.2;
+                margin-bottom: 8px;
             }
         }
 
@@ -192,8 +180,8 @@
 
         @media (orientation: landscape) and (max-width: 1200px) {
             button {
-                font-size: 4px;
-                padding: 1px;
+                font-size: 6px;
+                padding: 2px;
                 border: 1px solid #555;
             }
         }
@@ -219,11 +207,11 @@
 
         @media (orientation: landscape) and (max-width: 1200px) {
             .dpad {
-                grid-template-rows: repeat(3, 15px);
+                grid-template-rows: repeat(3, 25px);
             }
             .dpad button {
-                font-size: 8px;
-                height: 15px;
+                font-size: 10px;
+                height: 25px;
             }
         }
 
@@ -249,10 +237,10 @@
 
         @media (orientation: landscape) and (max-width: 1200px) {
             .top-menus {
-                grid-template-rows: 15px;
+                grid-template-rows: 28px;
             }
             .top-menus button {
-                font-size: 4px;
+                font-size: 5px;
             }
         }
 
@@ -285,13 +273,13 @@
 
         @media (orientation: landscape) and (max-width: 1200px) {
             .select-btn {
-                width: 18px;
-                height: 18px;
+                width: 35px;
+                height: 35px;
             }
             .emergency-btn {
-                width: 18px;
-                height: 18px;
-                font-size: 3px !important;
+                width: 35px;
+                height: 35px;
+                font-size: 5px !important;
             }
         }
 
@@ -311,8 +299,8 @@
 
         @media (orientation: landscape) and (max-width: 1200px) {
             .speed-btns button {
-                font-size: 4px;
-                height: 15px;
+                font-size: 6px;
+                height: 28px;
             }
         }
 
@@ -335,7 +323,7 @@
 
         @media (orientation: landscape) and (max-width: 1200px) {
             .number-grid button {
-                height: 15px;
+                height: 25px;
             }
         }
 
@@ -383,16 +371,16 @@
 
         @media (orientation: landscape) and (max-width: 1200px) {
             .control-buttons {
-                gap: 5px;
-                margin-top: 5px;
-                padding-top: 4px;
+                gap: 10px;
+                margin-top: 10px;
+                padding-top: 8px;
                 border-top: 1px solid #666;
             }
             .btn-enable, .btn-start, .btn-stop {
-                width: 25px !important;
-                height: 25px !important;
-                border: 1px solid #666 !important;
-                font-size: 3px !important;
+                width: 40px !important;
+                height: 40px !important;
+                border: 2px solid #666 !important;
+                font-size: 5px !important;
             }
         }
 
@@ -450,31 +438,31 @@
 
         @media (orientation: landscape) and (max-width: 1200px) {
             .guide-panel {
-                padding: 5px;
-                font-size: 7px;
+                padding: 8px;
+                font-size: 8px;
                 line-height: 1.3;
-                margin-top: 3px;
-                max-height: none;
-                overflow-y: visible;
+                margin-top: 8px;
+                max-height: 150px;
+                overflow-y: auto;
             }
             .guide-step {
-                margin: 2px 0;
-                padding: 3px;
-                border-left: 1px solid #00ff00;
+                margin: 3px 0;
+                padding: 4px;
+                border-left: 2px solid #00ff00;
             }
             .guide-step strong {
-                font-size: 7px;
+                font-size: 8px;
             }
             .guide-toggle-btn {
-                padding: 3px 6px !important;
-                font-size: 7px !important;
-                margin-top: 3px;
+                padding: 6px 10px !important;
+                font-size: 8px !important;
+                margin-top: 8px;
             }
             .info-display {
-                font-size: 7px;
-                padding: 3px;
-                margin-top: 2px;
-                min-height: auto;
+                font-size: 8px;
+                padding: 5px;
+                margin-top: 5px;
+                min-height: 20px;
             }
         }
     </style>
