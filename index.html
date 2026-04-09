@@ -28,8 +28,9 @@
 
         @media (orientation: landscape) and (max-width: 1200px) {
             .main-container {
-                flex-direction: row;
-                height: 100vh;
+                flex-direction: column;
+                height: auto;
+                min-height: 100vh;
                 gap: 5px;
                 padding: 5px;
             }
@@ -47,8 +48,9 @@
 
         @media (orientation: landscape) and (max-width: 1200px) {
             .robot-section {
-                flex: 0 0 35%;
-                height: 100%;
+                flex: 0 0 auto;
+                height: 35vh;
+                width: 100%;
             }
         }
 
@@ -72,8 +74,8 @@
         }
 
         .console-wrapper {
-            flex: 0 0 60%;
-            max-height: 100vh;
+            flex: 0 0 100%;
+            max-height: 50vh;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
@@ -82,8 +84,8 @@
 
         @media (orientation: landscape) and (max-width: 1200px) {
             .console-wrapper {
-                flex: 0 0 65%;
-                max-height: 100vh;
+                flex: 0 0 100%;
+                max-height: 65vh;
                 overflow-y: auto;
                 gap: 3px;
             }
