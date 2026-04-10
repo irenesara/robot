@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  simulator:
+    build: .
+    ports:
+      - "8080:80"
+    environment:
+      - TZ=UTC
+    restart: unless-stopped
+    container_name: yaskawa-dx200-simulator
+    volumes:
+      - ./index.html:/usr/share/nginx/html/index.html:ro

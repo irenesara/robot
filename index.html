@@ -3,628 +3,316 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador Robot 6 Ejes</title>
+    <title>Yaskawa DX200 Teach Pendant - Simulador Realista</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            background: #1a1a1a;
-            color: #fff;
-            overflow: hidden;
-        }
-
-        .main-container {
-            display: flex;
-            height: 100vh;
-            gap: 10px;
-            padding: 10px;
-        }
-
-        .robot-section {
-            flex: 1;
-            background: linear-gradient(135deg, #1a3a4a, #0a1a2a);
-            border-radius: 10px;
-            border: 2px solid #444;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        #canvas {
-            flex: 1;
-        }
-
-        .robot-info {
-            background: rgba(0, 0, 0, 0.9);
-            padding: 5px 8px;
-            border-top: 1px solid #444;
-            font-size: 8px;
-            line-height: 1.2;
-        }
-
-        @media (orientation: landscape) and (max-width: 1200px) {
-            .robot-info {
-                font-size: 7px;
-                padding: 3px 5px;
-            }
-        }
-
-        .console-wrapper {
-            width: 600px;
-            max-height: 100vh;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        @media (orientation: landscape) and (max-width: 1200px) {
-            .console-wrapper {
-                width: auto;
-                flex: 1;
-                max-height: 100vh;
-                overflow-y: auto;
-                gap: 3px;
-            }
-        }
-
-        .console-container {
-            background: linear-gradient(135deg, #888888, #777777);
-            border-radius: 30px;
-            padding: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.3);
-            border: 8px solid #555;
-        }
-
-        @media (orientation: landscape) and (max-width: 1200px) {
-            .console-container {
-                border-radius: 15px;
-                padding: 10px;
-                border: 4px solid #555;
-            }
-        }
-
-        .console-title {
-            text-align: center;
-            color: #222;
-            font-size: 11px;
-            font-weight: bold;
-            letter-spacing: 2px;
-            margin-bottom: 12px;
-        }
-
-        @media (orientation: landscape) and (max-width: 1200px) {
-            .console-title {
-                font-size: 8px;
-                letter-spacing: 0.5px;
-                margin-bottom: 5px;
-            }
-        }
-
-        /* LCD SCREEN */
-        .lcd-display {
-            background: linear-gradient(to bottom, #1a3a6a, #0a2a5a);
-            border: 5px solid #222;
-            border-radius: 4px;
-            padding: 10px;
-            height: 90px;
-            color: #0f0;
-            font-family: 'Courier New', monospace;
-            font-size: 10px;
-            font-weight: bold;
-            overflow-y: auto;
-            box-shadow: inset 0 3px 8px rgba(0,0,0,0.9), 0 0 15px rgba(0, 255, 0, 0.2);
-            line-height: 1.4;
-            margin-bottom: 15px;
-        }
-
-        @media (orientation: landscape) and (max-width: 1200px) {
-            .lcd-display {
-                height: 50px;
-                border: 3px solid #222;
-                padding: 5px;
-                font-size: 8px;
-                line-height: 1.2;
-                margin-bottom: 6px;
-            }
-        }
-
-        /* LAYOUT GRID */
-        .console-body {
-            display: grid;
-            grid-template-columns: repeat(8, 1fr);
-            gap: 3px;
-        }
-
-        @media (orientation: landscape) and (max-width: 1200px) {
-            .console-body {
-                gap: 2px;
-            }
-        }
-
-        /* BOTONES - Estilos generales */
-        button {
-            border: 2px solid #555;
-            border-radius: 3px;
-            background: linear-gradient(135deg, #d0d0d0, #b0b0b0);
-            cursor: pointer;
-            font-weight: bold;
-            color: #222;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px rgba(255,255,255,0.3);
-            transition: all 0.05s;
-            font-size: 7px;
-            padding: 4px;
-            touch-action: manipulation;
-        }
-
-        @media (orientation: landscape) and (max-width: 1200px) {
-            button {
-                font-size: 5px;
-                padding: 2px;
-                border: 1px solid #555;
-            }
-        }
-
-        button:active {
-            box-shadow: 0 1px 2px rgba(0,0,0,0.4), inset 0 1px 2px rgba(0,0,0,0.2);
-            transform: translateY(1px);
-        }
-
-        /* CRUCETA */
-        .dpad {
-            grid-column: 1 / 3;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 2px;
-            grid-template-rows: repeat(3, 35px);
-        }
-
-        .dpad button {
-            font-size: 14px;
-            height: 35px;
-        }
-
-        @media (orientation: landscape) and (max-width: 1200px) {
-            .dpad {
-                grid-template-rows: repeat(3, 20px);
-            }
-            .dpad button {
-                font-size: 9px;
-                height: 20px;
-            }
-        }
-
-        .dpad button:nth-child(1) { grid-column: 2; grid-row: 1; }
-        .dpad button:nth-child(2) { grid-column: 1; grid-row: 2; }
-        .dpad button:nth-child(3) { grid-column: 2; grid-row: 2; }
-        .dpad button:nth-child(4) { grid-column: 3; grid-row: 2; }
-        .dpad button:nth-child(5) { grid-column: 2; grid-row: 3; }
-
-        /* MENÚS TOP */
-        .top-menus {
-            grid-column: 3 / 9;
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 2px;
-            grid-template-rows: 40px;
-        }
-
-        .top-menus button {
-            font-size: 6px;
-            line-height: 1.1;
-        }
-
-        @media (orientation: landscape) and (max-width: 1200px) {
-            .top-menus {
-                grid-template-rows: 22px;
-            }
-            .top-menus button {
-                font-size: 4px;
-            }
-        }
-
-        /* BOTONES GRANDES */
-        .big-buttons {
-            grid-column: 3 / 5;
-            grid-row: 2;
-            display: flex;
-            gap: 3px;
-        }
-
-        .select-btn {
-            flex: 1;
-            width: 50px;
-            height: 50px;
-            border-radius: 50% !important;
-            background: radial-gradient(circle at 30% 30%, #e8e8e8, #b8b8b8) !important;
-        }
-
-        .emergency-btn {
-            flex: 1;
-            width: 50px;
-            height: 50px;
-            border-radius: 50% !important;
-            border: 4px solid #aa0000 !important;
-            background: radial-gradient(circle at 30% 30%, #ff3333, #cc0000) !important;
-            color: white !important;
-            font-size: 7px !important;
-        }
-
-        @media (orientation: landscape) and (max-width: 1200px) {
-            .select-btn {
-                width: 28px;
-                height: 28px;
-            }
-            .emergency-btn {
-                width: 28px;
-                height: 28px;
-                font-size: 4px !important;
-            }
-        }
-
-        /* SPEED BUTTONS */
-        .speed-btns {
-            grid-column: 5 / 9;
-            grid-row: 2;
-            display: flex;
-            gap: 2px;
-        }
-
-        .speed-btns button {
-            flex: 1;
-            font-size: 7px;
-            height: 50px;
-        }
-
-        @media (orientation: landscape) and (max-width: 1200px) {
-            .speed-btns button {
-                font-size: 5px;
-                height: 22px;
-            }
-        }
-
-        .speed-btns button.active {
-            background: linear-gradient(135deg, #FFD700, #FFA500) !important;
-            box-shadow: 0 0 8px rgba(255, 165, 0, 0.5), inset 0 1px 2px rgba(255,255,255,0.3) !important;
-        }
-
-        /* GRID NÚMEROS */
-        .number-grid {
-            grid-column: 1 / 9;
-            display: grid;
-            grid-template-columns: repeat(8, 1fr);
-            gap: 2px;
-        }
-
-        .number-grid button {
-            height: 35px;
-        }
-
-        @media (orientation: landscape) and (max-width: 1200px) {
-            .number-grid button {
-                height: 20px;
-            }
-        }
-
-        .number-grid button.blue {
-            background: linear-gradient(135deg, #5090c8, #3a6fa8) !important;
-            color: white !important;
-        }
-
-        /* BOTONES CONTROL */
-        .control-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 15px;
-            padding-top: 12px;
-            border-top: 2px solid #666;
-        }
-
-        .btn-enable {
-            width: 60px;
-            height: 60px;
-            border-radius: 50% !important;
-            background: radial-gradient(circle at 30% 30%, #ffffff, #dddddd) !important;
-            border: 4px solid #666 !important;
-            color: #222 !important;
-        }
-
-        .btn-start {
-            width: 60px;
-            height: 60px;
-            border-radius: 50% !important;
-            background: radial-gradient(circle at 30% 30%, #00ff00, #00aa00) !important;
-            border: 4px solid #005500 !important;
-            color: white !important;
-        }
-
-        .btn-stop {
-            width: 60px;
-            height: 60px;
-            border-radius: 50% !important;
-            background: radial-gradient(circle at 30% 30%, #ff0000, #aa0000) !important;
-            border: 4px solid #550000 !important;
-            color: white !important;
-        }
-
-        @media (orientation: landscape) and (max-width: 1200px) {
-            .control-buttons {
-                gap: 8px;
-                margin-top: 6px;
-                padding-top: 5px;
-                border-top: 1px solid #666;
-            }
-            .btn-enable, .btn-start, .btn-stop {
-                width: 32px !important;
-                height: 32px !important;
-                border: 2px solid #666 !important;
-                font-size: 4px !important;
-            }
-        }
-
-        /* GUIDE PANEL */
-        .guide-panel {
-            background: rgba(0, 0, 0, 0.95);
-            color: #00ff00;
-            border: 2px solid #00ff00;
-            border-radius: 8px;
-            padding: 15px;
-            font-size: 12px;
-            line-height: 1.6;
-            margin-top: 10px;
-        }
-
-        .guide-step {
-            margin: 8px 0;
-            padding: 8px;
-            background: rgba(0, 255, 0, 0.1);
-            border-left: 3px solid #00ff00;
-        }
-
-        .guide-step strong {
-            color: #ffff00;
-        }
-
-        .guide-toggle-btn {
-            background: #00ff00 !important;
-            color: #000 !important;
-            border: 2px solid #000 !important;
-            padding: 8px 12px !important;
-            width: auto !important;
-            height: auto !important;
-            margin-top: 10px;
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .guide-toggle-btn:hover {
-            background: #00cc00 !important;
-        }
-
-        .info-display {
-            background: rgba(0, 0, 0, 0.8);
-            color: #00ff00;
-            border: 1px solid #00ff00;
-            padding: 8px;
-            border-radius: 4px;
-            font-size: 10px;
-            margin-top: 8px;
-            min-height: 30px;
-            font-weight: bold;
-        }
-
-        @media (orientation: landscape) and (max-width: 1200px) {
-            .guide-panel {
-                padding: 6px;
-                font-size: 7px;
-                line-height: 1.2;
-                margin-top: 5px;
-                max-height: 120px;
-                overflow-y: auto;
-            }
-            .guide-step {
-                margin: 2px 0;
-                padding: 3px;
-                border-left: 1px solid #00ff00;
-            }
-            .guide-step strong {
-                font-size: 7px;
-            }
-            .guide-toggle-btn {
-                padding: 4px 8px !important;
-                font-size: 7px !important;
-                margin-top: 5px;
-            }
-            .info-display {
-                font-size: 7px;
-                padding: 3px;
-                margin-top: 3px;
-                min-height: auto;
-            }
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #0a0a0a; color: #fff; overflow: hidden; }
+        .main-container { display: flex; height: 100vh; gap: 8px; padding: 8px; }
+        .robot-section { flex: 1; background: linear-gradient(135deg, #1a2a3a, #0f1820); border-radius: 10px; border: 2px solid #444; overflow: hidden; display: flex; flex-direction: column; }
+        #canvas { flex: 1; }
+        .robot-info { background: rgba(0,0,0,0.95); padding: 6px; border-top: 1px solid #444; font-size: 8px; line-height: 1.4; font-family: monospace; }
+        .console-wrapper { display: flex; gap: 6px; height: 100vh; overflow: hidden; }
+        .console-main { background: linear-gradient(135deg, #888888, #777777); border-radius: 16px; padding: 8px; box-shadow: 0 20px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.3); border: 6px solid #555; width: auto; max-width: 95vw; flex: 1; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
+        .top-operation-buttons { display: flex; gap: 10px; align-items: center; justify-content: flex-start; padding: 3px 10px; background: rgba(0,0,0,0.1); border-radius: 6px; flex-wrap: wrap; }
+        .op-button { width: 44px; height: 44px; border-radius: 50%; cursor: pointer; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; font-size: 6px; border: 3px solid; transition: all 0.1s; text-align: center; line-height: 1.1; padding: 2px; }
+        .op-button:active { transform: scale(0.95); }
+        .op-remote { background: linear-gradient(135deg, #d0d0d0, #b0b0b0); border-color: #666; color: #222; }
+        .op-teach { background: radial-gradient(circle at 30% 30%, #00ff00, #00aa00); border-color: #005500; color: white; }
+        .op-start { background: radial-gradient(circle at 30% 30%, #ffffff, #e0e0e0); border-color: #999; color: #222; }
+        .op-hold { background: radial-gradient(circle at 30% 30%, #ffffff, #e0e0e0); border-color: #999; color: #222; }
+        .op-emg { width: 52px; height: 52px; background: radial-gradient(circle at 30% 30%, #ff3333, #cc0000); border-color: #aa0000; border-width: 4px; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 0 0 4px #ffdd00; }
+        .lcd-display { background: linear-gradient(to bottom, #1a3a6a, #0a2a5a); border: 3px solid #222; border-radius: 3px; padding: 4px; height: 75px; color: #0f0; font-family: 'Courier New', monospace; font-size: 7px; font-weight: bold; overflow-y: auto; box-shadow: inset 0 3px 8px rgba(0,0,0,0.9), 0 0 12px rgba(0, 255, 0, 0.2); line-height: 1.1; }
+        .dpad-area { display: grid; grid-template-columns: repeat(3, 32px); grid-template-rows: repeat(3, 32px); gap: 1px; }
+        .btn-small { border: 2px solid #666; background: linear-gradient(135deg, #d0d0d0, #b0b0b0); cursor: pointer; font-weight: bold; color: #222; font-size: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px rgba(255,255,255,0.3); border-radius: 2px; transition: all 0.05s; }
+        .btn-small:active { transform: translateY(1px); }
+        .dpad-area button:nth-child(1) { grid-column: 2; grid-row: 1; }
+        .dpad-area button:nth-child(2) { grid-column: 1; grid-row: 2; }
+        .dpad-area button:nth-child(3) { grid-column: 2; grid-row: 2; }
+        .dpad-area button:nth-child(4) { grid-column: 3; grid-row: 2; }
+        .dpad-area button:nth-child(5) { grid-column: 2; grid-row: 3; }
+        .func-btn-top { border: 2px solid #666; background: linear-gradient(135deg, #d0d0d0, #b0b0b0); cursor: pointer; font-weight: bold; color: #222; font-size: 5px; height: 36px; width: 52px; box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px rgba(255,255,255,0.3); border-radius: 2px; padding: 2px; display: flex; align-items: center; justify-content: center; text-align: center; transition: all 0.05s; }
+        .func-btn-top:active { transform: translateY(1px); }
+        .select-circle { width: 46px; height: 46px; border-radius: 50%; border: 2px solid #666; background: radial-gradient(circle at 30% 30%, #e8e8e8, #b8b8b8); cursor: pointer; font-weight: bold; color: #222; font-size: 7px; box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px rgba(255,255,255,0.3); transition: all 0.05s; }
+        .select-circle:active { transform: translateY(1px); }
+        .main-body { display: flex; gap: 6px; align-items: flex-start; }
+        .side-buttons-container { display: flex; flex-direction: column; gap: 2px; }
+        .side-btn-col { display: grid; grid-template-columns: 1fr; grid-template-rows: repeat(4, 30px); gap: 2px; width: 60px; }
+        .side-btn { border: 2px solid #555; background: linear-gradient(135deg, #d0d0d0, #b0b0b0); cursor: pointer; font-weight: bold; color: #222; font-size: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px rgba(255,255,255,0.3); border-radius: 2px; padding: 1px; transition: all 0.05s; display: flex; align-items: center; justify-content: center; text-align: center; }
+        .side-btn:active { transform: translateY(1px); }
+        .side-btn.blue { background: linear-gradient(135deg, #5090c8, #3a6fa8) !important; color: white !important; }
+        .axes-section { display: grid; grid-template-columns: repeat(2, 42px); grid-template-rows: repeat(4, 30px); gap: 2px; border: 3px solid #ff0000; padding: 3px; background: rgba(0,0,0,0.1); border-radius: 4px; }
+        .axis-btn { border: 2px solid #555; background: linear-gradient(135deg, #d0d0d0, #b0b0b0); cursor: pointer; font-weight: bold; color: #222; font-size: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px rgba(255,255,255,0.3); border-radius: 2px; padding: 1px; transition: all 0.05s; }
+        .axis-btn:active { transform: translateY(1px); }
+        .center-control-section { display: flex; flex-direction: column; gap: 2px; align-items: center; }
+        .servo-btn { width: 42px; height: 28px; border: 2px solid #666; background: linear-gradient(135deg, #888888, #666666); color: white; cursor: pointer; font-weight: bold; font-size: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.4); border-radius: 3px; transition: all 0.05s; }
+        .servo-btn:active { transform: translateY(1px); }
+        .speed-section { display: flex; flex-direction: column; gap: 2px; }
+        .speed-btn { width: 46px; height: 28px; border: 2px solid #666; background: linear-gradient(135deg, #d0d0d0, #b0b0b0); cursor: pointer; font-weight: bold; color: #222; font-size: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px rgba(255,255,255,0.3); border-radius: 3px; transition: all 0.05s; }
+        .speed-btn:active { transform: translateY(1px); }
+        .bottom-section { display: flex; gap: 4px; align-items: flex-start; }
+        .bottom-axes { display: grid; grid-template-columns: repeat(2, 38px); grid-template-rows: repeat(2, 28px); gap: 2px; border: 3px solid #00aa00; padding: 2px; background: rgba(0,0,0,0.1); border-radius: 4px; }
+        .keypad { display: grid; grid-template-columns: repeat(3, 35px); grid-template-rows: repeat(4, 28px); gap: 2px; border: 3px solid #ffffff; padding: 2px; background: rgba(0,0,0,0.1); border-radius: 4px; }
+        .key-btn { border: 2px solid #555; background: linear-gradient(135deg, #d0d0d0, #b0b0b0); cursor: pointer; font-weight: bold; color: #222; font-size: 9px; box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px rgba(255,255,255,0.3); border-radius: 2px; transition: all 0.05s; }
+        .key-btn:active { transform: translateY(1px); }
+        .info-display { background: rgba(0,0,0,0.8); color: #00ff00; border: 1px solid #00ff00; padding: 3px; border-radius: 2px; font-size: 7px; font-weight: bold; min-height: 14px; }
+        .back-controls-box { background: rgba(0,0,0,0.15); border: 2px dashed #ffaa00; border-radius: 6px; padding: 6px 8px; display: flex; gap: 8px; align-items: center; justify-content: center; }
+        .back-controls-title { color: #ffaa00; font-weight: bold; font-size: 6px; writing-mode: vertical-rl; text-orientation: mixed; margin-right: 2px; }
+        .deadman-section { background: rgba(255, 170, 0, 0.1); border: 2px solid #ffaa00; border-radius: 4px; padding: 3px 5px; text-align: center; display: flex; flex-direction: column; gap: 2px; }
+        .deadman-label { color: #ffff00; font-weight: bold; font-size: 5px; line-height: 1.1; white-space: nowrap; }
+        .deadman-btn { padding: 2px 4px; border: 2px solid #ffaa00; background: #333; color: #ff6600; cursor: pointer; font-weight: bold; font-size: 5px; border-radius: 2px; transition: all 0.2s; min-width: 48px; }
+        .deadman-btn.active { background: #00aa00; color: white; border-color: #00ff00; box-shadow: 0 0 8px rgba(0, 255, 0, 0.5); }
+        .key-switch-container { position: relative; width: 62px; height: 62px; background: rgba(0,0,0,0.2); border: 2px solid #666; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 3px 8px rgba(0,0,0,0.5), 0 0 12px rgba(0,0,0,0.3); }
+        .key-switch-dial { width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, #555555, #333333); border: 2px solid #777; position: relative; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.6), inset 0 1px rgba(255,255,255,0.1); transition: transform 0.2s; }
+        .key-switch-dial:active { transform: scale(0.95); }
+        .key-indicator { width: 5px; height: 16px; background: #ff6600; border-radius: 2px; position: absolute; top: 5px; box-shadow: 0 0 6px rgba(255, 102, 0, 0.6); }
+        .key-switch-label { position: absolute; font-size: 5px; font-weight: bold; color: #999; text-align: center; width: 24px; }
+        .key-label-remote { top: -2px; left: -26px; color: #0f0; }
+        .key-label-teach { top: -2px; right: -26px; color: #0f0; }
+        .key-current-position { position: absolute; bottom: 1px; font-size: 4px; font-weight: bold; color: #ff6600; background: rgba(0,0,0,0.7); padding: 0px 2px; border-radius: 2px; }
     </style>
 </head>
 <body>
     <div class="main-container">
-        <!-- ROBOT 3D -->
         <div class="robot-section">
             <canvas id="canvas"></canvas>
             <div class="robot-info">
-                <strong>ROBOT 6 EJES | Time: <span id="runtime">00:00</span></strong><br>
-                J1: <span id="j1">0°</span> J2: <span id="j2">0°</span> J3: <span id="j3">0°</span> 
-                J4: <span id="j4">0°</span> J5: <span id="j5">0°</span> J6: <span id="j6">0°</span>
+                <strong>YASKAWA DX200 | <span id="runtime">00:00</span></strong><br>
+                S: <span id="s">0°</span> L: <span id="l">0°</span> U: <span id="u">0°</span> | R: <span id="r">0°</span> B: <span id="b">0°</span> T: <span id="t">0°</span>
             </div>
         </div>
 
-        <!-- CONSOLA -->
         <div class="console-wrapper">
-            <div class="console-container">
-                <div class="console-title">⚙️ TERMINAL KEYPAD - ROBOT 6 EJES</div>
+            <div class="console-main">
+                <div class="top-operation-buttons">
+                    <div class="op-button op-remote" title="REMOTE/PLAY">◄</div>
+                    <div class="op-button op-teach" title="TEACH" onclick="setMode('teach')">TEACH</div>
+                    <div class="op-button op-start" title="START" onclick="startProgram()">START</div>
+                    <div class="op-button op-hold" title="HOLD" onclick="handleFunc('hold')">HOLD</div>
+                    <div class="op-button op-emg" title="EMERGENCY STOP" onclick="emergencyStop()">E-STOP</div>
+                    
+                    <div class="back-controls-box">
+                        <div class="back-controls-title">REAR</div>
+                        <div class="key-switch-container" title="Llave Selectora - Click para rotar">
+                            <div class="key-switch-label key-label-remote">REM</div>
+                            <div class="key-switch-label key-label-teach">TEA</div>
+                            <div class="key-switch-dial" id="keySwitch" onclick="rotateKeySwitch()">
+                                <div class="key-indicator" id="keyIndicator"></div>
+                                <div class="key-current-position" id="keyPosition">OFF</div>
+                            </div>
+                        </div>
+                        
+                        <div class="deadman-section">
+                            <div class="deadman-label">DEAD<br>MAN</div>
+                            <button class="deadman-btn" id="deadman-btn" onclick="toggleDeadman()">OFF</button>
+                        </div>
+                    </div>
+                </div>
 
-                <!-- LCD -->
                 <div class="lcd-display">
-                    <div>ROBOT 6 EJES - CONTROL SYSTEM</div>
-                    <div>Status: <span id="lcd-status">READY</span></div>
-                    <div>Mode: <span id="lcd-mode">TEACH</span> | Speed: <span id="lcd-speed">50%</span></div>
+                    <div>YASKAWA DX200</div>
+                    <div>STATUS: <span id="lcd-status">READY</span></div>
+                    <div>MODE: <span id="lcd-mode">TEACH</span></div>
                 </div>
 
-                <!-- BOTONES -->
-                <div class="console-body">
-                    <!-- CRUCETA ARRIBA IZQUIERDA -->
-                    <div class="dpad">
-                        <button onclick="handlePress('j1-plus')">▲</button>
-                        <button onclick="handlePress('j1-minus')">◄</button>
-                        <button onclick="handlePress('dpad-center')">⊙</button>
-                        <button onclick="handlePress('j1-plus2')">►</button>
-                        <button onclick="handlePress('j1-minus2')">▼</button>
+                <div style="display: flex; gap: 6px; align-items: flex-start;">
+                    <div class="dpad-area">
+                        <button class="btn-small" onclick="handleDir('up')">▲</button>
+                        <button class="btn-small" onclick="handleDir('left')">◄</button>
+                        <button class="btn-small" onclick="handleDir('center')">⊙</button>
+                        <button class="btn-small" onclick="handleDir('right')">►</button>
+                        <button class="btn-small" onclick="handleDir('down')">▼</button>
                     </div>
 
-                    <!-- MENÚS TOP -->
-                    <div class="top-menus">
-                        <button onclick="handlePress('main')">MAIN<br>MENU</button>
-                        <button onclick="handlePress('simp')">SIMP<br>MENU</button>
-                        <button onclick="handlePress('io')">I/O</button>
-                        <button onclick="handlePress('area')">AREA</button>
-                        <button onclick="handlePress('edit')">EDIT</button>
-                        <button onclick="handlePress('select')">SELECT</button>
+                    <div style="display: flex; gap: 2px;">
+                        <button class="func-btn-top">MULTI<br>LAYOUT</button>
+                        <button class="func-btn-top">TOOL SEL<br>COORD</button>
+                        <button class="func-btn-top">DIRECT<br>OPEN</button>
+                        <button class="func-btn-top">GO BACK<br>PAGE</button>
+                        <button class="func-btn-top">LANGUAGE<br>AREA</button>
                     </div>
 
-                    <!-- SELECT Y EMERGENCY -->
-                    <div class="big-buttons">
-                        <button class="select-btn" onclick="handlePress('select2')">SELECT</button>
-                        <button class="emergency-btn" onclick="handlePress('stop-emerg')">STOP<br>EMG</button>
+                    <button class="select-circle">SELECT</button>
+                </div>
+
+                <div class="main-body">
+                    <div class="side-buttons-container">
+                        <div class="side-btn-col">
+                            <button class="side-btn blue">ROBOT</button>
+                            <button class="side-btn blue">EX.AXIS</button>
+                            <button class="side-btn blue">AUX</button>
+                            <button class="side-btn">TEST<br>START</button>
+                        </div>
                     </div>
 
-                    <!-- SPEED -->
-                    <div class="speed-btns">
-                        <button onclick="handlePress('slow')">SLOW</button>
-                        <button class="active" onclick="handlePress('normal')">NORMAL</button>
-                        <button onclick="handlePress('fast')">FAST</button>
+                    <div class="axes-section">
+                        <button class="axis-btn" onclick="moveAxis('x', -1)">X−<br>S−</button>
+                        <button class="axis-btn" onclick="moveAxis('x', 1)">X+<br>S+</button>
+                        <button class="axis-btn" onclick="moveAxis('y', -1)">Y−<br>L−</button>
+                        <button class="axis-btn" onclick="moveAxis('y', 1)">Y+<br>L+</button>
+                        <button class="axis-btn" onclick="moveAxis('z', -1)">Z−<br>U−</button>
+                        <button class="axis-btn" onclick="moveAxis('z', 1)">Z+<br>U+</button>
+                        <button class="axis-btn" onclick="moveAxis('e', -1)">E−</button>
+                        <button class="axis-btn" onclick="moveAxis('e', 1)">E+</button>
                     </div>
 
-                    <!-- GRID PRINCIPAL -->
-                    <div class="number-grid">
-                        <button class="blue" onclick="handlePress('robot-list')">ROBOT<br>LIST</button>
-                        <button class="blue" onclick="handlePress('prog-mnt')">PROG<br>MNT</button>
-                        <button class="blue" onclick="handlePress('shift')">SHIFT</button>
-                        <button onclick="handlePress('j5-plus')">J5+</button>
-                        <button onclick="handlePress('robot')">ROBOT</button>
-                        <button onclick="handlePress('teach')">TEACH</button>
-                        <button onclick="handlePress('j4-plus')">J4+</button>
-                        <button onclick="handlePress('j6-plus')">J6+</button>
+                    <div class="center-control-section">
+                        <button class="servo-btn" onclick="toggleServo()" id="servo-btn">SERVO<br>ON</button>
+                        <div class="speed-section">
+                            <button class="speed-btn" onclick="setSpeed(100)">HIGH<br>SPEED</button>
+                            <button class="speed-btn" onclick="setSpeed(50)">FAST</button>
+                            <button class="speed-btn" onclick="setSpeed(25)">MANUAL<br>SPEED</button>
+                            <button class="speed-btn" onclick="setSpeed(10)">SLOW</button>
+                        </div>
+                    </div>
 
-                        <button onclick="handlePress('j2-minus')">J2−</button>
-                        <button onclick="handlePress('usage')">USAGE</button>
-                        <button onclick="handlePress('j3-minus')">J3−</button>
-                        <button onclick="handlePress('j5-minus')">J5−</button>
-                        <button onclick="handlePress('j2-plus')">J2+</button>
-                        <button class="blue" onclick="handlePress('delete')">DELETE</button>
-                        <button onclick="handlePress('j4-minus')">J4−</button>
-                        <button class="blue" onclick="handlePress('reset')">RESET</button>
+                    <div class="axes-section">
+                        <button class="axis-btn" onclick="moveAxis('r', -1)">X−<br>R−</button>
+                        <button class="axis-btn" onclick="moveAxis('r', 1)">X+<br>R+</button>
+                        <button class="axis-btn" onclick="moveAxis('b', -1)">Y−<br>B−</button>
+                        <button class="axis-btn" onclick="moveAxis('b', 1)">Y+<br>B+</button>
+                        <button class="axis-btn" onclick="moveAxis('t', -1)">Z−<br>T−</button>
+                        <button class="axis-btn" onclick="moveAxis('t', 1)">Z+<br>T+</button>
+                        <button class="axis-btn" onclick="moveAxis('a', -1)">8−</button>
+                        <button class="axis-btn" onclick="moveAxis('a', 1)">8+</button>
+                    </div>
 
-                        <button onclick="handlePress('j3-plus')">J3+</button>
-                        <button onclick="handlePress('j6-minus')">J6−</button>
-                        <button class="blue" onclick="handlePress('prog-list')">PROG<br>LIST</button>
-                        <button onclick="handlePress('data-clr')">DATA<br>CLR</button>
-                        <button onclick="handlePress('play')">PLAY</button>
-                        <button onclick="handlePress('free')">FREE</button>
-                        <button onclick="handlePress('tool')">TOOL</button>
-                        <button onclick="handlePress('frame')">FRAME</button>
-
-                        <button onclick="handlePress('system')">SYSTEM</button>
-                        <button onclick="handlePress('setup')">SETUP</button>
-                        <button onclick="handlePress('data')">DATA</button>
-                        <button onclick="handlePress('aux')">AUX</button>
-                        <button onclick="handlePress('x-minus')">X−</button>
-                        <button onclick="handlePress('x-plus')">X+</button>
-                        <button onclick="handlePress('y-minus')">Y−</button>
-                        <button onclick="handlePress('y-plus')">Y+</button>
-
-                        <button onclick="handlePress('z-minus')">Z−</button>
-                        <button onclick="handlePress('z-plus')">Z+</button>
-                        <button onclick="handlePress('rot-minus')">θ−</button>
-                        <button onclick="handlePress('rot-plus')">θ+</button>
-                        <button onclick="handlePress('p-minus')">P−</button>
-                        <button onclick="handlePress('p-plus')">P+</button>
-                        <button onclick="handlePress('r-minus')">R−</button>
-                        <button onclick="handlePress('r-plus')">R+</button>
+                    <div class="side-buttons-container">
+                        <div class="side-btn-col">
+                            <button class="side-btn blue">INFORM<br>LIST</button>
+                            <button class="side-btn blue">WELD<br>ON/OFF</button>
+                            <button class="side-btn blue">MOTION<br>TYPE</button>
+                            <button class="side-btn">BWD<br>FWD</button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- BOTONES CONTROL -->
-                <div class="control-buttons">
-                    <button class="btn-enable" onclick="handlePress('enable')">ENABLE</button>
-                    <button class="btn-start" onclick="handlePress('start')">START</button>
-                    <button class="btn-stop" onclick="handlePress('stop')">STOP</button>
+                <div class="bottom-section">
+                    <div class="bottom-axes">
+                        <button class="axis-btn" onclick="moveAxis('e', -1)">E−<br>CIERRE</button>
+                        <button class="axis-btn" onclick="moveAxis('e', 1)">E+<br>ABRE</button>
+                        <button class="side-btn blue">SHIFT</button>
+                        <button class="side-btn blue">INTER<br>LOCK</button>
+                    </div>
+
+                    <div class="keypad">
+                        <button class="key-btn">7</button>
+                        <button class="key-btn">8</button>
+                        <button class="key-btn">9</button>
+                        <button class="key-btn">4</button>
+                        <button class="key-btn">5</button>
+                        <button class="key-btn">6</button>
+                        <button class="key-btn">1</button>
+                        <button class="key-btn">2</button>
+                        <button class="key-btn">3</button>
+                        <button class="key-btn">0</button>
+                        <button class="key-btn">−</button>
+                        <button class="key-btn">.</button>
+                    </div>
+
+                    <div class="bottom-axes">
+                        <button class="axis-btn" onclick="moveAxis('a', -1)">8−<br>CIERRE</button>
+                        <button class="axis-btn" onclick="moveAxis('a', 1)">8+<br>ABRE</button>
+                        <button class="side-btn blue">DELETE</button>
+                        <button class="side-btn blue">INSERT</button>
+                    </div>
+
+                    <div class="side-buttons-container">
+                        <div class="side-btn-col">
+                            <button class="side-btn blue">MODIFY</button>
+                            <button class="side-btn blue">ENTER</button>
+                            <button class="side-btn">EMPTY</button>
+                            <button class="side-btn">EMPTY</button>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- GUIDE -->
-                <button class="guide-toggle-btn" onclick="toggleGuide()">📚 GUÍA PASO A PASO</button>
-                <div class="info-display" id="infoDisplay">Bienvenido. Presiona la guía para aprender.</div>
-                
-                <div class="guide-panel" id="guidePanel" style="display: none;">
-                    <strong>📚 PASOS PARA MOVER EL ROBOT:</strong>
-
-                    <div class="guide-step">
-                        <strong>1️⃣ HABILITAR SISTEMA</strong><br>
-                        Presiona el botón blanco <strong>ENABLE</strong> (abajo izquierda)
-                    </div>
-
-                    <div class="guide-step">
-                        <strong>2️⃣ INICIAR MOVIMIENTO</strong><br>
-                        Presiona el botón verde <strong>START</strong> (abajo centro)
-                    </div>
-
-                    <div class="guide-step">
-                        <strong>3️⃣ SELECCIONAR VELOCIDAD</strong><br>
-                        Elige: <strong>SLOW</strong> (25%), <strong>NORMAL</strong> (50%) o <strong>FAST</strong> (100%)
-                    </div>
-
-                    <div class="guide-step">
-                        <strong>4️⃣ MOVER EL ROBOT</strong><br>
-                        Usa los botones <strong>J1-J6</strong> o <strong>X±, Y±, Z±, θ±, P±, R±</strong>
-                    </div>
-
-                    <div class="guide-step">
-                        <strong>5️⃣ PARAR</strong><br>
-                        Presiona el botón rojo <strong>STOP</strong> (abajo derecha) para detener todo
-                    </div>
-                </div>
+                <div class="info-display" id="infoDisplay">✓ Consola lista</div>
             </div>
         </div>
     </div>
 
     <script>
-        // Three.js - Robot 3D DX200 CAD-like
         let scene, camera, renderer;
-        let robotGroup;
-        let joints = [];
+        let robotGroup, joints = [];
         let startTime = Date.now();
-        let cameraDistance = 0.83;
-        let cameraAngleX = 0.2;
-        let cameraAngleY = 0.5;
-        let isDragging = false;
-        let dragStartX = 0;
-        let dragStartY = 0;
+        let cameraDistance = 1.2, cameraAngleX = 0.25, cameraAngleY = 0.5;
+        let isDragging = false, dragStartX = 0, dragStartY = 0;
+        let activeJoint = -1, activeJointTimeout, highlightLight = null;
+        let gripperAngle = 0;      // Pinza 1
+        let gripper2Angle = 0;     // Pinza 2
+        let gripperGroup = null;
+        let scissorGroup = null;
+
         let state = {
-            enabled: false,
-            running: false,
+            deadman: false,
             speed: 50,
-            angles: [0, 0, 0, 0, 0, 0]
+            angles: { s: 0, l: 0, u: 0, r: 0, b: 0, t: 0 },
+            limits: {
+                s: { min: -170, max: 170 },
+                l: { min: -120, max: 120 },
+                u: { min: -120, max: 120 },
+                r: { min: -190, max: 190 },
+                b: { min: -120, max: 120 },
+                t: { min: -360, max: 360 }
+            },
+            programRunning: false,
+            programStep: 0,
+            stepTimer: 0
         };
+
+        const robotProgram = [
+            { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, gripper: 0, desc: 'POSICION INICIAL' },
+            { s: 45, l: -45, u: 75, r: 0, b: 0, t: 0, gripper: 0, desc: 'IR A CAJA 1' },
+            { s: 45, l: -60, u: 90, r: 0, b: 0, t: 0, gripper: 0, desc: 'BAJAR A CAJA' },
+            { s: 45, l: -60, u: 90, r: 0, b: 0, t: 0, gripper: 0.015, desc: 'CERRAR PINZA' },
+            { s: 45, l: -30, u: 40, r: 0, b: 0, t: 0, gripper: 0.015, desc: 'LEVANTAR CAJA' },
+            { s: -45, l: -40, u: 60, r: 0, b: 0, t: 0, gripper: 0.015, desc: 'IR A DESTINO' },
+            { s: -45, l: -70, u: 90, r: 0, b: 0, t: 0, gripper: 0.015, desc: 'BAJAR CAJA' },
+            { s: -45, l: -70, u: 90, r: 0, b: 0, t: 0, gripper: 0, desc: 'ABRIR PINZA' },
+            { s: -45, l: -30, u: 40, r: 0, b: 0, t: 0, gripper: 0, desc: 'RETORNAR' },
+            { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, gripper: 0, desc: 'FIN PROGRAMA' }
+        ];
+
+        function createStripedTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            
+            // Fondo azul oscuro
+            ctx.fillStyle = '#0a3a7a';
+            ctx.fillRect(0, 0, 256, 256);
+            
+            // Rayas blancas verticales
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 4;
+            for (let i = 0; i < 256; i += 14) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, 256);
+                ctx.stroke();
+            }
+            
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set(1, 2);
+            return texture;
+        }
+
+        window.addEventListener('load', initRobot);
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                toggleDeadman();
+            }
+        });
 
         function initRobot() {
             const canvas = document.getElementById('canvas');
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x1a2a3a);
+            scene.background = new THREE.Color(0x0a0a0a);
 
             camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
             updateCameraPosition();
@@ -632,591 +320,509 @@
             renderer = new THREE.WebGLRenderer({ antialias: true, canvas, preserveDrawingBuffer: true });
             renderer.setSize(canvas.clientWidth, canvas.clientHeight);
             renderer.shadowMap.enabled = true;
-            renderer.shadowMap.type = THREE.PCFShadowShadowMap;
 
-            // Iluminación mejorada
-            const light1 = new THREE.DirectionalLight(0xffffff, 0.85);
-            light1.position.set(4, 6, 4);
+            const light1 = new THREE.DirectionalLight(0xffffff, 1);
+            light1.position.set(5, 8, 5);
             light1.castShadow = true;
             light1.shadow.mapSize.width = 2048;
             light1.shadow.mapSize.height = 2048;
-            light1.shadow.camera.far = 15;
+            light1.shadow.camera.far = 20;
             scene.add(light1);
 
-            const light2 = new THREE.DirectionalLight(0xffffff, 0.5);
-            light2.position.set(-3, 5, -3);
-            scene.add(light2);
+            scene.add(new THREE.DirectionalLight(0xffffff, 0.6));
+            scene.add(new THREE.AmbientLight(0xffffff, 0.8));
 
-            scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-
-            // Suelo
             const ground = new THREE.Mesh(
-                new THREE.PlaneGeometry(1, 1),
-                new THREE.MeshStandardMaterial({ color: 0x2a2a2a, metalness: 0.3, roughness: 0.8 })
+                new THREE.PlaneGeometry(2, 2),
+                new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.2, roughness: 0.9 })
             );
             ground.rotation.x = -Math.PI / 2;
             ground.position.y = -0.05;
             ground.receiveShadow = true;
             scene.add(ground);
 
-            // Robot DX200
             buildDX200Robot();
-
             animate();
+
             window.addEventListener('resize', () => {
                 camera.aspect = canvas.clientWidth / canvas.clientHeight;
                 camera.updateProjectionMatrix();
                 renderer.setSize(canvas.clientWidth, canvas.clientHeight);
             });
 
-            // ZOOM con rueda del ratón
             canvas.addEventListener('wheel', (e) => {
                 e.preventDefault();
-                const zoomSpeed = 0.05;
-                const direction = e.deltaY > 0 ? 1 : -1;
-                cameraDistance = Math.max(0.3, Math.min(1.5, cameraDistance + direction * zoomSpeed));
+                cameraDistance = Math.max(0.5, Math.min(2, cameraDistance + (e.deltaY > 0 ? 0.05 : -0.05)));
                 updateCameraPosition();
             }, { passive: false });
 
-            // ARRASTRAR con ratón
-            canvas.addEventListener('mousedown', (e) => {
-                isDragging = true;
-                dragStartX = e.clientX;
-                dragStartY = e.clientY;
-            });
-
+            canvas.addEventListener('mousedown', (e) => { isDragging = true; dragStartX = e.clientX; dragStartY = e.clientY; });
             canvas.addEventListener('mousemove', (e) => {
                 if (isDragging) {
-                    const deltaX = e.clientX - dragStartX;
-                    const deltaY = e.clientY - dragStartY;
-                    cameraAngleY += deltaX * 0.005;
-                    cameraAngleX -= deltaY * 0.005;
+                    cameraAngleY += (e.clientX - dragStartX) * 0.005;
+                    cameraAngleX -= (e.clientY - dragStartY) * 0.005;
                     cameraAngleX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, cameraAngleX));
                     updateCameraPosition();
                     dragStartX = e.clientX;
                     dragStartY = e.clientY;
                 }
             });
-
-            canvas.addEventListener('mouseup', () => {
-                isDragging = false;
-            });
-
-            canvas.addEventListener('mouseleave', () => {
-                isDragging = false;
-            });
-
-            // ZOOM con pinch en móvil
-            let lastDistance = 0;
-            canvas.addEventListener('touchstart', (e) => {
-                if (e.touches.length === 1) {
-                    dragStartX = e.touches[0].clientX;
-                    dragStartY = e.touches[0].clientY;
-                    isDragging = true;
-                } else if (e.touches.length === 2) {
-                    isDragging = false;
-                    const dx = e.touches[0].clientX - e.touches[1].clientX;
-                    const dy = e.touches[0].clientY - e.touches[1].clientY;
-                    lastDistance = Math.sqrt(dx * dx + dy * dy);
-                }
-            });
-
-            canvas.addEventListener('touchmove', (e) => {
-                if (e.touches.length === 1 && isDragging) {
-                    const deltaX = e.touches[0].clientX - dragStartX;
-                    const deltaY = e.touches[0].clientY - dragStartY;
-                    cameraAngleY += deltaX * 0.005;
-                    cameraAngleX -= deltaY * 0.005;
-                    cameraAngleX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, cameraAngleX));
-                    updateCameraPosition();
-                    dragStartX = e.touches[0].clientX;
-                    dragStartY = e.touches[0].clientY;
-                } else if (e.touches.length === 2) {
-                    const dx = e.touches[0].clientX - e.touches[1].clientX;
-                    const dy = e.touches[0].clientY - e.touches[1].clientY;
-                    const currentDistance = Math.sqrt(dx * dx + dy * dy);
-                    const delta = currentDistance - lastDistance;
-                    const zoomSpeed = 0.002;
-                    cameraDistance = Math.max(0.3, Math.min(1.5, cameraDistance - delta * zoomSpeed));
-                    updateCameraPosition();
-                    lastDistance = currentDistance;
-                }
-                e.preventDefault();
-            }, { passive: false });
-
-            canvas.addEventListener('touchend', () => {
-                isDragging = false;
-            });
+            canvas.addEventListener('mouseup', () => { isDragging = false; });
         }
 
         function updateCameraPosition() {
             const x = Math.sin(cameraAngleY) * Math.cos(cameraAngleX) * cameraDistance;
-            const y = Math.sin(cameraAngleX) * cameraDistance + 0.1;
+            const y = Math.sin(cameraAngleX) * cameraDistance + 0.15;
             const z = Math.cos(cameraAngleY) * Math.cos(cameraAngleX) * cameraDistance;
             camera.position.set(x, y, z);
-            camera.lookAt(0.1, 0.08, 0);
+            camera.lookAt(0.15, 0.1, 0);
         }
 
         function buildDX200Robot() {
             robotGroup = new THREE.Group();
-            robotGroup.scale.set(0.6, 0.6, 0.6);
             scene.add(robotGroup);
 
-            // ========== BASE ==========
-            const baseGeom = new THREE.CylinderGeometry(0.08, 0.08, 0.06, 32);
-            const baseMat = new THREE.MeshStandardMaterial({ 
-                color: 0x1a1a3a,
-                metalness: 0.9,
-                roughness: 0.2
-            });
+            const baseGeom = new THREE.CylinderGeometry(0.18, 0.20, 0.08, 32);
+            const baseMat = new THREE.MeshStandardMaterial({ color: 0x1a4a9a, metalness: 0.5, roughness: 0.6 });
             const base = new THREE.Mesh(baseGeom, baseMat);
             base.castShadow = true;
             base.receiveShadow = true;
-            base.position.y = 0.03;
+            base.position.y = 0.04;
             robotGroup.add(base);
 
-            // Montura base
-            const mountGeom = new THREE.BoxGeometry(0.10, 0.04, 0.10);
-            const mountMat = new THREE.MeshStandardMaterial({ color: 0x2a2a4a, metalness: 0.8 });
-            const mount = new THREE.Mesh(mountGeom, mountMat);
-            mount.castShadow = true;
-            mount.position.y = 0.08;
-            robotGroup.add(mount);
+            const baseStructGeom = new THREE.CylinderGeometry(0.12, 0.14, 0.15, 32);
+            const baseStructMat = new THREE.MeshStandardMaterial({ color: 0x0f2a6a, metalness: 0.6 });
+            const baseStruct = new THREE.Mesh(baseStructGeom, baseStructMat);
+            baseStruct.castShadow = true;
+            baseStruct.position.y = 0.12;
+            robotGroup.add(baseStruct);
 
-            // ========== J1 - BASE ROTATION (Z) - ROJO ==========
-            const j1 = new THREE.Group();
-            j1.position.y = 0.10;
+            const stripedTexture = createStripedTexture();
 
-            // Link J1 (vertical) - ROJO para Z
-            const j1Link = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.025, 0.025, 0.12, 16),
-                new THREE.MeshStandardMaterial({ color: 0xff3333, metalness: 0.85, roughness: 0.15 })
+            const joint0 = new THREE.Group();
+            joint0.position.y = 0.22;
+            robotGroup.add(joint0);
+
+            const shoulder = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.08, 0.08, 0.12, 24),
+                new THREE.MeshStandardMaterial({ color: 0x1a5aaa, metalness: 0.7 })
             );
-            j1Link.castShadow = true;
-            j1Link.position.y = 0.06;
-            j1.add(j1Link);
+            shoulder.castShadow = true;
+            shoulder.position.y = 0.08;
+            joint0.add(shoulder);
 
-            // Junta visual
-            const joint1 = new THREE.Mesh(
-                new THREE.SphereGeometry(0.028, 16, 16),
-                new THREE.MeshStandardMaterial({ color: 0xff0000, metalness: 0.9 })
+            const joint1 = new THREE.Group();
+            joint1.position.y = 0.14;
+            joint0.add(joint1);
+
+            const upperArm = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.042, 0.042, 0.38, 16),
+                new THREE.MeshStandardMaterial({ map: stripedTexture, metalness: 0.7, roughness: 0.3 })
             );
-            joint1.castShadow = true;
-            joint1.position.y = 0.12;
-            j1.add(joint1);
-            addJointLabel(j1, 'J1', 'Z', 0xff0000);
+            upperArm.castShadow = true;
+            upperArm.rotation.z = Math.PI / 2;
+            upperArm.position.x = 0.19;
+            joint1.add(upperArm);
 
-            robotGroup.add(j1);
-            joints[0] = j1;
-
-            // ========== J2 - SHOULDER (X) - VERDE ==========
-            const j2 = new THREE.Group();
-            j2.position.y = 0.12;
-
-            // Link J2 (largo horizontal) - VERDE para X
-            const j2Link = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.022, 0.022, 0.20, 16),
-                new THREE.MeshStandardMaterial({ color: 0x33ff33, metalness: 0.85, roughness: 0.15 })
+            const elbowJoint = new THREE.Mesh(
+                new THREE.SphereGeometry(0.045, 16, 16),
+                new THREE.MeshStandardMaterial({ color: 0xff8800, metalness: 0.9 })
             );
-            j2Link.castShadow = true;
-            j2Link.rotation.z = Math.PI / 2;
-            j2Link.position.x = 0.10;
-            j2.add(j2Link);
+            elbowJoint.castShadow = true;
+            elbowJoint.position.x = 0.38;
+            joint1.add(elbowJoint);
 
-            // Junta visual
-            const joint2 = new THREE.Mesh(
-                new THREE.SphereGeometry(0.026, 16, 16),
-                new THREE.MeshStandardMaterial({ color: 0x00dd00 })
+            joints.push(joint0);
+            joints.push(joint1);
+
+            const joint2 = new THREE.Group();
+            joint2.position.x = 0.38;
+            joint1.add(joint2);
+
+            const foreArm = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.038, 0.038, 0.35, 16),
+                new THREE.MeshStandardMaterial({ map: stripedTexture, metalness: 0.7, roughness: 0.3 })
             );
-            joint2.castShadow = true;
-            joint2.position.x = 0.20;
-            j2.add(joint2);
-            addJointLabel(j2, 'J2', 'X', 0x00dd00);
+            foreArm.castShadow = true;
+            foreArm.rotation.z = Math.PI / 2;
+            foreArm.position.x = 0.175;
+            joint2.add(foreArm);
 
-            j1.add(j2);
-            joints[1] = j2;
-
-            // ========== J3 - ELBOW (X) - VERDE ==========
-            const j3 = new THREE.Group();
-            j3.position.x = 0.20;
-            j3.position.y = 0;
-
-            // Link J3 - VERDE para X
-            const j3Link = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.020, 0.020, 0.18, 16),
-                new THREE.MeshStandardMaterial({ color: 0x33ff33, metalness: 0.85, roughness: 0.15 })
+            const wristBase = new THREE.Mesh(
+                new THREE.SphereGeometry(0.042, 16, 16),
+                new THREE.MeshStandardMaterial({ color: 0xff8800, metalness: 0.9 })
             );
-            j3Link.castShadow = true;
-            j3Link.rotation.z = Math.PI / 2;
-            j3Link.position.x = 0.09;
-            j3.add(j3Link);
+            wristBase.castShadow = true;
+            wristBase.position.x = 0.35;
+            joint2.add(wristBase);
 
-            // Junta visual
-            const joint3 = new THREE.Mesh(
-                new THREE.SphereGeometry(0.024, 16, 16),
-                new THREE.MeshStandardMaterial({ color: 0x00dd00 })
+            joints.push(joint2);
+
+            const joint3 = new THREE.Group();
+            joint3.position.x = 0.35;
+            joint2.add(joint3);
+
+            const wristAdapter = new THREE.Mesh(
+                new THREE.BoxGeometry(0.08, 0.08, 0.08),
+                new THREE.MeshStandardMaterial({ color: 0x1a4a9a, metalness: 0.7 })
             );
-            joint3.castShadow = true;
-            joint3.position.x = 0.18;
-            j3.add(joint3);
-            addJointLabel(j3, 'J3', 'X', 0x00dd00);
+            wristAdapter.castShadow = true;
+            joint3.add(wristAdapter);
 
-            j2.add(j3);
-            joints[2] = j3;
+            joints.push(joint3);
 
-            // ========== J4 - WRIST 1 (Z) - AZUL ==========
-            const j4 = new THREE.Group();
-            j4.position.x = 0.18;
+            const joint4 = new THREE.Group();
+            joint4.position.z = 0;
+            joint3.add(joint4);
 
-            // Link J4 - AZUL para Z
-            const j4Link = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.018, 0.018, 0.10, 16),
-                new THREE.MeshStandardMaterial({ color: 0x3333ff, metalness: 0.85, roughness: 0.15 })
+            const toolAdapter = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.028, 0.028, 0.06, 16),
+                new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.8 })
             );
-            j4Link.castShadow = true;
-            j4Link.rotation.z = Math.PI / 2;
-            j4Link.position.x = 0.05;
-            j4.add(j4Link);
+            toolAdapter.castShadow = true;
+            toolAdapter.rotation.x = Math.PI / 2;
+            toolAdapter.position.x = 0.05;
+            joint4.add(toolAdapter);
 
-            // Junta visual
-            const joint4 = new THREE.Mesh(
-                new THREE.SphereGeometry(0.022, 16, 16),
-                new THREE.MeshStandardMaterial({ color: 0x0000ff })
-            );
-            joint4.castShadow = true;
-            joint4.position.x = 0.10;
-            j4.add(joint4);
-            addJointLabel(j4, 'J4', 'Z', 0x0000ff);
+            joints.push(joint4);
 
-            j3.add(j4);
-            joints[3] = j4;
+            const joint5 = new THREE.Group();
+            joint5.position.x = 0.1;
+            joint4.add(joint5);
 
-            // ========== J5 - WRIST 2 (X) - VERDE ==========
-            const j5 = new THREE.Group();
-            j5.position.x = 0.10;
+            joints.push(joint5);
 
-            // Link J5 - VERDE para X
-            const j5Link = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.016, 0.016, 0.08, 16),
-                new THREE.MeshStandardMaterial({ color: 0x33ff33, metalness: 0.85, roughness: 0.15 })
-            );
-            j5Link.castShadow = true;
-            j5Link.rotation.z = Math.PI / 2;
-            j5Link.position.x = 0.04;
-            j5.add(j5Link);
-
-            // Junta visual
-            const joint5 = new THREE.Mesh(
-                new THREE.SphereGeometry(0.020, 16, 16),
-                new THREE.MeshStandardMaterial({ color: 0x00dd00 })
-            );
-            joint5.castShadow = true;
-            joint5.position.x = 0.08;
-            j5.add(joint5);
-            addJointLabel(j5, 'J5', 'X', 0x00dd00);
-
-            j4.add(j5);
-            joints[4] = j5;
-
-            // ========== J6 - WRIST 3 (Z) - AZUL ==========
-            const j6 = new THREE.Group();
-            j6.position.x = 0.08;
-
-            // Link J6 - AZUL para Z
-            const j6Link = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.014, 0.014, 0.06, 16),
-                new THREE.MeshStandardMaterial({ color: 0x3333ff, metalness: 0.85, roughness: 0.15 })
-            );
-            j6Link.castShadow = true;
-            j6Link.rotation.z = Math.PI / 2;
-            j6Link.position.x = 0.03;
-            j6.add(j6Link);
-
-            // Junta visual
-            const joint6 = new THREE.Mesh(
-                new THREE.SphereGeometry(0.018, 16, 16),
-                new THREE.MeshStandardMaterial({ color: 0x0000ff })
-            );
-            joint6.castShadow = true;
-            joint6.position.x = 0.06;
-            j6.add(joint6);
-            addJointLabel(j6, 'J6', 'Z', 0x0000ff);
-
-            j5.add(j6);
-            joints[5] = j6;
-
-            // ========== TOOL / GRIPPER ==========
-            const toolGeom = new THREE.BoxGeometry(0.05, 0.05, 0.08);
-            const toolMat = new THREE.MeshStandardMaterial({ 
-                color: 0xffff00,
-                metalness: 0.9,
-                roughness: 0.1
-            });
-            const tool = new THREE.Mesh(toolGeom, toolMat);
-            tool.castShadow = true;
-            tool.position.x = 0.06;
-            j6.add(tool);
-
-            // Pinza izquierda
-            const gripLeft = new THREE.Mesh(
-                new THREE.BoxGeometry(0.012, 0.020, 0.012),
-                new THREE.MeshStandardMaterial({ color: 0xffff00 })
-            );
-            gripLeft.castShadow = true;
-            gripLeft.position.set(0.065, 0.015, 0.025);
-            tool.add(gripLeft);
-
-            // Pinza derecha
-            const gripRight = new THREE.Mesh(
-                new THREE.BoxGeometry(0.012, 0.020, 0.012),
-                new THREE.MeshStandardMaterial({ color: 0xffff00 })
-            );
-            gripRight.castShadow = true;
-            gripRight.position.set(0.065, 0.015, -0.025);
-            tool.add(gripRight);
+            // PINZA 1 - IZQUIERDA con 2 dedos
+            gripperGroup = new THREE.Group();
+            gripperGroup.position.x = 0.08;
+            gripperGroup.position.z = 0.05;
+            gripperGroup.rotation.x = Math.PI / 2;
+            joint5.add(gripperGroup);
+            
+            // Base pinza 1
+            const gripperBaseGeom = new THREE.BoxGeometry(0.020, 0.030, 0.050);
+            const gripperBaseMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.95 });
+            const gripperBase = new THREE.Mesh(gripperBaseGeom, gripperBaseMat);
+            gripperBase.castShadow = true;
+            gripperGroup.add(gripperBase);
+            
+            // Dedo SUPERIOR pinza 1
+            const fingerTopGeom = new THREE.BoxGeometry(0.008, 0.035, 0.090);
+            const fingerMat = new THREE.MeshStandardMaterial({ color: 0xdd8844, metalness: 0.80, roughness: 0.35 });
+            const fingerTop = new THREE.Mesh(fingerTopGeom, fingerMat);
+            fingerTop.castShadow = true;
+            fingerTop.position.y = 0.028;
+            fingerTop.position.z = 0.065;
+            fingerTop.userData.isPinza1Top = true;
+            gripperGroup.add(fingerTop);
+            
+            // Dedo INFERIOR pinza 1
+            const fingerBottomGeom = new THREE.BoxGeometry(0.008, 0.035, 0.090);
+            const fingerBottom = new THREE.Mesh(fingerBottomGeom, fingerMat);
+            fingerBottom.castShadow = true;
+            fingerBottom.position.y = -0.028;
+            fingerBottom.position.z = 0.065;
+            fingerBottom.userData.isPinza1Bottom = true;
+            gripperGroup.add(fingerBottom);
+            
+            // PINZA 2 - DERECHA con 2 dedos
+            scissorGroup = new THREE.Group();
+            scissorGroup.position.x = 0.08;
+            scissorGroup.position.z = -0.05;
+            scissorGroup.rotation.x = Math.PI / 2;
+            joint5.add(scissorGroup);
+            
+            // Base pinza 2
+            const gripper2BaseGeom = new THREE.BoxGeometry(0.020, 0.030, 0.050);
+            const gripper2BaseMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.95 });
+            const gripper2Base = new THREE.Mesh(gripper2BaseGeom, gripper2BaseMat);
+            gripper2Base.castShadow = true;
+            scissorGroup.add(gripper2Base);
+            
+            // Dedo SUPERIOR pinza 2
+            const finger2TopGeom = new THREE.BoxGeometry(0.008, 0.035, 0.090);
+            const finger2Mat = new THREE.MeshStandardMaterial({ color: 0xdd8844, metalness: 0.80, roughness: 0.35 });
+            const finger2Top = new THREE.Mesh(finger2TopGeom, finger2Mat);
+            finger2Top.castShadow = true;
+            finger2Top.position.y = 0.028;
+            finger2Top.position.z = 0.065;
+            finger2Top.userData.isPinza2Top = true;
+            scissorGroup.add(finger2Top);
+            
+            // Dedo INFERIOR pinza 2
+            const finger2BottomGeom = new THREE.BoxGeometry(0.008, 0.035, 0.090);
+            const finger2Bottom = new THREE.Mesh(finger2BottomGeom, finger2Mat);
+            finger2Bottom.castShadow = true;
+            finger2Bottom.position.y = -0.028;
+            finger2Bottom.position.z = 0.065;
+            finger2Bottom.userData.isPinza2Bottom = true;
+            scissorGroup.add(finger2Bottom);
         }
 
-        function addJointLabel(group, jointName, axis, color) {
-            // Crear canvas con texto
-            const canvas = document.createElement('canvas');
-            canvas.width = 256;
-            canvas.height = 256;
-            const ctx = canvas.getContext('2d');
-            
-            // Fondo transparente
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Dibujar círculo de fondo
-            ctx.fillStyle = '#' + color.toString(16).padStart(6, '0');
-            ctx.beginPath();
-            ctx.arc(128, 128, 100, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Dibujar texto
-            ctx.fillStyle = '#000000';
-            ctx.font = 'bold 90px Arial';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(jointName, 128, 110);
-            
-            ctx.font = 'bold 60px Arial';
-            ctx.fillText(axis, 128, 160);
-            
-            // Crear textura
-            const texture = new THREE.CanvasTexture(canvas);
-            const spriteMat = new THREE.SpriteMaterial({ map: texture });
-            const sprite = new THREE.Sprite(spriteMat);
-            sprite.scale.set(0.08, 0.08, 1);
-            
-            group.add(sprite);
+        function highlightJoint(index) {
+            if (activeJoint >= 0 && joints[activeJoint]) {
+                joints[activeJoint].children.forEach(child => {
+                    if (child.isMesh) {
+                        child.material.color.setHex(child.geometry.type === 'SphereGeometry' ? 0xff8800 : 0x2a2a2a);
+                        child.material.emissive.setHex(0x000000);
+                    }
+                });
+                if (highlightLight) {
+                    scene.remove(highlightLight);
+                    highlightLight = null;
+                }
+            }
+
+            activeJoint = index;
+            if (joints[index]) {
+                joints[index].children.forEach(child => {
+                    if (child.isMesh) {
+                        child.material.color.setHex(0xff0000);
+                        child.material.emissive.setHex(0xff0000);
+                    }
+                });
+                const worldPos = new THREE.Vector3();
+                joints[index].getWorldPosition(worldPos);
+                highlightLight = new THREE.PointLight(0xff0000, 2.5, 0.6);
+                highlightLight.position.copy(worldPos);
+                scene.add(highlightLight);
+            }
+
+            clearTimeout(activeJointTimeout);
+            activeJointTimeout = setTimeout(() => {
+                if (activeJoint >= 0 && joints[activeJoint]) {
+                    joints[activeJoint].children.forEach(child => {
+                        if (child.isMesh) {
+                            child.material.color.setHex(child.geometry.type === 'SphereGeometry' ? 0xff8800 : 0x2a2a2a);
+                            child.material.emissive.setHex(0x000000);
+                        }
+                    });
+                }
+                if (highlightLight) {
+                    scene.remove(highlightLight);
+                    highlightLight = null;
+                }
+                activeJoint = -1;
+            }, 1200);
         }
 
         function animate() {
             requestAnimationFrame(animate);
-
-            // Aplicar rotaciones jerárquicamente
-            if (joints.length >= 6) {
-                joints[0].rotation.z = state.angles[0] * Math.PI / 180;
-                joints[1].rotation.x = state.angles[1] * Math.PI / 180;
-                joints[2].rotation.x = state.angles[2] * Math.PI / 180;
-                joints[3].rotation.z = state.angles[3] * Math.PI / 180;
-                joints[4].rotation.x = state.angles[4] * Math.PI / 180;
-                joints[5].rotation.z = state.angles[5] * Math.PI / 180;
+            
+            if (state.programRunning && robotProgram.length > 0) {
+                state.stepTimer++;
+                if (state.stepTimer > 60) {
+                    state.stepTimer = 0;
+                    const step = robotProgram[state.programStep];
+                    
+                    const lerpFactor = 0.15;
+                    state.angles.s += (step.s - state.angles.s) * lerpFactor;
+                    state.angles.l += (step.l - state.angles.l) * lerpFactor;
+                    state.angles.u += (step.u - state.angles.u) * lerpFactor;
+                    state.angles.r += (step.r - state.angles.r) * lerpFactor;
+                    state.angles.b += (step.b - state.angles.b) * lerpFactor;
+                    state.angles.t += (step.t - state.angles.t) * lerpFactor;
+                    gripperAngle += (step.gripper - gripperAngle) * lerpFactor;
+                    
+                    document.getElementById('lcd-mode').textContent = state.programStep + 1 + '/' + robotProgram.length;
+                    
+                    state.programStep++;
+                    if (state.programStep >= robotProgram.length) {
+                        state.programRunning = false;
+                        state.programStep = 0;
+                        document.getElementById('lcd-status').textContent = 'READY';
+                        document.getElementById('infoDisplay').textContent = '✓ PROGRAMA COMPLETADO';
+                    }
+                }
             }
-
+            
+            if (joints.length >= 6) {
+                joints[0].rotation.z = state.angles.s * Math.PI / 180;
+                joints[1].rotation.x = state.angles.l * Math.PI / 180;
+                joints[2].rotation.x = state.angles.u * Math.PI / 180;
+                joints[3].rotation.z = state.angles.r * Math.PI / 180;
+                joints[4].rotation.x = state.angles.b * Math.PI / 180;
+                joints[5].rotation.z = state.angles.t * Math.PI / 180;
+                
+                if (gripperGroup) {
+                    gripperGroup.children.forEach(child => {
+                        if (child.userData.isPinza1Top) {
+                            child.position.y = 0.028 + gripperAngle;   // Dedo superior pinza 1
+                        } else if (child.userData.isPinza1Bottom) {
+                            child.position.y = -0.028 - gripperAngle;  // Dedo inferior pinza 1
+                        }
+                    });
+                }
+                
+                if (scissorGroup) {
+                    scissorGroup.children.forEach(child => {
+                        if (child.userData.isPinza2Top) {
+                            child.position.y = 0.028 + gripper2Angle;   // Dedo superior pinza 2
+                        } else if (child.userData.isPinza2Bottom) {
+                            child.position.y = -0.028 - gripper2Angle;  // Dedo inferior pinza 2
+                        }
+                    });
+                }
+            }
             renderer.render(scene, camera);
-
-            // Tiempo
             const elapsed = Math.floor((Date.now() - startTime) / 1000);
             document.getElementById('runtime').textContent = 
                 String(Math.floor(elapsed/60)).padStart(2,'0') + ':' + String(elapsed%60).padStart(2,'0');
         }
 
-        function handlePress(button) {
-            const info = document.getElementById('infoDisplay');
-
-            switch(button) {
-                case 'enable':
-                    state.enabled = !state.enabled;
-                    if (!state.enabled) state.running = false;
-                    info.textContent = '✓ Sistema ' + (state.enabled ? 'HABILITADO' : 'DESHABILITADO');
-                    break;
-                case 'start':
-                    if (!state.enabled) return;
-                    state.running = !state.running;
-                    info.textContent = '▶ ' + (state.running ? 'MOVIMIENTO' : 'PAUSA');
-                    break;
-                case 'stop':
-                case 'stop-emerg':
-                    state.running = false;
-                    state.enabled = false;
-                    state.angles = [0, 0, 0, 0, 0, 0];
-                    info.textContent = '🛑 PARO - ROBOT HOME';
-                    break;
-                case 'slow':
-                    state.speed = 25;
-                    updateSpeedButtons('slow');
-                    info.textContent = '🐢 SLOW (25%)';
-                    break;
-                case 'normal':
-                    state.speed = 50;
-                    updateSpeedButtons('normal');
-                    info.textContent = '📍 NORMAL (50%)';
-                    break;
-                case 'fast':
-                    state.speed = 100;
-                    updateSpeedButtons('fast');
-                    info.textContent = '🐇 FAST (100%)';
-                    break;
-                
-                case 'j1-plus':
-                case 'j1-plus2':
-                    if (!state.running) return;
-                    state.angles[0] += state.speed * 0.18;
-                    info.textContent = '🔄 J1 + (Base)';
-                    break;
-                case 'j1-minus':
-                case 'j1-minus2':
-                    if (!state.running) return;
-                    state.angles[0] -= state.speed * 0.18;
-                    info.textContent = '🔄 J1 − (Base)';
-                    break;
-                case 'j2-plus':
-                    if (!state.running) return;
-                    state.angles[1] += state.speed * 0.15;
-                    info.textContent = '📈 J2 + (Hombro)';
-                    break;
-                case 'j2-minus':
-                    if (!state.running) return;
-                    state.angles[1] -= state.speed * 0.15;
-                    info.textContent = '📉 J2 − (Hombro)';
-                    break;
-                case 'j3-plus':
-                    if (!state.running) return;
-                    state.angles[2] += state.speed * 0.15;
-                    info.textContent = '📈 J3 + (Codo)';
-                    break;
-                case 'j3-minus':
-                    if (!state.running) return;
-                    state.angles[2] -= state.speed * 0.15;
-                    info.textContent = '📉 J3 − (Codo)';
-                    break;
-                case 'j4-plus':
-                    if (!state.running) return;
-                    state.angles[3] += state.speed * 0.20;
-                    info.textContent = '🔄 J4 + (Muñeca 1)';
-                    break;
-                case 'j4-minus':
-                    if (!state.running) return;
-                    state.angles[3] -= state.speed * 0.20;
-                    info.textContent = '🔄 J4 − (Muñeca 1)';
-                    break;
-                case 'j5-plus':
-                    if (!state.running) return;
-                    state.angles[4] += state.speed * 0.20;
-                    info.textContent = '📈 J5 + (Muñeca 2)';
-                    break;
-                case 'j5-minus':
-                    if (!state.running) return;
-                    state.angles[4] -= state.speed * 0.20;
-                    info.textContent = '📉 J5 − (Muñeca 2)';
-                    break;
-                case 'j6-plus':
-                    if (!state.running) return;
-                    state.angles[5] += state.speed * 0.20;
-                    info.textContent = '🔄 J6 + (Muñeca 3)';
-                    break;
-                case 'j6-minus':
-                    if (!state.running) return;
-                    state.angles[5] -= state.speed * 0.20;
-                    info.textContent = '🔄 J6 − (Muñeca 3)';
-                    break;
-                
-                case 'x-plus':
-                    if (!state.running) return;
-                    state.angles[0] += state.speed * 0.18;
-                    info.textContent = '→ X+';
-                    break;
-                case 'x-minus':
-                    if (!state.running) return;
-                    state.angles[0] -= state.speed * 0.18;
-                    info.textContent = '← X−';
-                    break;
-                case 'y-plus':
-                    if (!state.running) return;
-                    state.angles[2] += state.speed * 0.15;
-                    info.textContent = '↑ Y+ (J3)';
-                    break;
-                case 'y-minus':
-                    if (!state.running) return;
-                    state.angles[2] -= state.speed * 0.15;
-                    info.textContent = '↓ Y− (J3)';
-                    break;
-                case 'z-plus':
-                    if (!state.running) return;
-                    state.angles[3] += state.speed * 0.20;
-                    info.textContent = '⬆ Z+ (J4)';
-                    break;
-                case 'z-minus':
-                    if (!state.running) return;
-                    state.angles[3] -= state.speed * 0.20;
-                    info.textContent = '⬇ Z− (J4)';
-                    break;
-                case 'rot-plus':
-                    if (!state.running) return;
-                    state.angles[3] += state.speed * 0.20;
-                    info.textContent = '🔄 θ+';
-                    break;
-                case 'rot-minus':
-                    if (!state.running) return;
-                    state.angles[3] -= state.speed * 0.20;
-                    info.textContent = '🔄 θ−';
-                    break;
-                case 'p-plus':
-                    if (!state.running) return;
-                    state.angles[4] += state.speed * 0.20;
-                    info.textContent = '📈 P+';
-                    break;
-                case 'p-minus':
-                    if (!state.running) return;
-                    state.angles[4] -= state.speed * 0.20;
-                    info.textContent = '📉 P−';
-                    break;
-                case 'r-plus':
-                    if (!state.running) return;
-                    state.angles[5] += state.speed * 0.20;
-                    info.textContent = '🔄 R+';
-                    break;
-                case 'r-minus':
-                    if (!state.running) return;
-                    state.angles[5] -= state.speed * 0.20;
-                    info.textContent = '🔄 R−';
-                    break;
-            }
-
-            state.angles = state.angles.map(a => Math.max(-180, Math.min(180, a)));
-            updateDisplay();
-        }
-
-        function updateSpeedButtons(active) {
-            document.querySelectorAll('.speed-btns button').forEach(b => b.classList.remove('active'));
-            event.target.classList.add('active');
-        }
-
         function updateDisplay() {
-            for (let i = 0; i < 6; i++) {
-                document.getElementById(`j${i+1}`).textContent = state.angles[i].toFixed(0) + '°';
+            document.getElementById('s').textContent = state.angles.s.toFixed(1) + '°';
+            document.getElementById('l').textContent = state.angles.l.toFixed(1) + '°';
+            document.getElementById('u').textContent = state.angles.u.toFixed(1) + '°';
+            document.getElementById('r').textContent = state.angles.r.toFixed(1) + '°';
+            document.getElementById('b').textContent = state.angles.b.toFixed(1) + '°';
+            document.getElementById('t').textContent = state.angles.t.toFixed(1) + '°';
+        }
+
+        function moveAxis(axis, dir) {
+            if (axis === 'a') {
+                // PINZA 1 con 8+/8−
+                const maxOpen = 0.030;
+                const newAngle = gripperAngle + (0.03 * dir);
+                gripperAngle = Math.max(0, Math.min(maxOpen, newAngle));
+                
+                if (gripperAngle <= 0.001) {
+                    document.getElementById('infoDisplay').textContent = '✓ PINZA 1 CERRADA';
+                } else if (gripperAngle >= maxOpen - 0.001) {
+                    document.getElementById('infoDisplay').textContent = '✓ PINZA 1 ABIERTA';
+                } else {
+                    document.getElementById('infoDisplay').textContent = '✓ PINZA 1: ' + Math.round((gripperAngle / maxOpen) * 100) + '%';
+                }
+                return;
             }
-            document.getElementById('lcd-status').textContent = state.running ? 'MOVING' : 'READY';
-            document.getElementById('lcd-speed').textContent = state.speed + '%';
+            if (axis === 'e') {
+                // PINZA 2 con E+/E−
+                const maxOpen = 0.030;
+                const newAngle = gripper2Angle + (0.03 * dir);
+                gripper2Angle = Math.max(0, Math.min(maxOpen, newAngle));
+                
+                if (gripper2Angle <= 0.001) {
+                    document.getElementById('infoDisplay').textContent = '✓ PINZA 2 CERRADA';
+                } else if (gripper2Angle >= maxOpen - 0.001) {
+                    document.getElementById('infoDisplay').textContent = '✓ PINZA 2 ABIERTA';
+                } else {
+                    document.getElementById('infoDisplay').textContent = '✓ PINZA 2: ' + Math.round((gripper2Angle / maxOpen) * 100) + '%';
+                }
+                return;
+            }
+            if (!state.deadman) {
+                document.getElementById('infoDisplay').textContent = '⚠️ Deadman (ESPACIO)';
+                return;
+            }
+            const axisMap = { x: 's', y: 'l', z: 'u', r: 'r', b: 'b', t: 't' };
+            const sAxis = axisMap[axis];
+            if (sAxis && state.angles[sAxis] !== undefined) {
+                const inc = state.speed * 0.18 * dir;
+                state.angles[sAxis] = Math.max(state.limits[sAxis].min, Math.min(state.limits[sAxis].max, state.angles[sAxis] + inc));
+                const axisToJoint = { s: 0, l: 1, u: 2, r: 3, b: 4, t: 5 };
+                highlightJoint(axisToJoint[sAxis]);
+                updateDisplay();
+                document.getElementById('infoDisplay').textContent = `✓ ${sAxis.toUpperCase()} ${dir > 0 ? '+' : '−'}`;
+            }
         }
 
-        function toggleGuide() {
-            const guide = document.getElementById('guidePanel');
-            guide.style.display = guide.style.display === 'none' ? 'block' : 'none';
+        function toggleDeadman() {
+            state.deadman = !state.deadman;
+            const btn = document.getElementById('deadman-btn');
+            if (state.deadman) {
+                btn.textContent = '✓ ACTIVO';
+                btn.classList.add('active');
+                document.getElementById('infoDisplay').textContent = '✓ Deadman ACTIVO';
+            } else {
+                btn.textContent = 'INACTIVO';
+                btn.classList.remove('active');
+                document.getElementById('infoDisplay').textContent = '⚠️ Deadman INACTIVO';
+            }
         }
 
-        window.addEventListener('load', initRobot);
+        function setSpeed(speed) {
+            state.speed = speed;
+            document.getElementById('infoDisplay').textContent = `⚡ Velocidad: ${speed}%`;
+        }
+
+        function toggleServo() {
+            const btn = document.getElementById('servo-btn');
+            if (btn.textContent.includes('ON')) {
+                btn.textContent = 'SERVO\nOFF';
+                document.getElementById('infoDisplay').textContent = '⚠️ Servo desactivado';
+            } else {
+                btn.textContent = 'SERVO\nON';
+                document.getElementById('infoDisplay').textContent = '✓ Servo activado';
+            }
+        }
+
+        function setMode(mode) {
+            document.getElementById('lcd-mode').textContent = mode.toUpperCase();
+            document.getElementById('infoDisplay').textContent = `Modo: ${mode.toUpperCase()}`;
+        }
+
+        function startProgram() {
+            state.programRunning = !state.programRunning;
+            state.programStep = 0;
+            state.stepTimer = 0;
+            
+            if (state.programRunning) {
+                document.getElementById('lcd-status').textContent = 'RUNNING';
+                document.getElementById('infoDisplay').textContent = '▶️ EJECUTANDO PROGRAMA';
+            } else {
+                document.getElementById('lcd-status').textContent = 'STOPPED';
+                document.getElementById('infoDisplay').textContent = '⏹️ PROGRAMA DETENIDO';
+            }
+        }
+
+        function emergencyStop() {
+            state.deadman = false;
+            const btn = document.getElementById('deadman-btn');
+            if (btn) {
+                btn.textContent = 'INACTIVO';
+                btn.classList.remove('active');
+            }
+            document.getElementById('lcd-status').textContent = 'E-STOP';
+            document.getElementById('infoDisplay').textContent = '🚨 PARO EMERGENCIA';
+        }
+
+        function handleFunc(func) {
+            if (func === 'hold') {
+                document.getElementById('infoDisplay').textContent = '⏸️ HOLD';
+            } else {
+                document.getElementById('infoDisplay').textContent = func.toUpperCase();
+            }
+        }
+
+        function handleDir(dir) {
+            document.getElementById('infoDisplay').textContent = `Dirección: ${dir}`;
+        }
+
+        let keyPosition = 0;
+        const keyPositions = ['OFF', 'REMOTE', 'TEACH'];
+        const keyRotations = [0, -120, 120];
+        
+        function rotateKeySwitch() {
+            keyPosition = (keyPosition + 1) % 3;
+            updateKeySwitchDisplay();
+            document.getElementById('infoDisplay').textContent = `Llave: ${keyPositions[keyPosition]}`;
+        }
+        
+        function updateKeySwitchDisplay() {
+            const dial = document.getElementById('keySwitch');
+            const position = document.getElementById('keyPosition');
+            const indicator = document.getElementById('keyIndicator');
+            
+            dial.style.transform = `rotate(${keyRotations[keyPosition]}deg)`;
+            position.textContent = keyPositions[keyPosition];
+            
+            if (keyPosition === 0) {
+                indicator.style.boxShadow = '0 0 6px rgba(200, 100, 0, 0.6)';
+            } else {
+                indicator.style.boxShadow = '0 0 6px rgba(0, 255, 0, 0.6)';
+            }
+        }
+
     </script>
 </body>
 </html>
