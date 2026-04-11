@@ -320,7 +320,8 @@
             },
             programRunning: false,
             programStep: 0,
-            stepTimer: 0
+            stepTimer: 0,
+            mode: 'TEACH'
         };
 
         let robotJobs = {
@@ -470,6 +471,7 @@
         }
 
         function pressInsert() {
+            if (!checkTeachMode('INSERT')) return;
             document.getElementById('infoDisplay').textContent = "INSERT presionado. Pulse ENTER para confirmar.";
             dxState.isInserting = true;
             dxState.isDeleting = false;
@@ -477,6 +479,7 @@
         }
 
         function pressDelete() {
+            if (!checkTeachMode('DELETE')) return;
             document.getElementById('infoDisplay').textContent = "DELETE presionado. Pulse ENTER para confirmar.";
             dxState.isDeleting = true;
             dxState.isInserting = false;
@@ -484,6 +487,7 @@
         }
 
         function pressModify() {
+            if (!checkTeachMode('MODIFY')) return;
             document.getElementById('infoDisplay').textContent = "MODIFY presionado. Pulse ENTER para actualizar.";
             dxState.isModifying = true;
             dxState.isInserting = false;
@@ -558,6 +562,7 @@
                     let tokens = (step.code || '').split(' ');
                     
                     if (dxState.selectedTokenIndex > 0 && tokens.length > dxState.selectedTokenIndex) {
+                        if (!checkTeachMode('Edición de parámetros')) return;
                         let target = tokens[dxState.selectedTokenIndex];
                         if (target.startsWith('VJ=')) {
                             const speeds = ['VJ=1.00', 'VJ=5.00', 'VJ=10.00', 'VJ=25.00', 'VJ=50.00', 'VJ=100.00'];
@@ -1160,6 +1165,8 @@
         }
 
         function moveAxis(axis, dir) {
+            if (!checkTeachMode('Movimiento manual')) return;
+            if (state.programRunning) return;
             if (axis === 'a') {
                 // PINZA 1 con 8+/8−
                 const maxOpen = 0.030;
@@ -1237,8 +1244,17 @@
         }
 
         function setMode(mode) {
-            document.getElementById('lcd-mode').textContent = mode.toUpperCase();
-            document.getElementById('infoDisplay').textContent = `Modo: ${mode.toUpperCase()}`;
+            state.mode = mode.toUpperCase();
+            document.getElementById('lcd-mode').textContent = state.mode;
+            document.getElementById('infoDisplay').textContent = `Modo: ${state.mode}`;
+        }
+
+        function checkTeachMode(actionName) {
+            if (state.mode !== 'TEACH' && keyPositions[keyPosition] !== 'TEACH') {
+                document.getElementById('infoDisplay').textContent = `❌ ${actionName} anulado. Gira llave a TEACH.`;
+                return false;
+            }
+            return true;
         }
 
         function startProgram() {
@@ -1258,6 +1274,7 @@
         }
 
         function stepProgram(direction) {
+            if (!checkTeachMode('Paso a Paso')) return;
             if (!state.deadman) {
                 showMsg('⚠️ Requiere Deadman (Pulse ESPACIO)');
                 return;
