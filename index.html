@@ -142,17 +142,23 @@
                         <div class="lcd-sidebar">
                             <div class="lcd-sidebar-btn active" id="btn-view-job" onclick="setView('JOB')">JOB</div>
                             <div class="lcd-sidebar-btn" id="btn-view-robot" onclick="setView('ROBOT')">ROBOT</div>
-                            <div class="lcd-sidebar-btn" onclick="document.getElementById('infoDisplay').textContent='Variable NO IMPL'">VARIABLE</div>
-                            <div class="lcd-sidebar-btn" onclick="document.getElementById('infoDisplay').textContent='In/Out NO IMPL'">IN/OUT</div>
+                            <div class="lcd-sidebar-btn" id="btn-view-list" onclick="setView('LIST')">JOB LIST</div>
+                            <div class="lcd-sidebar-btn" onclick="createNewJob()">NEW JOB</div>
                         </div>
                         <div class="lcd-main">
                             <div id="job-screen" style="display: flex; flex-direction: column; height: 100%;">
                                 <div class="lcd-header">
                                     <span>LINE: <span id="job-line-indicator">---</span></span>
-                                    <span>TOOL: 0</span>
+                                    <span>JOB: <span id="current-job-name">JOB_CAJA</span></span>
                                 </div>
                                 <div class="job-content" id="job-content-area">
                                     <!-- Job lines will be generated here -->
+                                </div>
+                            </div>
+                            <div id="list-screen" style="display: none; flex-direction: column; height: 100%; background: #ccc;">
+                                <div class="lcd-header"><span>JOB LIST - SELECT PROGRAM</span></div>
+                                <div class="job-content" id="list-content-area" style="background:#fff;">
+                                    <!-- Job list populated here -->
                                 </div>
                             </div>
                             <div id="robot-screen" class="robot-coords-screen">
@@ -272,7 +278,7 @@
 
                     <div class="side-buttons-container">
                         <div class="side-btn-col">
-                            <button class="side-btn blue">MODIFY</button>
+                            <button class="side-btn blue" onclick="pressModify()">MODIFY</button>
                             <button class="side-btn blue" onclick="pressEnter()">ENTER</button>
                             <button class="side-btn">EMPTY</button>
                             <button class="side-btn">EMPTY</button>
@@ -314,38 +320,56 @@
             stepTimer: 0
         };
 
-        const robotProgram = [
-            { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, gripper: 0, code: 'NOP', desc: 'INICIO' },
-            { s: 45, l: -45, u: 75, r: 0, b: 0, t: 0, gripper: 0, code: 'MOVJ VJ=50', desc: 'IR A CAJA 1' },
-            { s: 45, l: -60, u: 90, r: 0, b: 0, t: 0, gripper: 0, code: 'MOVJ VJ=25', desc: 'BAJAR ALTO' },
-            { s: 45, l: -60, u: 90, r: 0, b: 0, t: 0, gripper: 0.015, code: 'TIMER T=0.5', desc: 'CERRAR PINZA' },
-            { s: 45, l: -30, u: 40, r: 0, b: 0, t: 0, gripper: 0.015, code: 'MOVJ VJ=50', desc: 'LEVANTAR' },
-            { s: -45, l: -40, u: 60, r: 0, b: 0, t: 0, gripper: 0.015, code: 'MOVJ VJ=50', desc: 'IR A DESTINO' },
-            { s: -45, l: -70, u: 90, r: 0, b: 0, t: 0, gripper: 0.015, code: 'MOVJ VJ=25', desc: 'BAJAR CAJA' },
-            { s: -45, l: -70, u: 90, r: 0, b: 0, t: 0, gripper: 0, code: 'TIMER T=0.5', desc: 'ABRIR PINZA' },
-            { s: -45, l: -30, u: 40, r: 0, b: 0, t: 0, gripper: 0, code: 'MOVJ VJ=50', desc: 'RETORNAR' },
-            { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, gripper: 0, code: 'END', desc: 'FIN' }
-        ];
+        const robotJobs = {
+            "JOB_CAJA": [
+                { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, gripper: 0, code: 'NOP', desc: 'INICIO' },
+                { s: 45, l: -45, u: 75, r: 0, b: 0, t: 0, gripper: 0, code: 'MOVJ VJ=50', desc: 'IR A CAJA 1' },
+                { s: 45, l: -60, u: 90, r: 0, b: 0, t: 0, gripper: 0, code: 'MOVJ VJ=25', desc: 'BAJAR ALTO' },
+                { s: 45, l: -60, u: 90, r: 0, b: 0, t: 0, gripper: 0.015, code: 'TIMER T=0.5', desc: 'CERRAR PINZA' },
+                { s: 45, l: -30, u: 40, r: 0, b: 0, t: 0, gripper: 0.015, code: 'MOVJ VJ=50', desc: 'LEVANTAR' },
+                { s: -45, l: -40, u: 60, r: 0, b: 0, t: 0, gripper: 0.015, code: 'MOVJ VJ=50', desc: 'IR A DESTINO' },
+                { s: -45, l: -70, u: 90, r: 0, b: 0, t: 0, gripper: 0.015, code: 'MOVJ VJ=25', desc: 'BAJAR CAJA' },
+                { s: -45, l: -70, u: 90, r: 0, b: 0, t: 0, gripper: 0, code: 'TIMER T=0.5', desc: 'ABRIR PINZA' },
+                { s: -45, l: -30, u: 40, r: 0, b: 0, t: 0, gripper: 0, code: 'MOVJ VJ=50', desc: 'RETORNAR' },
+                { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, gripper: 0, code: 'END', desc: 'FIN' }
+            ],
+            "TEST_VIO": [
+                { s: 0, l: 0, u: 0, r: 0, b: 0, t: 0, gripper: 0, code: 'NOP', desc: 'INICIO' },
+                { s: 30, l: 10, u: -10, r: 0, b: 0, t: 0, gripper: 0, code: 'MOVJ VJ=100', desc: 'POS_A' },
+                { s: -30, l: 10, u: -10, r: 0, b: 0, t: 0, gripper: 0, code: 'MOVJ VJ=100', desc: 'POS_B' },
+                { s: 0, l: 0, u: 0, r: 0, b: 0, t: 0, gripper: 0, code: 'MOVJ VJ=100', desc: 'RETORNO' },
+                { s: 0, l: 0, u: 0, r: 0, b: 0, t: 0, gripper: 0, code: 'END', desc: 'FIN' }
+            ]
+        };
 
         let dxState = {
             view: 'JOB',
+            currentJobId: 'JOB_CAJA',
             selectedLineIndex: 0,
+            selectedListIndex: 0,
             isInserting: false,
-            isDeleting: false
+            isDeleting: false,
+            isModifying: false
         };
 
         function setView(viewName) {
             dxState.view = viewName;
             document.querySelectorAll('.lcd-sidebar-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('btn-view-' + viewName.toLowerCase()).classList.add('active');
+            const btn = document.getElementById('btn-view-' + viewName.toLowerCase());
+            if(btn) btn.classList.add('active');
             
+            document.getElementById('job-screen').style.display = 'none';
+            document.getElementById('robot-screen').style.display = 'none';
+            document.getElementById('list-screen').style.display = 'none';
+
             if(viewName === 'JOB') {
                 document.getElementById('job-screen').style.display = 'flex';
-                document.getElementById('robot-screen').style.display = 'none';
                 renderJob();
             } else if (viewName === 'ROBOT') {
-                document.getElementById('job-screen').style.display = 'none';
                 document.getElementById('robot-screen').style.display = 'flex';
+            } else if (viewName === 'LIST') {
+                document.getElementById('list-screen').style.display = 'flex';
+                renderList();
             }
         }
 
@@ -353,9 +377,12 @@
             const container = document.getElementById('job-content-area');
             if(!container) return;
             container.innerHTML = '';
+            
+            const currentProgram = robotJobs[dxState.currentJobId];
+            document.getElementById('current-job-name').textContent = dxState.currentJobId;
             document.getElementById('job-line-indicator').textContent = String(dxState.selectedLineIndex).padStart(4,'0');
             
-            robotProgram.forEach((step, index) => {
+            currentProgram.forEach((step, index) => {
                 const line = document.createElement('div');
                 line.className = 'job-line' + (index === dxState.selectedLineIndex ? ' selected' : '');
                 line.innerHTML = `<span class="job-line-num">${String(index).padStart(4,'0')}</span> <span>${step.code || 'MOVJ VJ=50.00'}</span> <span style="color:#aaa; font-size: 8px;">// ${step.desc || ''}</span>`;
@@ -363,67 +390,112 @@
                     dxState.selectedLineIndex = index; 
                     dxState.isInserting = false;
                     dxState.isDeleting = false;
+                    dxState.isModifying = false;
                     renderJob(); 
                 };
                 container.appendChild(line);
             });
-            // Auto-scroll to selected line safely
+            // Auto-scroll safely
             const selectedElem = container.querySelector('.selected');
             if (selectedElem) {
-                try {
-                    selectedElem.scrollIntoView({ block: 'nearest' });
-                } catch(e) {
-                    selectedElem.scrollIntoView();
-                }
+                try { selectedElem.scrollIntoView({ block: 'nearest' }); } catch(e) { selectedElem.scrollIntoView(); }
             }
         }
-        
+
+        function renderList() {
+            const container = document.getElementById('list-content-area');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            const jobKeys = Object.keys(robotJobs);
+            if (dxState.selectedListIndex >= jobKeys.length) dxState.selectedListIndex = Math.max(0, jobKeys.length - 1);
+            
+            jobKeys.forEach((jobId, index) => {
+                const line = document.createElement('div');
+                line.className = 'job-line' + (index === dxState.selectedListIndex ? ' selected' : '');
+                line.innerHTML = `⭐ <strong>${jobId}</strong> <span style="color:#666; font-size: 8px; float:right;">[${robotJobs[jobId].length} steps]</span>`;
+                line.onclick = () => {
+                    dxState.selectedListIndex = index;
+                    renderList();
+                };
+                container.appendChild(line);
+            });
+        }
+
+        function createNewJob() {
+            const num = Object.keys(robotJobs).length + 1;
+            const newName = "NEW_JOB_" + num;
+            robotJobs[newName] = [
+                { s: 0, l: 0, u: 0, r: 0, b: 0, t: 0, gripper: 0, code: 'NOP', desc: 'INICIO' },
+                { s: 0, l: 0, u: 0, r: 0, b: 0, t: 0, gripper: 0, code: 'END', desc: 'FIN' }
+            ];
+            dxState.currentJobId = newName;
+            dxState.selectedLineIndex = 0;
+            setView('JOB');
+            document.getElementById('infoDisplay').textContent = "✓ Nuevo trabajo creado: " + newName;
+        }
+
         function pressInsert() {
             document.getElementById('infoDisplay').textContent = "INSERT presionado. Pulse ENTER para confirmar.";
             dxState.isInserting = true;
             dxState.isDeleting = false;
+            dxState.isModifying = false;
         }
 
         function pressDelete() {
             document.getElementById('infoDisplay').textContent = "DELETE presionado. Pulse ENTER para confirmar.";
             dxState.isDeleting = true;
             dxState.isInserting = false;
+            dxState.isModifying = false;
+        }
+
+        function pressModify() {
+            document.getElementById('infoDisplay').textContent = "MODIFY presionado. Pulse ENTER para actualizar.";
+            dxState.isModifying = true;
+            dxState.isInserting = false;
+            dxState.isDeleting = false;
         }
 
         function pressEnter() {
+            const currentProgram = robotJobs[dxState.currentJobId];
             if (dxState.isInserting) {
                 const newStep = {
-                    s: state.angles.s,
-                    l: state.angles.l,
-                    u: state.angles.u,
-                    r: state.angles.r,
-                    b: state.angles.b,
-                    t: state.angles.t,
-                    gripper: gripperAngle,    // Usamos el de la pinza 1 por simplicidad en guardado conjunto.
-                    code: 'MOVJ VJ=' + state.speed + '.00',
-                    desc: 'Punto ENSEÑADO'
+                    s: state.angles.s, l: state.angles.l, u: state.angles.u,
+                    r: state.angles.r, b: state.angles.b, t: state.angles.t,
+                    gripper: gripperAngle, code: 'MOVJ VJ=' + state.speed + '.00', desc: 'Punto ENSEÑADO'
                 };
-                if (dxState.selectedLineIndex >= 0 && dxState.selectedLineIndex < robotProgram.length) {
-                    robotProgram.splice(dxState.selectedLineIndex + 1, 0, newStep);
+                if (dxState.selectedLineIndex >= 0 && dxState.selectedLineIndex < currentProgram.length) {
+                    currentProgram.splice(dxState.selectedLineIndex + 1, 0, newStep);
                     dxState.selectedLineIndex++;
                 } else {
-                    robotProgram.push(newStep);
-                    dxState.selectedLineIndex = robotProgram.length - 1;
+                    currentProgram.push(newStep);
+                    dxState.selectedLineIndex = currentProgram.length - 1;
                 }
-                document.getElementById('infoDisplay').textContent = "✓ Punto insertado (MOVJ).";
+                document.getElementById('infoDisplay').textContent = "✓ Punto insertado.";
                 dxState.isInserting = false;
                 renderJob();
             } else if (dxState.isDeleting) {
-                if (dxState.selectedLineIndex >= 0 && dxState.selectedLineIndex < robotProgram.length) {
-                    robotProgram.splice(dxState.selectedLineIndex, 1);
-                    if(dxState.selectedLineIndex >= robotProgram.length && robotProgram.length > 0) {
-                        dxState.selectedLineIndex = robotProgram.length - 1;
-                    } else if (robotProgram.length === 0) {
+                if (dxState.selectedLineIndex >= 0 && dxState.selectedLineIndex < currentProgram.length) {
+                    currentProgram.splice(dxState.selectedLineIndex, 1);
+                    if(dxState.selectedLineIndex >= currentProgram.length && currentProgram.length > 0) {
+                        dxState.selectedLineIndex = currentProgram.length - 1;
+                    } else if (currentProgram.length === 0) {
                         dxState.selectedLineIndex = -1;
                     }
                     document.getElementById('infoDisplay').textContent = "✓ Punto eliminado.";
                 }
                 dxState.isDeleting = false;
+                renderJob();
+            } else if (dxState.isModifying) {
+                if (dxState.selectedLineIndex >= 0 && dxState.selectedLineIndex < currentProgram.length) {
+                    let step = currentProgram[dxState.selectedLineIndex];
+                    step.s = state.angles.s; step.l = state.angles.l; step.u = state.angles.u;
+                    step.r = state.angles.r; step.b = state.angles.b; step.t = state.angles.t;
+                    step.gripper = gripperAngle;
+                    step.code = 'MOVJ VJ=' + state.speed + '.00';
+                    document.getElementById('infoDisplay').textContent = "✓ Punto modificado.";
+                }
+                dxState.isModifying = false;
                 renderJob();
             }
         }
@@ -433,19 +505,39 @@
         }
         
         function pressSelect() {
-            document.getElementById('infoDisplay').textContent = "✓ SELECT pulsado";
+            if (dxState.view === 'LIST') {
+                const jobKeys = Object.keys(robotJobs);
+                if (jobKeys.length > 0) {
+                    dxState.currentJobId = jobKeys[dxState.selectedListIndex];
+                    dxState.selectedLineIndex = 0;
+                    setView('JOB');
+                    document.getElementById('infoDisplay').textContent = "✓ Cargado: " + dxState.currentJobId;
+                }
+            } else {
+                document.getElementById('infoDisplay').textContent = "✓ SELECT pulsado";
+            }
         }
 
         function handleDir(dir) {
-            if (dxState.view === 'JOB' && robotProgram.length > 0) {
-                if (dir === 'up') {
-                    dxState.selectedLineIndex = Math.max(0, dxState.selectedLineIndex - 1);
+            if (dxState.view === 'JOB') {
+                const currentProgram = robotJobs[dxState.currentJobId];
+                if (currentProgram && currentProgram.length > 0) {
+                    if (dir === 'up') {
+                        dxState.selectedLineIndex = Math.max(0, dxState.selectedLineIndex - 1);
+                    } else if (dir === 'down') {
+                        dxState.selectedLineIndex = Math.min(currentProgram.length - 1, dxState.selectedLineIndex + 1);
+                    }
                     renderJob();
-                } else if (dir === 'down') {
-                    dxState.selectedLineIndex = Math.min(robotProgram.length - 1, dxState.selectedLineIndex + 1);
-                    renderJob();
-                } else {
-                    document.getElementById('infoDisplay').textContent = "Dirección: " + dir;
+                }
+            } else if (dxState.view === 'LIST') {
+                const jobKeys = Object.keys(robotJobs);
+                if (jobKeys.length > 0) {
+                    if (dir === 'up') {
+                        dxState.selectedListIndex = Math.max(0, dxState.selectedListIndex - 1);
+                    } else if (dir === 'down') {
+                        dxState.selectedListIndex = Math.min(jobKeys.length - 1, dxState.selectedListIndex + 1);
+                    }
+                    renderList();
                 }
             } else {
                 document.getElementById('infoDisplay').textContent = "Dirección " + dir + " pulsada";
@@ -608,55 +700,87 @@
             robotGroup = new THREE.Group();
             scene.add(robotGroup);
 
-            const baseGeom = new THREE.CylinderGeometry(0.18, 0.20, 0.08, 32);
-            const baseMat = new THREE.MeshStandardMaterial({ color: 0x1a4a9a, metalness: 0.5, roughness: 0.6 });
+            const yBlue = 0x005696; // Yaskawa Blue
+            const yGrey = 0x888CA0; // Machined Metal
+            const yDark = 0x333333; // Motor Black
+
+            // FLOOR PLATE
+            const floorPlateGeom = new THREE.BoxGeometry(0.6, 0.02, 0.6);
+            const floorPlateMat = new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.3, roughness: 0.8 });
+            const floorPlate = new THREE.Mesh(floorPlateGeom, floorPlateMat);
+            floorPlate.receiveShadow = true;
+            floorPlate.position.y = 0.01;
+            scene.add(floorPlate);
+
+            // S-Axis BASE Pedestal (Tapered)
+            const baseGeom = new THREE.CylinderGeometry(0.14, 0.18, 0.12, 32);
+            const baseMat = new THREE.MeshStandardMaterial({ color: yBlue, metalness: 0.5, roughness: 0.6 });
             const base = new THREE.Mesh(baseGeom, baseMat);
             base.castShadow = true;
             base.receiveShadow = true;
-            base.position.y = 0.04;
+            base.position.y = 0.08;
             robotGroup.add(base);
 
-            const baseStructGeom = new THREE.CylinderGeometry(0.12, 0.14, 0.15, 32);
-            const baseStructMat = new THREE.MeshStandardMaterial({ color: 0x0f2a6a, metalness: 0.6 });
+            // Turn structure
+            const baseStructGeom = new THREE.CylinderGeometry(0.12, 0.14, 0.20, 32);
+            const baseStructMat = new THREE.MeshStandardMaterial({ color: yBlue, metalness: 0.6 });
             const baseStruct = new THREE.Mesh(baseStructGeom, baseStructMat);
             baseStruct.castShadow = true;
-            baseStruct.position.y = 0.12;
+            baseStruct.position.y = 0.20;
             robotGroup.add(baseStruct);
 
-            const stripedTexture = createStripedTexture();
+            // S Motor
+            const sMotorGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.15, 16);
+            const sMotor = new THREE.Mesh(sMotorGeo, new THREE.MeshStandardMaterial({ color: yDark, metalness: 0.8 }));
+            sMotor.rotation.z = Math.PI/2;
+            sMotor.position.set(-0.15, 0.20, 0);
+            robotGroup.add(sMotor);
 
             const joint0 = new THREE.Group();
-            joint0.position.y = 0.22;
+            joint0.position.y = 0.30;
             robotGroup.add(joint0);
 
-            const shoulder = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.08, 0.08, 0.12, 24),
-                new THREE.MeshStandardMaterial({ color: 0x1a5aaa, metalness: 0.7 })
-            );
+            // L-Axis Shoulder
+            const shoulderGeom = new THREE.CylinderGeometry(0.10, 0.10, 0.14, 24);
+            const shoulder = new THREE.Mesh(shoulderGeom, new THREE.MeshStandardMaterial({ color: yBlue, metalness: 0.6 }));
             shoulder.castShadow = true;
-            shoulder.position.y = 0.08;
+            shoulder.position.y = 0;
             joint0.add(shoulder);
+            
+            // L Motor
+            const lMotor = new THREE.Mesh(sMotorGeo, new THREE.MeshStandardMaterial({ color: yDark, metalness: 0.8 }));
+            lMotor.position.set(0, 0, -0.12);
+            lMotor.rotation.x = Math.PI/2;
+            joint0.add(lMotor);
 
             const joint1 = new THREE.Group();
-            joint1.position.y = 0.14;
+            joint1.position.y = 0.04;
+            joint1.position.x = 0;
             joint0.add(joint1);
 
-            const upperArm = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.042, 0.042, 0.38, 16),
-                new THREE.MeshStandardMaterial({ map: stripedTexture, metalness: 0.7, roughness: 0.3 })
-            );
+            // Upper Arm (tapered)
+            const upperArmGeom = new THREE.CylinderGeometry(0.045, 0.07, 0.38, 16);
+            const upperArm = new THREE.Mesh(upperArmGeom, new THREE.MeshStandardMaterial({ color: yBlue, metalness: 0.5 }));
             upperArm.castShadow = true;
             upperArm.rotation.z = Math.PI / 2;
             upperArm.position.x = 0.19;
             joint1.add(upperArm);
 
+            // U-Axis Elbow joint (metal cylinder)
             const elbowJoint = new THREE.Mesh(
-                new THREE.SphereGeometry(0.045, 16, 16),
-                new THREE.MeshStandardMaterial({ color: 0xff8800, metalness: 0.9 })
+                new THREE.CylinderGeometry(0.06, 0.06, 0.11, 16),
+                new THREE.MeshStandardMaterial({ color: yGrey, metalness: 0.8 })
             );
             elbowJoint.castShadow = true;
+            elbowJoint.rotation.x = Math.PI/2;
             elbowJoint.position.x = 0.38;
             joint1.add(elbowJoint);
+
+            // U Motor
+            const uMotor = new THREE.Mesh(sMotorGeo, new THREE.MeshStandardMaterial({ color: yDark, metalness: 0.8 }));
+            uMotor.position.set(0.38, 0, 0.10);
+            uMotor.rotation.x = Math.PI/2;
+            joint1.add(uMotor);
 
             joints.push(joint0);
             joints.push(joint1);
@@ -665,18 +789,17 @@
             joint2.position.x = 0.38;
             joint1.add(joint2);
 
-            const foreArm = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.038, 0.038, 0.35, 16),
-                new THREE.MeshStandardMaterial({ map: stripedTexture, metalness: 0.7, roughness: 0.3 })
-            );
+            // Forearm (R-Axis housing) (tapered)
+            const foreArmGeom = new THREE.CylinderGeometry(0.035, 0.045, 0.35, 16);
+            const foreArm = new THREE.Mesh(foreArmGeom, new THREE.MeshStandardMaterial({ color: yBlue, metalness: 0.5 }));
             foreArm.castShadow = true;
             foreArm.rotation.z = Math.PI / 2;
             foreArm.position.x = 0.175;
             joint2.add(foreArm);
 
             const wristBase = new THREE.Mesh(
-                new THREE.SphereGeometry(0.042, 16, 16),
-                new THREE.MeshStandardMaterial({ color: 0xff8800, metalness: 0.9 })
+                new THREE.SphereGeometry(0.045, 16, 16),
+                new THREE.MeshStandardMaterial({ color: yGrey, metalness: 0.8 })
             );
             wristBase.castShadow = true;
             wristBase.position.x = 0.35;
@@ -688,11 +811,13 @@
             joint3.position.x = 0.35;
             joint2.add(joint3);
 
+            // B-Axis Wrist adapter
             const wristAdapter = new THREE.Mesh(
-                new THREE.BoxGeometry(0.08, 0.08, 0.08),
-                new THREE.MeshStandardMaterial({ color: 0x1a4a9a, metalness: 0.7 })
+                new THREE.CylinderGeometry(0.04, 0.04, 0.06, 16),
+                new THREE.MeshStandardMaterial({ color: yBlue, metalness: 0.6 })
             );
             wristAdapter.castShadow = true;
+            wristAdapter.rotation.x = Math.PI / 2;
             joint3.add(wristAdapter);
 
             joints.push(joint3);
@@ -701,19 +826,18 @@
             joint4.position.z = 0;
             joint3.add(joint4);
 
-            const toolAdapter = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.028, 0.028, 0.06, 16),
-                new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.8 })
-            );
+            // T-Axis Tool mounting flange
+            const toolAdapterGeom = new THREE.CylinderGeometry(0.03, 0.03, 0.03, 16);
+            const toolAdapter = new THREE.Mesh(toolAdapterGeom, new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.9 }));
             toolAdapter.castShadow = true;
-            toolAdapter.rotation.x = Math.PI / 2;
-            toolAdapter.position.x = 0.05;
+            toolAdapter.rotation.z = Math.PI / 2;
+            toolAdapter.position.x = 0.035;
             joint4.add(toolAdapter);
 
             joints.push(joint4);
 
             const joint5 = new THREE.Group();
-            joint5.position.x = 0.1;
+            joint5.position.x = 0.05; // Offset past flange
             joint4.add(joint5);
 
             joints.push(joint5);
@@ -835,11 +959,12 @@
         function animate() {
             requestAnimationFrame(animate);
             
-            if (state.programRunning && robotProgram.length > 0) {
+            const currentProgram = robotJobs[dxState.currentJobId];
+            if (state.programRunning && currentProgram && currentProgram.length > 0) {
                 state.stepTimer++;
                 if (state.stepTimer > 60) {
                     state.stepTimer = 0;
-                    const step = robotProgram[state.programStep];
+                    const step = currentProgram[state.programStep];
                     
                     const lerpFactor = 0.15;
                     state.angles.s += (step.s - state.angles.s) * lerpFactor;
@@ -850,14 +975,14 @@
                     state.angles.t += (step.t - state.angles.t) * lerpFactor;
                     gripperAngle += (step.gripper - gripperAngle) * lerpFactor;
                     
-                    document.getElementById('lcd-mode').textContent = (state.programStep + 1) + '/' + robotProgram.length;
+                    document.getElementById('lcd-mode').textContent = (state.programStep + 1) + '/' + currentProgram.length;
                     
                     // Actualizar el cursor visual durante la ejecución
                     dxState.selectedLineIndex = state.programStep;
                     if(dxState.view === 'JOB') renderJob();
                     
                     state.programStep++;
-                    if (state.programStep >= robotProgram.length) {
+                    if (state.programStep >= currentProgram.length) {
                         state.programRunning = false;
                         state.programStep = 0;
                         document.getElementById('lcd-status').textContent = 'READY';
