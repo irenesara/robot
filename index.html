@@ -320,7 +320,7 @@
             stepTimer: 0
         };
 
-        const robotJobs = {
+        let robotJobs = {
             "JOB_CAJA": [
                 { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, gripper: 0, code: 'NOP', desc: 'INICIO' },
                 { s: 45, l: -45, u: 75, r: 0, b: 0, t: 0, gripper: 0, code: 'MOVJ VJ=50', desc: 'IR A CAJA 1' },
@@ -351,6 +351,29 @@
             isDeleting: false,
             isModifying: false
         };
+
+        function saveJobsLocally() {
+            try {
+                localStorage.setItem('dx200_robotJobs', JSON.stringify(robotJobs));
+            } catch(e) { console.error("Error al guardar trabajos", e); }
+        }
+
+        function loadJobsLocally() {
+            try {
+                const saved = localStorage.getItem('dx200_robotJobs');
+                if (saved) {
+                    robotJobs = JSON.parse(saved);
+                    // Si el programa activo ya no existe, coger el primero o crear uno de emergencia
+                    if (!robotJobs[dxState.currentJobId]) {
+                        const keys = Object.keys(robotJobs);
+                        dxState.currentJobId = keys.length > 0 ? keys[0] : 'JOB_CAJA';
+                    }
+                }
+            } catch(e) { console.error("Error al cargar trabajos", e); }
+        }
+        
+        // Cargar trabajos al inicializar
+        loadJobsLocally();
 
         function setView(viewName) {
             dxState.view = viewName;
@@ -431,6 +454,7 @@
             ];
             dxState.currentJobId = newName;
             dxState.selectedLineIndex = 0;
+            saveJobsLocally();
             setView('JOB');
             document.getElementById('infoDisplay').textContent = "✓ Nuevo trabajo creado: " + newName;
         }
@@ -473,6 +497,7 @@
                 }
                 document.getElementById('infoDisplay').textContent = "✓ Punto insertado.";
                 dxState.isInserting = false;
+                saveJobsLocally();
                 renderJob();
             } else if (dxState.isDeleting) {
                 if (dxState.selectedLineIndex >= 0 && dxState.selectedLineIndex < currentProgram.length) {
@@ -485,6 +510,7 @@
                     document.getElementById('infoDisplay').textContent = "✓ Punto eliminado.";
                 }
                 dxState.isDeleting = false;
+                saveJobsLocally();
                 renderJob();
             } else if (dxState.isModifying) {
                 if (dxState.selectedLineIndex >= 0 && dxState.selectedLineIndex < currentProgram.length) {
@@ -496,6 +522,7 @@
                     document.getElementById('infoDisplay').textContent = "✓ Punto modificado.";
                 }
                 dxState.isModifying = false;
+                saveJobsLocally();
                 renderJob();
             }
         }
