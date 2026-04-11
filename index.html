@@ -197,10 +197,10 @@
                 <div class="main-body">
                     <div class="side-buttons-container">
                         <div class="side-btn-col">
-                            <button class="side-btn blue">ROBOT</button>
-                            <button class="side-btn blue">EX.AXIS</button>
-                            <button class="side-btn blue">AUX</button>
-                            <button class="side-btn">TEST<br>START</button>
+                            <button class="side-btn blue" onclick="showMsg('ROBOT ACTIVO')">ROBOT</button>
+                            <button class="side-btn blue" onclick="showMsg('EJE EXTERNO APAGADO')">EX.AXIS</button>
+                            <button class="side-btn blue" onclick="showMsg('SIN AUXILIARES')">AUX</button>
+                            <button class="side-btn" onclick="startProgram()">TEST<br>START</button>
                         </div>
                     </div>
 
@@ -238,10 +238,13 @@
 
                     <div class="side-buttons-container">
                         <div class="side-btn-col">
-                            <button class="side-btn blue">INFORM<br>LIST</button>
-                            <button class="side-btn blue">WELD<br>ON/OFF</button>
-                            <button class="side-btn blue">MOTION<br>TYPE</button>
-                            <button class="side-btn">BWD<br>FWD</button>
+                            <button class="side-btn blue" onclick="showMsg('Menú INFORM. (Usa vista JOB/LIST)')">INFORM<br>LIST</button>
+                            <button class="side-btn blue" onclick="showMsg('SOLDADURA OFF (Sin cabezal)')">WELD<br>ON/OFF</button>
+                            <button class="side-btn blue" onclick="showMsg('TIPO MOV: Cambiar JOINT / LINEAL / CIRC')">MOTION<br>TYPE</button>
+                            <div style="display:flex; flex-direction:column; gap:2px; height: 100%;">
+                                <button class="side-btn" style="flex:1; padding:0; min-height:20px;" onclick="stepProgram('BWD')">BWD</button>
+                                <button class="side-btn" style="flex:1; padding:0; min-height:20px;" onclick="stepProgram('FWD')">FWD</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -250,23 +253,23 @@
                     <div class="bottom-axes">
                         <button class="axis-btn" onclick="moveAxis('e', -1)">E−<br>CIERRE</button>
                         <button class="axis-btn" onclick="moveAxis('e', 1)">E+<br>ABRE</button>
-                        <button class="side-btn blue">SHIFT</button>
-                        <button class="side-btn blue">INTER<br>LOCK</button>
+                        <button class="side-btn blue" onclick="showMsg('SHIFT: Cambios rápidos o selección continua')">SHIFT</button>
+                        <button class="side-btn blue" onclick="showMsg('INTERLOCK: Bloqueo de avance en test')">INTER<br>LOCK</button>
                     </div>
 
                     <div class="keypad">
-                        <button class="key-btn">7</button>
-                        <button class="key-btn">8</button>
-                        <button class="key-btn">9</button>
-                        <button class="key-btn">4</button>
-                        <button class="key-btn">5</button>
-                        <button class="key-btn">6</button>
-                        <button class="key-btn">1</button>
-                        <button class="key-btn">2</button>
-                        <button class="key-btn">3</button>
-                        <button class="key-btn">0</button>
-                        <button class="key-btn">−</button>
-                        <button class="key-btn">.</button>
+                        <button class="key-btn" onclick="showMsg('NUMPAD 7')">7</button>
+                        <button class="key-btn" onclick="showMsg('NUMPAD 8')">8</button>
+                        <button class="key-btn" onclick="showMsg('NUMPAD 9')">9</button>
+                        <button class="key-btn" onclick="showMsg('NUMPAD 4')">4</button>
+                        <button class="key-btn" onclick="showMsg('NUMPAD 5')">5</button>
+                        <button class="key-btn" onclick="showMsg('NUMPAD 6')">6</button>
+                        <button class="key-btn" onclick="showMsg('NUMPAD 1')">1</button>
+                        <button class="key-btn" onclick="showMsg('NUMPAD 2')">2</button>
+                        <button class="key-btn" onclick="showMsg('NUMPAD 3')">3</button>
+                        <button class="key-btn" onclick="showMsg('NUMPAD 0')">0</button>
+                        <button class="key-btn" onclick="showMsg('SIGNO MENOS −')">−</button>
+                        <button class="key-btn" onclick="showMsg('PUNTO DECIMAL .')">.</button>
                     </div>
 
                     <div class="bottom-axes">
@@ -280,8 +283,8 @@
                         <div class="side-btn-col">
                             <button class="side-btn blue" onclick="pressModify()">MODIFY</button>
                             <button class="side-btn blue" onclick="pressEnter()">ENTER</button>
-                            <button class="side-btn">EMPTY</button>
-                            <button class="side-btn">EMPTY</button>
+                            <button class="side-btn" onclick="showMsg('BOTÓN VACÍO A (Sin Mapeo)')">EMPTY</button>
+                            <button class="side-btn" onclick="showMsg('BOTÓN VACÍO B (Sin Mapeo)')">EMPTY</button>
                         </div>
                     </div>
                 </div>
@@ -321,32 +324,26 @@
         };
 
         let robotJobs = {
-            "JOB_CAJA": [
+            "JOB_ALAMBRE": [
                 { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, gripper: 0, code: 'NOP', desc: 'INICIO' },
-                { s: 45, l: -45, u: 75, r: 0, b: 0, t: 0, gripper: 0, code: 'MOVJ VJ=50', desc: 'IR A CAJA 1' },
-                { s: 45, l: -60, u: 90, r: 0, b: 0, t: 0, gripper: 0, code: 'MOVJ VJ=25', desc: 'BAJAR ALTO' },
-                { s: 45, l: -60, u: 90, r: 0, b: 0, t: 0, gripper: 0.015, code: 'TIMER T=0.5', desc: 'CERRAR PINZA' },
-                { s: 45, l: -30, u: 40, r: 0, b: 0, t: 0, gripper: 0.015, code: 'MOVJ VJ=50', desc: 'LEVANTAR' },
-                { s: -45, l: -40, u: 60, r: 0, b: 0, t: 0, gripper: 0.015, code: 'MOVJ VJ=50', desc: 'IR A DESTINO' },
-                { s: -45, l: -70, u: 90, r: 0, b: 0, t: 0, gripper: 0.015, code: 'MOVJ VJ=25', desc: 'BAJAR CAJA' },
-                { s: -45, l: -70, u: 90, r: 0, b: 0, t: 0, gripper: 0, code: 'TIMER T=0.5', desc: 'ABRIR PINZA' },
-                { s: -45, l: -30, u: 40, r: 0, b: 0, t: 0, gripper: 0, code: 'MOVJ VJ=50', desc: 'RETORNAR' },
-                { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, gripper: 0, code: 'END', desc: 'FIN' }
-            ],
-            "TEST_VIO": [
-                { s: 0, l: 0, u: 0, r: 0, b: 0, t: 0, gripper: 0, code: 'NOP', desc: 'INICIO' },
-                { s: 30, l: 10, u: -10, r: 0, b: 0, t: 0, gripper: 0, code: 'MOVJ VJ=100', desc: 'POS_A' },
-                { s: -30, l: 10, u: -10, r: 0, b: 0, t: 0, gripper: 0, code: 'MOVJ VJ=100', desc: 'POS_B' },
-                { s: 0, l: 0, u: 0, r: 0, b: 0, t: 0, gripper: 0, code: 'MOVJ VJ=100', desc: 'RETORNO' },
-                { s: 0, l: 0, u: 0, r: 0, b: 0, t: 0, gripper: 0, code: 'END', desc: 'FIN' }
+                { s: 30, l: -20, u: 50, r: 0, b: -45, t: 0, gripper: 0, code: 'MOVJ VJ=50.00', desc: 'IR A ROLLO HILO' },
+                { s: 30, l: -40, u: 70, r: 0, b: -90, t: 0, gripper: 0, code: 'MOVJ VJ=25.00', desc: 'BAJAR A HILO' },
+                { s: 30, l: -40, u: 70, r: 0, b: -90, t: 0, gripper: 0.015, code: 'TIMER T=0.5', desc: 'CERRAR PINZA (COGER)' },
+                { s: 30, l: -20, u: 50, r: 0, b: -45, t: 0, gripper: 0.015, code: 'MOVJ VJ=10.00', desc: 'TENSAR SUAVE' },
+                { s: 0, l: -20, u: 50, r: 90, b: -45, t: -90, gripper: 0.015, code: 'MOVJ VJ=50.00', desc: 'TIRAR Y ENROLLAR' },
+                { s: -45, l: -10, u: 40, r: 180, b: 0, t: -180, gripper: 0.015, code: 'MOVJ VJ=50.00', desc: 'ARRASTRAR LARGO' },
+                { s: -45, l: -10, u: 40, r: 180, b: 0, t: -180, gripper: 0, code: 'TIMER T=0.5', desc: 'SOLTAR ALAMBRE' },
+                { s: -45, l: -30, u: 60, r: 0, b: 0, t: 0, gripper: 0, code: 'MOVJ VJ=100.00', desc: 'RETORNO SEGURO' },
+                { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, gripper: 0, code: 'END', desc: 'FIN BUCLE' }
             ]
         };
 
         let dxState = {
             view: 'JOB',
-            currentJobId: 'JOB_CAJA',
+            currentJobId: 'JOB_ALAMBRE',
             selectedLineIndex: 0,
             selectedListIndex: 0,
+            selectedTokenIndex: 0,
             isInserting: false,
             isDeleting: false,
             isModifying: false
@@ -362,12 +359,13 @@
             try {
                 const saved = localStorage.getItem('dx200_robotJobs');
                 if (saved) {
-                    robotJobs = JSON.parse(saved);
-                    // Si el programa activo ya no existe, coger el primero o crear uno de emergencia
-                    if (!robotJobs[dxState.currentJobId]) {
-                        const keys = Object.keys(robotJobs);
-                        dxState.currentJobId = keys.length > 0 ? keys[0] : 'JOB_CAJA';
-                    }
+                    let parsed = JSON.parse(saved);
+                    if (!parsed['JOB_ALAMBRE']) parsed['JOB_ALAMBRE'] = robotJobs['JOB_ALAMBRE'];
+                    robotJobs = parsed;
+                }
+                if (!robotJobs[dxState.currentJobId]) {
+                    const keys = Object.keys(robotJobs);
+                    dxState.currentJobId = keys.length > 0 ? keys[0] : 'JOB_ALAMBRE';
                 }
             } catch(e) { console.error("Error al cargar trabajos", e); }
         }
@@ -408,9 +406,21 @@
             currentProgram.forEach((step, index) => {
                 const line = document.createElement('div');
                 line.className = 'job-line' + (index === dxState.selectedLineIndex ? ' selected' : '');
-                line.innerHTML = `<span class="job-line-num">${String(index).padStart(4,'0')}</span> <span>${step.code || 'MOVJ VJ=50.00'}</span> <span style="color:#aaa; font-size: 8px;">// ${step.desc || ''}</span>`;
+                
+                let tokenHtml = '';
+                const tokens = (step.code || 'MOVJ VJ=50.00').split(' ');
+                tokens.forEach((token, tIndex) => {
+                    let style = '';
+                    if (index === dxState.selectedLineIndex && tIndex === dxState.selectedTokenIndex) {
+                        style = 'background: #000; color: #ffea00; padding: 0 4px; border-radius: 2px;';
+                    }
+                    tokenHtml += `<span style="${style}">${token}</span> `;
+                });
+                
+                line.innerHTML = `<span class="job-line-num">${String(index).padStart(4,'0')}</span> <span>${tokenHtml}</span> <span style="color:#aaa; font-size: 8px;">// ${step.desc || ''}</span>`;
                 line.onclick = () => { 
-                    dxState.selectedLineIndex = index; 
+                    dxState.selectedLineIndex = index;
+                    dxState.selectedTokenIndex = 0;
                     dxState.isInserting = false;
                     dxState.isDeleting = false;
                     dxState.isModifying = false;
@@ -537,8 +547,34 @@
                 if (jobKeys.length > 0) {
                     dxState.currentJobId = jobKeys[dxState.selectedListIndex];
                     dxState.selectedLineIndex = 0;
+                    dxState.selectedTokenIndex = 0;
                     setView('JOB');
                     document.getElementById('infoDisplay').textContent = "✓ Cargado: " + dxState.currentJobId;
+                }
+            } else if (dxState.view === 'JOB') {
+                const currentProgram = robotJobs[dxState.currentJobId];
+                if (currentProgram && currentProgram.length > 0) {
+                    let step = currentProgram[dxState.selectedLineIndex];
+                    let tokens = (step.code || '').split(' ');
+                    
+                    if (dxState.selectedTokenIndex > 0 && tokens.length > dxState.selectedTokenIndex) {
+                        let target = tokens[dxState.selectedTokenIndex];
+                        if (target.startsWith('VJ=')) {
+                            const speeds = ['VJ=1.00', 'VJ=5.00', 'VJ=10.00', 'VJ=25.00', 'VJ=50.00', 'VJ=100.00'];
+                            let idx = speeds.indexOf(target);
+                            tokens[dxState.selectedTokenIndex] = speeds[(idx + 1) % speeds.length];
+                        } else if (target.startsWith('T=')) {
+                            const timers = ['T=0.1', 'T=0.5', 'T=1.0', 'T=2.0', 'T=5.0'];
+                            let idx = timers.indexOf(target);
+                            tokens[dxState.selectedTokenIndex] = timers[(idx + 1) % timers.length];
+                        }
+                        step.code = tokens.join(' ');
+                        saveJobsLocally();
+                        renderJob();
+                        document.getElementById('infoDisplay').textContent = "✓ Parámetro actualizado";
+                    } else {
+                        document.getElementById('infoDisplay').textContent = "✓ SELECT pulsado";
+                    }
                 }
             } else {
                 document.getElementById('infoDisplay').textContent = "✓ SELECT pulsado";
@@ -551,8 +587,16 @@
                 if (currentProgram && currentProgram.length > 0) {
                     if (dir === 'up') {
                         dxState.selectedLineIndex = Math.max(0, dxState.selectedLineIndex - 1);
+                        dxState.selectedTokenIndex = 0;
                     } else if (dir === 'down') {
                         dxState.selectedLineIndex = Math.min(currentProgram.length - 1, dxState.selectedLineIndex + 1);
+                        dxState.selectedTokenIndex = 0;
+                    } else if (dir === 'left') {
+                        dxState.selectedTokenIndex = Math.max(0, dxState.selectedTokenIndex - 1);
+                    } else if (dir === 'right') {
+                        const step = currentProgram[dxState.selectedLineIndex];
+                        const maxTokens = (step.code || '').split(' ').length - 1;
+                        dxState.selectedTokenIndex = Math.min(maxTokens, dxState.selectedTokenIndex + 1);
                     }
                     renderJob();
                 }
@@ -640,8 +684,8 @@
             scene.add(backLight);
 
             const ground = new THREE.Mesh(
-                new THREE.PlaneGeometry(2, 2),
-                new THREE.MeshPhongMaterial({ color: 0x1a1a1a, shininess: 90, specular: 0x444444 })
+                new THREE.PlaneGeometry(4, 4),
+                new THREE.ShadowMaterial({ opacity: 0.4 })
             );
             ground.rotation.x = -Math.PI / 2;
             ground.position.y = -0.05;
@@ -1005,32 +1049,57 @@
             
             const currentProgram = robotJobs[dxState.currentJobId];
             if (state.programRunning && currentProgram && currentProgram.length > 0) {
-                state.stepTimer++;
-                if (state.stepTimer > 60) {
-                    state.stepTimer = 0;
-                    const step = currentProgram[state.programStep];
+                const step = currentProgram[state.programStep];
+                let isTimer = (step.code || '').startsWith('TIMER');
+                let targetGripper = step.gripper !== undefined ? step.gripper : gripperAngle;
+                
+                if (isTimer) {
+                    state.stepTimer++;
+                    let maxFrames = 30; // Min 0.5s default
+                    let match = (step.code || '').match(/T=([\d\.]+)/);
+                    if (match && match[1]) maxFrames = parseFloat(match[1]) * 60;
                     
-                    const lerpFactor = 0.15;
+                    gripperAngle += (targetGripper - gripperAngle) * 0.15;
+                    
+                    if (state.stepTimer > maxFrames) {
+                        state.stepTimer = 0;
+                        state.programStep++;
+                        if (state.programStep >= currentProgram.length) {
+                            state.programStep = 0;
+                            document.getElementById('infoDisplay').textContent = '🔄 REINICIANDO BUCLE';
+                        }
+                        dxState.selectedLineIndex = state.programStep;
+                        if(dxState.view === 'JOB') renderJob();
+                    }
+                } else {
+                    const lerpFactor = 0.04; // Smooth tracking
                     state.angles.s += (step.s - state.angles.s) * lerpFactor;
                     state.angles.l += (step.l - state.angles.l) * lerpFactor;
                     state.angles.u += (step.u - state.angles.u) * lerpFactor;
                     state.angles.r += (step.r - state.angles.r) * lerpFactor;
                     state.angles.b += (step.b - state.angles.b) * lerpFactor;
                     state.angles.t += (step.t - state.angles.t) * lerpFactor;
-                    gripperAngle += (step.gripper - gripperAngle) * lerpFactor;
+                    gripperAngle += (targetGripper - gripperAngle) * lerpFactor;
                     
                     document.getElementById('lcd-mode').textContent = (state.programStep + 1) + '/' + currentProgram.length;
                     
-                    // Actualizar el cursor visual durante la ejecución
-                    dxState.selectedLineIndex = state.programStep;
-                    if(dxState.view === 'JOB') renderJob();
-                    
-                    state.programStep++;
-                    if (state.programStep >= currentProgram.length) {
-                        state.programRunning = false;
-                        state.programStep = 0;
-                        document.getElementById('lcd-status').textContent = 'READY';
-                        document.getElementById('infoDisplay').textContent = '✓ PROGRAMA COMPLETADO';
+                    let maxError = Math.max(
+                        Math.abs(step.s - state.angles.s),
+                        Math.abs(step.l - state.angles.l),
+                        Math.abs(step.u - state.angles.u),
+                        Math.abs(step.r - state.angles.r),
+                        Math.abs(step.b - state.angles.b),
+                        Math.abs(step.t - state.angles.t)
+                    );
+
+                    if (maxError < 1.0) {
+                        state.programStep++;
+                        if (state.programStep >= currentProgram.length) {
+                            state.programStep = 0;
+                            document.getElementById('infoDisplay').textContent = '🔄 REINICIANDO BUCLE';
+                        }
+                        dxState.selectedLineIndex = state.programStep;
+                        if(dxState.view === 'JOB') renderJob();
                     }
                 }
             }
@@ -1173,17 +1242,63 @@
         }
 
         function startProgram() {
-            state.programRunning = !state.programRunning;
-            state.programStep = 0;
-            state.stepTimer = 0;
-            
-            if (state.programRunning) {
+            if (!state.programRunning) {
+                state.programRunning = true;
+                const currentProgram = robotJobs[dxState.currentJobId];
+                if (currentProgram && state.programStep >= currentProgram.length) {
+                    state.programStep = 0;
+                }
                 document.getElementById('lcd-status').textContent = 'RUNNING';
                 document.getElementById('infoDisplay').textContent = '▶️ EJECUTANDO PROGRAMA';
             } else {
+                state.programRunning = false;
                 document.getElementById('lcd-status').textContent = 'STOPPED';
                 document.getElementById('infoDisplay').textContent = '⏹️ PROGRAMA DETENIDO';
             }
+        }
+
+        function stepProgram(direction) {
+            if (!state.deadman) {
+                showMsg('⚠️ Requiere Deadman (Pulse ESPACIO)');
+                return;
+            }
+            const currentProgram = robotJobs[dxState.currentJobId];
+            if (!currentProgram || currentProgram.length === 0) return;
+
+            let targetIndex = dxState.selectedLineIndex;
+            if (direction === 'FWD' && targetIndex < currentProgram.length - 1) targetIndex++;
+            else if (direction === 'BWD' && targetIndex > 0) targetIndex--;
+            else return;
+
+            dxState.selectedLineIndex = targetIndex;
+            const target = currentProgram[targetIndex];
+            
+            // Interpolación visual rápida (300ms) al punto deseado
+            const startAngles = { ...state.angles };
+            const startGripper = gripperAngle;
+            let p = 0;
+            const stepAnim = setInterval(() => {
+                p += 0.1;
+                if (p >= 1.0) {
+                    p = 1.0;
+                    clearInterval(stepAnim);
+                }
+                state.angles.s = startAngles.s + (target.s - startAngles.s) * p;
+                state.angles.l = startAngles.l + (target.l - startAngles.l) * p;
+                state.angles.u = startAngles.u + (target.u - startAngles.u) * p;
+                state.angles.r = startAngles.r + (target.r - startAngles.r) * p;
+                state.angles.b = startAngles.b + (target.b - startAngles.b) * p;
+                state.angles.t = startAngles.t + (target.t - startAngles.t) * p;
+                if (target.gripper !== undefined) {
+                    gripperAngle = startGripper + (target.gripper - startGripper) * p;
+                }
+            }, 30);
+            
+            dxState.selectedTokenIndex = 0;
+            if (dxState.view !== 'JOB') setView('JOB');
+            else renderJob();
+            
+            document.getElementById('infoDisplay').textContent = direction === 'FWD' ? '⏭️ FWD: Avance a paso ' + targetIndex : '⏮️ BWD: Retroceso a paso ' + targetIndex;
         }
 
         // Llamar a la inicialización general al arrancar
@@ -1192,6 +1307,7 @@
         });
 
         function emergencyStop() {
+            state.programRunning = false;
             state.deadman = false;
             const btn = document.getElementById('deadman-btn');
             if (btn) {
@@ -1204,7 +1320,9 @@
 
         function handleFunc(func) {
             if (func === 'hold') {
-                document.getElementById('infoDisplay').textContent = '⏸️ HOLD';
+                state.programRunning = false;
+                document.getElementById('lcd-status').textContent = 'HOLD';
+                document.getElementById('infoDisplay').textContent = '⏸️ PROGRAMA PAUSADO (HOLD)';
             } else {
                 document.getElementById('infoDisplay').textContent = func.toUpperCase();
             }
