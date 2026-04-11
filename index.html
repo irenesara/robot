@@ -6,11 +6,11 @@
     <title>Yaskawa DX200 Teach Pendant - Simulador Realista</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: Arial, sans-serif; background: #0a0a0a; color: #fff; overflow: hidden; }
         .main-container { display: flex; height: 100vh; gap: 8px; padding: 8px; }
         .robot-section { flex: 1; background: linear-gradient(135deg, #1a2a3a, #0f1820); border-radius: 10px; border: 2px solid #444; overflow: hidden; display: flex; flex-direction: column; }
-        #canvas { flex: 1; }
+        #canvas { flex: 1; touch-action: none; }
         .robot-info { background: rgba(0,0,0,0.95); padding: 6px; border-top: 1px solid #444; font-size: 8px; line-height: 1.4; font-family: monospace; }
         .console-wrapper { display: flex; gap: 6px; height: 100vh; overflow: hidden; }
         .console-main { background: linear-gradient(135deg, #888888, #777777); border-radius: 16px; padding: 8px; box-shadow: 0 20px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.3); border: 6px solid #555; width: auto; max-width: 95vw; flex: 1; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
@@ -355,6 +355,27 @@
                 cameraDistance = Math.max(0.5, Math.min(2, cameraDistance + (e.deltaY > 0 ? 0.05 : -0.05)));
                 updateCameraPosition();
             }, { passive: false });
+            // Mouse events para PC
+            canvas.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                dragStartX = e.clientX;
+                dragStartY = e.clientY;
+            });
+
+            canvas.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    cameraAngleY += (e.clientX - dragStartX) * 0.005;
+                    cameraAngleX -= (e.clientY - dragStartY) * 0.005;
+                    cameraAngleX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, cameraAngleX));
+                    updateCameraPosition();
+                    dragStartX = e.clientX;
+                    dragStartY = e.clientY;
+                }
+            });
+
+            window.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
 
             // Touch events para móvil
             let lastDistance = 0;
