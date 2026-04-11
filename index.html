@@ -582,7 +582,7 @@
         function initRobot() {
             const canvas = document.getElementById('canvas');
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x0a0a0a);
+            scene.background = new THREE.Color(0x788896); // Fondo industrial medio
 
             camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
             updateCameraPosition();
@@ -591,7 +591,8 @@
             renderer.setSize(canvas.clientWidth, canvas.clientHeight);
             renderer.shadowMap.enabled = true;
 
-            const light1 = new THREE.DirectionalLight(0xffffff, 1);
+            // Luz principal direccional (Sol)
+            const light1 = new THREE.DirectionalLight(0xffffff, 1.0);
             light1.position.set(5, 8, 5);
             light1.castShadow = true;
             light1.shadow.mapSize.width = 2048;
@@ -599,12 +600,21 @@
             light1.shadow.camera.far = 20;
             scene.add(light1);
 
-            scene.add(new THREE.DirectionalLight(0xffffff, 0.6));
-            scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+            // Luz suave global reducida
+            const hemiLight = new THREE.HemisphereLight(0xffffff, 0x888888, 0.4);
+            scene.add(hemiLight);
+
+            // Luz ambiental para relleno de sombras
+            scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+
+            // Luz trasera para dar brillo al metal
+            const backLight = new THREE.DirectionalLight(0xffffff, 0.6);
+            backLight.position.set(-5, 3, -5);
+            scene.add(backLight);
 
             const ground = new THREE.Mesh(
                 new THREE.PlaneGeometry(2, 2),
-                new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.2, roughness: 0.9 })
+                new THREE.MeshPhongMaterial({ color: 0x1a1a1a, shininess: 90, specular: 0x444444 })
             );
             ground.rotation.x = -Math.PI / 2;
             ground.position.y = -0.05;
@@ -700,13 +710,13 @@
             robotGroup = new THREE.Group();
             scene.add(robotGroup);
 
-            const yBlue = 0x005696; // Yaskawa Blue
+            const yBlue = 0x0077C8; // Yaskawa Blue Brillo
             const yGrey = 0x888CA0; // Machined Metal
             const yDark = 0x333333; // Motor Black
 
             // FLOOR PLATE
             const floorPlateGeom = new THREE.BoxGeometry(0.6, 0.02, 0.6);
-            const floorPlateMat = new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.3, roughness: 0.8 });
+            const floorPlateMat = new THREE.MeshPhongMaterial({ color: 0x444444, shininess: 90, specular: 0x444444 });
             const floorPlate = new THREE.Mesh(floorPlateGeom, floorPlateMat);
             floorPlate.receiveShadow = true;
             floorPlate.position.y = 0.01;
@@ -714,7 +724,7 @@
 
             // S-Axis BASE Pedestal (Tapered)
             const baseGeom = new THREE.CylinderGeometry(0.14, 0.18, 0.12, 32);
-            const baseMat = new THREE.MeshStandardMaterial({ color: yBlue, metalness: 0.5, roughness: 0.6 });
+            const baseMat = new THREE.MeshPhongMaterial({ color: yBlue, shininess: 90, specular: 0x444444 });
             const base = new THREE.Mesh(baseGeom, baseMat);
             base.castShadow = true;
             base.receiveShadow = true;
@@ -723,7 +733,7 @@
 
             // Turn structure
             const baseStructGeom = new THREE.CylinderGeometry(0.12, 0.14, 0.20, 32);
-            const baseStructMat = new THREE.MeshStandardMaterial({ color: yBlue, metalness: 0.6 });
+            const baseStructMat = new THREE.MeshPhongMaterial({ color: yBlue, shininess: 90 });
             const baseStruct = new THREE.Mesh(baseStructGeom, baseStructMat);
             baseStruct.castShadow = true;
             baseStruct.position.y = 0.20;
@@ -731,7 +741,7 @@
 
             // S Motor
             const sMotorGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.15, 16);
-            const sMotor = new THREE.Mesh(sMotorGeo, new THREE.MeshStandardMaterial({ color: yDark, metalness: 0.8 }));
+            const sMotor = new THREE.Mesh(sMotorGeo, new THREE.MeshPhongMaterial({ color: yDark, shininess: 90 }));
             sMotor.rotation.z = Math.PI/2;
             sMotor.position.set(-0.15, 0.20, 0);
             robotGroup.add(sMotor);
@@ -742,13 +752,13 @@
 
             // L-Axis Shoulder
             const shoulderGeom = new THREE.CylinderGeometry(0.10, 0.10, 0.14, 24);
-            const shoulder = new THREE.Mesh(shoulderGeom, new THREE.MeshStandardMaterial({ color: yBlue, metalness: 0.6 }));
+            const shoulder = new THREE.Mesh(shoulderGeom, new THREE.MeshPhongMaterial({ color: yBlue, shininess: 90 }));
             shoulder.castShadow = true;
             shoulder.position.y = 0;
             joint0.add(shoulder);
             
             // L Motor
-            const lMotor = new THREE.Mesh(sMotorGeo, new THREE.MeshStandardMaterial({ color: yDark, metalness: 0.8 }));
+            const lMotor = new THREE.Mesh(sMotorGeo, new THREE.MeshPhongMaterial({ color: yDark, shininess: 90 }));
             lMotor.position.set(0, 0, -0.12);
             lMotor.rotation.x = Math.PI/2;
             joint0.add(lMotor);
@@ -760,7 +770,7 @@
 
             // Upper Arm (tapered)
             const upperArmGeom = new THREE.CylinderGeometry(0.045, 0.07, 0.38, 16);
-            const upperArm = new THREE.Mesh(upperArmGeom, new THREE.MeshStandardMaterial({ color: yBlue, metalness: 0.5 }));
+            const upperArm = new THREE.Mesh(upperArmGeom, new THREE.MeshPhongMaterial({ color: yBlue, shininess: 90 }));
             upperArm.castShadow = true;
             upperArm.rotation.z = Math.PI / 2;
             upperArm.position.x = 0.19;
@@ -769,7 +779,7 @@
             // U-Axis Elbow joint (metal cylinder)
             const elbowJoint = new THREE.Mesh(
                 new THREE.CylinderGeometry(0.06, 0.06, 0.11, 16),
-                new THREE.MeshStandardMaterial({ color: yGrey, metalness: 0.8 })
+                new THREE.MeshPhongMaterial({ color: yGrey, shininess: 90 })
             );
             elbowJoint.castShadow = true;
             elbowJoint.rotation.x = Math.PI/2;
@@ -777,7 +787,7 @@
             joint1.add(elbowJoint);
 
             // U Motor
-            const uMotor = new THREE.Mesh(sMotorGeo, new THREE.MeshStandardMaterial({ color: yDark, metalness: 0.8 }));
+            const uMotor = new THREE.Mesh(sMotorGeo, new THREE.MeshPhongMaterial({ color: yDark, shininess: 90 }));
             uMotor.position.set(0.38, 0, 0.10);
             uMotor.rotation.x = Math.PI/2;
             joint1.add(uMotor);
@@ -791,7 +801,7 @@
 
             // Forearm (R-Axis housing) (tapered)
             const foreArmGeom = new THREE.CylinderGeometry(0.035, 0.045, 0.35, 16);
-            const foreArm = new THREE.Mesh(foreArmGeom, new THREE.MeshStandardMaterial({ color: yBlue, metalness: 0.5 }));
+            const foreArm = new THREE.Mesh(foreArmGeom, new THREE.MeshPhongMaterial({ color: yBlue, shininess: 90 }));
             foreArm.castShadow = true;
             foreArm.rotation.z = Math.PI / 2;
             foreArm.position.x = 0.175;
@@ -799,7 +809,7 @@
 
             const wristBase = new THREE.Mesh(
                 new THREE.SphereGeometry(0.045, 16, 16),
-                new THREE.MeshStandardMaterial({ color: yGrey, metalness: 0.8 })
+                new THREE.MeshPhongMaterial({ color: yGrey, shininess: 90 })
             );
             wristBase.castShadow = true;
             wristBase.position.x = 0.35;
@@ -814,7 +824,7 @@
             // B-Axis Wrist adapter
             const wristAdapter = new THREE.Mesh(
                 new THREE.CylinderGeometry(0.04, 0.04, 0.06, 16),
-                new THREE.MeshStandardMaterial({ color: yBlue, metalness: 0.6 })
+                new THREE.MeshPhongMaterial({ color: yBlue, shininess: 90 })
             );
             wristAdapter.castShadow = true;
             wristAdapter.rotation.x = Math.PI / 2;
@@ -828,7 +838,7 @@
 
             // T-Axis Tool mounting flange
             const toolAdapterGeom = new THREE.CylinderGeometry(0.03, 0.03, 0.03, 16);
-            const toolAdapter = new THREE.Mesh(toolAdapterGeom, new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.9 }));
+            const toolAdapter = new THREE.Mesh(toolAdapterGeom, new THREE.MeshPhongMaterial({ color: 0x222222, shininess: 90 }));
             toolAdapter.castShadow = true;
             toolAdapter.rotation.z = Math.PI / 2;
             toolAdapter.position.x = 0.035;
@@ -851,14 +861,14 @@
             
             // Base pinza 1
             const gripperBaseGeom = new THREE.BoxGeometry(0.020, 0.030, 0.050);
-            const gripperBaseMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.95 });
+            const gripperBaseMat = new THREE.MeshPhongMaterial({ color: 0x1a1a1a, shininess: 90 });
             const gripperBase = new THREE.Mesh(gripperBaseGeom, gripperBaseMat);
             gripperBase.castShadow = true;
             gripperGroup.add(gripperBase);
             
             // Dedo SUPERIOR pinza 1
             const fingerTopGeom = new THREE.BoxGeometry(0.008, 0.035, 0.090);
-            const fingerMat = new THREE.MeshStandardMaterial({ color: 0xdd8844, metalness: 0.80, roughness: 0.35 });
+            const fingerMat = new THREE.MeshPhongMaterial({ color: 0xdd8844, shininess: 90, specular: 0x444444 });
             const fingerTop = new THREE.Mesh(fingerTopGeom, fingerMat);
             fingerTop.castShadow = true;
             fingerTop.position.y = 0.028;
@@ -884,14 +894,14 @@
             
             // Base pinza 2
             const gripper2BaseGeom = new THREE.BoxGeometry(0.020, 0.030, 0.050);
-            const gripper2BaseMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.95 });
+            const gripper2BaseMat = new THREE.MeshPhongMaterial({ color: 0x1a1a1a, shininess: 90 });
             const gripper2Base = new THREE.Mesh(gripper2BaseGeom, gripper2BaseMat);
             gripper2Base.castShadow = true;
             scissorGroup.add(gripper2Base);
             
             // Dedo SUPERIOR pinza 2
             const finger2TopGeom = new THREE.BoxGeometry(0.008, 0.035, 0.090);
-            const finger2Mat = new THREE.MeshStandardMaterial({ color: 0xdd8844, metalness: 0.80, roughness: 0.35 });
+            const finger2Mat = new THREE.MeshPhongMaterial({ color: 0xdd8844, shininess: 90, specular: 0x444444 });
             const finger2Top = new THREE.Mesh(finger2TopGeom, finger2Mat);
             finger2Top.castShadow = true;
             finger2Top.position.y = 0.028;
@@ -913,7 +923,9 @@
             if (activeJoint >= 0 && joints[activeJoint]) {
                 joints[activeJoint].children.forEach(child => {
                     if (child.isMesh) {
-                        child.material.color.setHex(child.geometry.type === 'SphereGeometry' ? 0xff8800 : 0x2a2a2a);
+                        if (child.userData.origColor !== undefined) {
+                            child.material.color.setHex(child.userData.origColor);
+                        }
                         child.material.emissive.setHex(0x000000);
                     }
                 });
@@ -927,8 +939,11 @@
             if (joints[index]) {
                 joints[index].children.forEach(child => {
                     if (child.isMesh) {
+                        if (child.userData.origColor === undefined) {
+                            child.userData.origColor = child.material.color.getHex();
+                        }
                         child.material.color.setHex(0xff0000);
-                        child.material.emissive.setHex(0xff0000);
+                        child.material.emissive.setHex(0x880000); // Emisión suave para que no queme el blanco
                     }
                 });
                 const worldPos = new THREE.Vector3();
@@ -943,7 +958,9 @@
                 if (activeJoint >= 0 && joints[activeJoint]) {
                     joints[activeJoint].children.forEach(child => {
                         if (child.isMesh) {
-                            child.material.color.setHex(child.geometry.type === 'SphereGeometry' ? 0xff8800 : 0x2a2a2a);
+                            if (child.userData.origColor !== undefined) {
+                                child.material.color.setHex(child.userData.origColor);
+                            }
                             child.material.emissive.setHex(0x000000);
                         }
                     });
