@@ -178,14 +178,14 @@
                     </div>
 
                     <div style="display: flex; gap: 2px;">
-                        <button class="func-btn-top">MULTI<br>LAYOUT</button>
-                        <button class="func-btn-top">TOOL SEL<br>COORD</button>
-                        <button class="func-btn-top">DIRECT<br>OPEN</button>
-                        <button class="func-btn-top">GO BACK<br>PAGE</button>
-                        <button class="func-btn-top">LANGUAGE<br>AREA</button>
+                        <button class="func-btn-top" onclick="showMsg('MULTI LAYOUT')">MULTI<br>LAYOUT</button>
+                        <button class="func-btn-top" onclick="showMsg('TOOL SEL/COORD')">TOOL SEL<br>COORD</button>
+                        <button class="func-btn-top" onclick="showMsg('DIRECT OPEN')">DIRECT<br>OPEN</button>
+                        <button class="func-btn-top" onclick="showMsg('GO BACK PAGE')">GO BACK<br>PAGE</button>
+                        <button class="func-btn-top" onclick="showMsg('LANGUAGE AREA')">LANGUAGE<br>AREA</button>
                     </div>
 
-                    <button class="select-circle">SELECT</button>
+                    <button class="select-circle" onclick="pressSelect()">SELECT</button>
                 </div>
 
                 <div class="main-body">
@@ -220,12 +220,12 @@
                     </div>
 
                     <div class="axes-section">
-                        <button class="axis-btn" onclick="moveAxis('r', -1)">X−<br>R−</button>
-                        <button class="axis-btn" onclick="moveAxis('r', 1)">X+<br>R+</button>
-                        <button class="axis-btn" onclick="moveAxis('b', -1)">Y−<br>B−</button>
-                        <button class="axis-btn" onclick="moveAxis('b', 1)">Y+<br>B+</button>
-                        <button class="axis-btn" onclick="moveAxis('t', -1)">Z−<br>T−</button>
-                        <button class="axis-btn" onclick="moveAxis('t', 1)">Z+<br>T+</button>
+                        <button class="axis-btn" onclick="moveAxis('r', -1)">Rx−<br>R−</button>
+                        <button class="axis-btn" onclick="moveAxis('r', 1)">Rx+<br>R+</button>
+                        <button class="axis-btn" onclick="moveAxis('b', -1)">Ry−<br>B−</button>
+                        <button class="axis-btn" onclick="moveAxis('b', 1)">Ry+<br>B+</button>
+                        <button class="axis-btn" onclick="moveAxis('t', -1)">Rz−<br>T−</button>
+                        <button class="axis-btn" onclick="moveAxis('t', 1)">Rz+<br>T+</button>
                         <button class="axis-btn" onclick="moveAxis('a', -1)">8−</button>
                         <button class="axis-btn" onclick="moveAxis('a', 1)">8+</button>
                     </div>
@@ -367,10 +367,14 @@
                 };
                 container.appendChild(line);
             });
-            // Auto-scroll to selected line
+            // Auto-scroll to selected line safely
             const selectedElem = container.querySelector('.selected');
-            if(selectedElem) {
-                selectedElem.scrollIntoView({ block: 'nearest' });
+            if (selectedElem) {
+                try {
+                    selectedElem.scrollIntoView({ block: 'nearest' });
+                } catch(e) {
+                    selectedElem.scrollIntoView();
+                }
             }
         }
         
@@ -421,6 +425,30 @@
                 }
                 dxState.isDeleting = false;
                 renderJob();
+            }
+        }
+
+        function showMsg(msg) {
+            document.getElementById('infoDisplay').textContent = "ℹ️ " + msg + " (Sin acción)";
+        }
+        
+        function pressSelect() {
+            document.getElementById('infoDisplay').textContent = "✓ SELECT pulsado";
+        }
+
+        function handleDir(dir) {
+            if (dxState.view === 'JOB' && robotProgram.length > 0) {
+                if (dir === 'up') {
+                    dxState.selectedLineIndex = Math.max(0, dxState.selectedLineIndex - 1);
+                    renderJob();
+                } else if (dir === 'down') {
+                    dxState.selectedLineIndex = Math.min(robotProgram.length - 1, dxState.selectedLineIndex + 1);
+                    renderJob();
+                } else {
+                    document.getElementById('infoDisplay').textContent = "Dirección: " + dir;
+                }
+            } else {
+                document.getElementById('infoDisplay').textContent = "Dirección " + dir + " pulsada";
             }
         }
 
@@ -1013,9 +1041,6 @@
             }
         }
 
-        function handleDir(dir) {
-            document.getElementById('infoDisplay').textContent = `Dirección: ${dir}`;
-        }
 
         let keyPosition = 0;
         const keyPositions = ['OFF', 'REMOTE', 'TEACH'];
