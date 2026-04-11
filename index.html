@@ -88,10 +88,10 @@
         @media (max-width: 768px) {
             .main-container { flex-direction: column; overflow: hidden; }
             .robot-section { flex: none; height: 35vh; min-height: 200px; border-radius: 6px; }
-            .console-wrapper { flex: 1; height: auto; width: 100%; }
-            .console-main { max-width: 100%; width: 100%; padding: 4px; border-radius: 6px; }
-            .top-operation-buttons { justify-content: center; }
-            .lcd-display { height: 130px; }
+            .console-wrapper { flex: 1; height: auto; width: 100%; min-height: 0; }
+            .console-main { max-width: 100%; width: 100%; padding: 4px; border-radius: 6px; min-height: 0; }
+            .top-operation-buttons { justify-content: center; flex-shrink: 0; }
+            .lcd-display { height: 130px; flex-shrink: 0; }
         }
     </style>
 </head>
