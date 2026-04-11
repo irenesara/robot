@@ -84,6 +84,15 @@
         .key-label-remote { top: -2px; left: -26px; color: #0f0; }
         .key-label-teach { top: -2px; right: -26px; color: #0f0; }
         .key-current-position { position: absolute; bottom: 1px; font-size: 4px; font-weight: bold; color: #ff6600; background: rgba(0,0,0,0.7); padding: 0px 2px; border-radius: 2px; }
+
+        @media (max-width: 768px) {
+            .main-container { flex-direction: column; overflow: hidden; }
+            .robot-section { flex: none; height: 35vh; min-height: 200px; border-radius: 6px; }
+            .console-wrapper { flex: 1; height: auto; width: 100%; }
+            .console-main { max-width: 100%; width: 100%; padding: 4px; border-radius: 6px; }
+            .top-operation-buttons { justify-content: center; }
+            .lcd-display { height: 130px; }
+        }
     </style>
 </head>
 <body>
