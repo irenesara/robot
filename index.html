@@ -283,8 +283,8 @@
                         <div class="side-btn-col">
                             <button class="side-btn blue" onclick="pressModify()">MODIFY</button>
                             <button class="side-btn blue" onclick="pressEnter()">ENTER</button>
-                            <button class="side-btn" onclick="showMsg('BOTÓN VACÍO A (Sin Mapeo)')">EMPTY</button>
-                            <button class="side-btn" onclick="showMsg('BOTÓN VACÍO B (Sin Mapeo)')">EMPTY</button>
+                            <button class="side-btn" onclick="goToTop()">TOP<br>LINE</button>
+                            <button class="side-btn" onclick="resetToZero()">ZERO<br>HOME</button>
                         </div>
                     </div>
                 </div>
@@ -1316,6 +1316,41 @@
             }
             document.getElementById('lcd-status').textContent = 'E-STOP';
             document.getElementById('infoDisplay').textContent = '🚨 PARO EMERGENCIA';
+        }
+
+        function goToTop() {
+            dxState.selectedLineIndex = 0;
+            if(dxState.view !== 'JOB') setView('JOB');
+            else renderJob();
+            document.getElementById('infoDisplay').textContent = "↑ CURSOR EN INICIO DEL PROGRAMA";
+        }
+        
+        function resetToZero() {
+            if (!state.deadman) {
+                showMsg('⚠️ Requiere Deadman (Pulse ESPACIO)');
+                return;
+            }
+            state.programRunning = false;
+            let target = { s:0, l:0, u:0, r:0, b:0, t:0, gripper:0 };
+            
+            // Animación física del robot volviendo al Origen 0,0,0
+            const startAngles = { ...state.angles };
+            const startGripper = gripperAngle;
+            let p = 0;
+            const zeroAnim = setInterval(() => {
+                p += 0.05;
+                if (p >= 1.0) { p = 1.0; clearInterval(zeroAnim); }
+                state.angles.s = startAngles.s + (target.s - startAngles.s) * p;
+                state.angles.l = startAngles.l + (target.l - startAngles.l) * p;
+                state.angles.u = startAngles.u + (target.u - startAngles.u) * p;
+                state.angles.r = startAngles.r + (target.r - startAngles.r) * p;
+                state.angles.b = startAngles.b + (target.b - startAngles.b) * p;
+                state.angles.t = startAngles.t + (target.t - startAngles.t) * p;
+                gripperAngle = startGripper + (target.gripper - startGripper) * p;
+            }, 30);
+            
+            document.getElementById('infoDisplay').textContent = '🏠 HOME FÍSICO (Retorno Absoluto a Cero)';
+            document.getElementById('lcd-status').textContent = 'HOMING';
         }
 
         function handleFunc(func) {
