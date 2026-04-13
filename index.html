@@ -63,6 +63,9 @@
         .dropdown-item:hover { background: #3c5cad; }
         .dropdown-item.disabled-style { color: #000; background: #a0a0a0; }
         .dropdown-item.disabled-style:hover { background: #b0b0b0; }
+        .dx-dropdown-btn { background: #cfcfcf; border-top: 1px solid #fff; border-left: 1px solid #fff; border-bottom: 2px solid #555; border-right: 2px solid #555; padding: 4px; font-size: 7px; color: #000; cursor: pointer; text-align: left; min-width: 80px; height: 16px; display: flex; align-items: center; border-radius: 2px; line-height: 1.1; margin-bottom: 2px; font-weight: bold; }
+        .dx-dropdown-btn:hover { background: #dadada; }
+        .dx-dropdown-btn:active { border-top: 2px solid #555; border-left: 2px solid #555; border-bottom: 1px solid #fff; border-right: 1px solid #fff; background: #c0c0c0; }
         .coord-row { display: flex; justify-content: space-between; border-bottom: 1px dashed #444; padding: 2px 0; }
         .dpad-area { display: grid; grid-template-columns: repeat(3, 32px); grid-template-rows: repeat(3, 32px); gap: 1px; }
         .btn-small { border: 2px solid #666; background: linear-gradient(135deg, #d0d0d0, #b0b0b0); cursor: pointer; font-weight: bold; color: #222; font-size: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px rgba(255,255,255,0.3); border-radius: 2px; transition: all 0.05s; }
@@ -210,7 +213,7 @@
                     </div>
                     <div class="lcd-menu-bar" style="position: relative;">
                         <div class="menu-tab">DATA</div>
-                        <div class="menu-tab">EDIT</div>
+                        <div class="menu-tab" onclick="toggleDropdown('edit-dropdown', this); const sm = document.getElementById('edit-submenu'); if(sm) sm.style.display='none';">EDIT</div>
                         <div class="menu-tab">DISPLAY</div>
                         <div class="menu-tab" onclick="toggleDropdown('utility-dropdown', this)">UTILITY</div>
                         <div class="menu-icons">
@@ -221,11 +224,31 @@
                             <div class="dropdown-item" onclick="showMsg('CALIBRATION'); toggleDropdown('utility-dropdown')">CALIBRATION</div>
                             <div class="dropdown-item disabled-style" onclick="setView('WGRAV'); toggleDropdown('utility-dropdown')">W.GRAV.POS<br>MEASURE</div>
                         </div>
+
+                        <div id="edit-dropdown" class="dropdown-menu" style="width: auto; padding: 4px; flex-direction: column; gap: 4px; border: 2px solid #000; background: #2b4b9b; position: absolute;">
+                            <div class="dx-dropdown-btn" onclick="handleEditAction('TOP LINE'); toggleDropdown('edit-dropdown')">TOP LINE</div>
+                            <div class="dx-dropdown-btn" onclick="handleEditAction('END LINE'); toggleDropdown('edit-dropdown')">END LINE</div>
+                            <div class="dx-dropdown-btn" onclick="handleEditAction('SEARCH'); toggleDropdown('edit-dropdown')">SEARCH</div>
+                            <div class="dx-dropdown-btn" onclick="handleEditAction('COPY'); toggleDropdown('edit-dropdown')">COPY</div>
+                            <div class="dx-dropdown-btn" onclick="handleEditAction('CUT'); toggleDropdown('edit-dropdown')">CUT</div>
+                            <div class="dx-dropdown-btn" onclick="handleEditAction('CHANGE SPEED'); toggleDropdown('edit-dropdown')">CHANGE SPEED</div>
+                            <div class="dx-dropdown-btn" onclick="handleEditAction('TRT'); toggleDropdown('edit-dropdown')">TRT</div>
+                            <div class="dx-dropdown-btn" onclick="handleEditAction('MODIFY TARGET AXIS'); toggleDropdown('edit-dropdown')">MODIFY TARGET<br>AXIS</div>
+                            <div class="dx-dropdown-btn" onclick="const sm = document.getElementById('edit-submenu'); sm.style.display = sm.style.display === 'flex' ? 'none' : 'flex'; event.stopPropagation();" style="display:flex; justify-content:space-between;"><span>EDIT LOCK</span> <span>▶</span></div>
+                            
+                            <div id="edit-submenu" style="display: none; position: absolute; left: 100%; bottom: 0; background: #2b4b9b; border: 2px solid #000; padding: 4px; flex-direction: column; gap: 4px; margin-left: -2px;">
+                                <div class="dx-dropdown-btn" onclick="handleEditAction('*LINE EDIT LOCK'); toggleDropdown('edit-dropdown'); document.getElementById('edit-submenu').style.display='none'">*LINE EDIT LOCK</div>
+                                <div class="dx-dropdown-btn" onclick="handleEditAction('COMMENT OUT'); toggleDropdown('edit-dropdown'); document.getElementById('edit-submenu').style.display='none'">COMMENT OUT</div>
+                                <div class="dx-dropdown-btn" onclick="handleEditAction('EDITLOCK CLR (ALL)'); toggleDropdown('edit-dropdown'); document.getElementById('edit-submenu').style.display='none'">EDITLOCK CLR<br>(ALL)</div>
+                                <div class="dx-dropdown-btn" onclick="handleEditAction('COMMENT OUT CLR'); toggleDropdown('edit-dropdown'); document.getElementById('edit-submenu').style.display='none'">COMMENT OUT<br>CLR(ALL)</div>
+                                <div class="dx-dropdown-btn" onclick="handleEditAction('CHANGE WELD. COND.'); toggleDropdown('edit-dropdown'); document.getElementById('edit-submenu').style.display='none'">CHANGE WELD.<br>COND.</div>
+                            </div>
+                        </div>
                     </div>
                     <div class="lcd-body">
                         <div class="lcd-sidebar">
                             <div class="lcd-sidebar-btn active" id="btn-view-job" onclick="setView('JOB')">JOB</div>
-                            <div class="lcd-sidebar-btn" id="btn-view-arc" onclick="showMsg('ARC WELDING')">ARC WELDING</div>
+                            <div class="lcd-sidebar-btn" id="btn-view-arc" onclick="setView('ARC')">HANDLING</div>
                             <div class="lcd-sidebar-btn" id="btn-view-var" onclick="showMsg('VARIABLE')">VARIABLE</div>
                             <div class="lcd-sidebar-btn" id="btn-view-inout" onclick="showMsg('IN/OUT')">IN/OUT</div>
                             <div class="lcd-sidebar-btn" id="btn-view-robot" onclick="setView('ROBOT')">ROBOT</div>
@@ -382,6 +405,34 @@
                                     <div style="flex: 1; text-align: center; border-right: 1px solid #999; padding: 4px 0; font-size: 7px; color: #000; cursor: pointer;" onclick="setView('ROBOT')">CANCEL</div>
                                     <div style="flex: 1; padding: 4px 0; border-right: 1px solid #999;"></div>
                                     <div style="flex: 1; padding: 4px 0;"></div>
+                                </div>
+                            </div>
+                            <div id="arc-screen" style="display: none; flex-direction: column; height: 100%; background: #eaeff2;">
+                                <div class="lcd-header" style="background: #1a3a6a; color: white; border-bottom: 2px solid #000; padding: 2px 8px; justify-content: flex-start;">HANDLING (MANIPULATION)</div>
+                                <div style="padding: 4px 6px; display: flex; flex-direction: column; flex: 1; font-family: 'Courier New', monospace; font-size: 9px; color: #000;">
+                                    <div style="display: flex; gap: 8px; margin-bottom: 6px;">
+                                        <button style="flex:1; padding:2px; font-size:7px; font-weight:bold; background:#dcdcdc; border:1px solid #777;">TOOL CONDITION</button>
+                                        <button style="flex:1; padding:2px; font-size:7px; font-weight:bold; background:#dcdcdc; border:1px solid #777;">SIGNAL OUTPUTS</button>
+                                    </div>
+                                    <div style="background: #fff; border: 1px solid #888; padding: 4px; display: flex; flex-direction: column; gap: 4px;">
+                                        <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #ccc;">
+                                            <span>PRESSURE:</span><span style="color:#a00; font-weight:bold;">6.0 Bar</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #ccc;">
+                                            <span>GRIPPER 1:</span><span style="color:#00a; font-weight:bold;">ACTIVE</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #ccc;">
+                                            <span>GRIPPER 2:</span><span style="color:#00a; font-weight:bold;">ACTIVE</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between;">
+                                            <span>STATUS:</span><span style="color:#0a0;">OK</span>
+                                        </div>
+                                    </div>
+                                    <div style="margin-top:auto; display:flex; gap: 4px;">
+                                        <button onclick="moveAxis('a', 1)" style="flex:1; background:#000; color:#fff; border:1px solid #555; padding:2px; font-size:6px; cursor:pointer;" title="Abre o cierra usando el control cinemático (Pulsar ESPACIO para Deadman)">P1 CONTROL</button>
+                                        <button onclick="moveAxis('e', 1)" style="flex:1; background:#000; color:#fff; border:1px solid #555; padding:2px; font-size:6px; cursor:pointer;" title="Abre o cierra usando el control cinemático (Pulsar ESPACIO para Deadman)">P2 CONTROL</button>
+                                        <button onclick="showMsg('AIR PRESSURE TEST OK')" style="flex:1; background:#000; color:#fff; border:1px solid #555; padding:2px; font-size:6px; cursor:pointer;" onmousedown="this.style.background='#333'" onmouseup="this.style.background='#000'">TEST AIR</button>
+                                    </div>
                                 </div>
                             </div>
                             <div id="system-info-menu-screen" style="display: none; flex-direction: column; height: 100%; padding: 2px; background: #e0e0e0;">
@@ -626,7 +677,8 @@
             selectedTokenIndex: 0,
             isInserting: false,
             isDeleting: false,
-            isModifying: false
+            isModifying: false,
+            clipboard: null
         };
 
         let wgravSelectedIdx = 0;
@@ -710,6 +762,8 @@
             if (toolScreen) toolScreen.style.display = 'none';
             const wgravScreen = document.getElementById('wgrav-screen');
             if (wgravScreen) wgravScreen.style.display = 'none';
+            const arcScreen = document.getElementById('arc-screen');
+            if (arcScreen) arcScreen.style.display = 'none';
 
             if(viewName === 'JOB') {
                 document.getElementById('job-screen').style.display = 'flex';
@@ -731,6 +785,8 @@
                 if (toolScreen) toolScreen.style.display = 'flex';
             } else if (viewName === 'WGRAV') {
                 if (wgravScreen) wgravScreen.style.display = 'flex';
+            } else if (viewName === 'ARC') {
+                if (arcScreen) arcScreen.style.display = 'flex';
             }
         }
 
@@ -910,6 +966,77 @@
 
         function showMsg(msg) {
             document.getElementById('infoDisplay').textContent = "ℹ️ " + msg + " (Sin acción)";
+        }
+
+        function handleEditAction(action) {
+            if (!checkTeachMode('EDIT')) return;
+            const currentProgram = robotJobs[dxState.currentJobId];
+            if (!currentProgram || currentProgram.length === 0) return;
+            
+            if (action === 'TOP LINE') {
+                dxState.selectedLineIndex = 0;
+                dxState.selectedTokenIndex = 0;
+                document.getElementById('infoDisplay').textContent = '✓ CURSOR AL INICIO';
+            } else if (action === 'END LINE') {
+                dxState.selectedLineIndex = currentProgram.length - 1;
+                dxState.selectedTokenIndex = 0;
+                document.getElementById('infoDisplay').textContent = '✓ CURSOR AL FINAL';
+            } else if (action === 'SEARCH') {
+                showMsg('SEARCH: Función en desarrollo');
+                return;
+            } else if (action === 'COPY') {
+                dxState.clipboard = JSON.parse(JSON.stringify(currentProgram[dxState.selectedLineIndex]));
+                showMsg('✓ Línea ' + dxState.selectedLineIndex + ' copiada');
+                return;
+            } else if (action === 'CUT') {
+                dxState.clipboard = JSON.parse(JSON.stringify(currentProgram[dxState.selectedLineIndex]));
+                currentProgram.splice(dxState.selectedLineIndex, 1);
+                if(dxState.selectedLineIndex >= currentProgram.length) dxState.selectedLineIndex = Math.max(0, currentProgram.length - 1);
+                showMsg('✓ Línea cortada');
+            } else if (action === 'PASTE') {
+                if (dxState.clipboard) {
+                    currentProgram.splice(dxState.selectedLineIndex + 1, 0, JSON.parse(JSON.stringify(dxState.clipboard)));
+                    dxState.selectedLineIndex++;
+                    showMsg('✓ Línea pegada');
+                } else {
+                    showMsg('⚠ Portapapeles vacío');
+                }
+            } else if (action === 'REVERSE PASTE') {
+                if (dxState.clipboard) {
+                    let rev = JSON.parse(JSON.stringify(dxState.clipboard));
+                    currentProgram.splice(dxState.selectedLineIndex + 1, 0, rev);
+                    dxState.selectedLineIndex++;
+                    showMsg('✓ Pegado inverso');
+                } else {
+                    showMsg('⚠ Portapapeles vacío');
+                }
+            } else if (action === 'CHANGE SPEED') {
+                let step = currentProgram[dxState.selectedLineIndex];
+                let tokens = (step.code || '').split(' ');
+                let speedChanged = false;
+                for(let i=0; i<tokens.length; i++) {
+                    if (tokens[i].startsWith('VJ=') || tokens[i].startsWith('V=')) {
+                        const speeds = ['VJ=1.00', 'VJ=5.00', 'VJ=10.00', 'VJ=25.00', 'VJ=50.00', 'VJ=100.00'];
+                        let idx = speeds.indexOf(tokens[i]);
+                        tokens[i] = speeds[(idx + 1) % speeds.length];
+                        step.code = tokens.join(' ');
+                        document.getElementById('infoDisplay').textContent = '✓ Velocidad cambiada a ' + tokens[i];
+                        speedChanged = true;
+                        break;
+                    }
+                }
+                if (!speedChanged) {
+                    document.getElementById('infoDisplay').textContent = '⚠ La línea no tiene parámetro de velocidad';
+                }
+            } else {
+                showMsg(action + ': Función reservada/en desarrollo');
+            }
+            saveJobsLocally();
+            if (dxState.view !== 'JOB') {
+                setView('JOB');
+            } else {
+                renderJob();
+            }
         }
         
         function pressSelect() {
