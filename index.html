@@ -7,14 +7,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: Arial, sans-serif; background: #0a0a0a; color: #fff; overflow-x: hidden; overflow-y: auto; }
+body { font-family: Arial, sans-serif; background: #0a0a0a; color: #fff; overflow: hidden; height: 100vh; height: 100dvh; }
 
-.main-container { display: flex; flex-direction: row; height: auto; min-height: 100vh; gap: 15px; padding: 15px; align-items: flex-start; justify-content: center; width: 100%; max-width: 1400px; margin: 0 auto; }
-.robot-section { flex: 1.5; min-width: 400px; background: linear-gradient(135deg, #1a2a3a, #0f1820); border-radius: 10px; border: 2px solid #444; overflow: hidden; display: flex; flex-direction: column; height: 600px; position: sticky; top: 15px; }
+.main-container { display: flex; flex-direction: row; height: 100%; width: 100%; gap: 15px; padding: 15px; align-items: stretch; justify-content: center; max-width: 1400px; margin: 0 auto; overflow: hidden; }
+.robot-section { flex: 1.2; min-width: 350px; background: linear-gradient(135deg, #1a2a3a, #0f1820); border-radius: 10px; border: 2px solid #444; overflow: hidden; display: flex; flex-direction: column; height: 100%; position: relative; }
 #canvas { flex: 1; touch-action: none; }
 .robot-info { background: rgba(0,0,0,0.95); padding: 6px; border-top: 1px solid #444; font-size: 8px; line-height: 1.4; font-family: monospace; }
 
-.console-wrapper { width: 480px; flex-shrink: 0; padding: 0; margin-top: 10px; }
+.console-wrapper { width: 480px; flex-shrink: 0; height: 100%; overflow-y: auto; padding-right: 5px; scroll-behavior: smooth; }
 .console-main { background: linear-gradient(135deg, #888888, #777777); border-radius: 16px; padding: 15px; box-shadow: 0 20px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.3); border: 6px solid #555; display: flex; flex-direction: column; gap: 8px; width: 100%; transition: all 0.3s ease; }
 
 .top-operation-buttons { display: flex; gap: 8px; align-items: center; justify-content: space-between; padding: 3px 10px; background: rgba(0,0,0,0.1); border-radius: 6px; flex-wrap: nowrap; overflow: hidden; width: 100%; }
@@ -133,21 +133,13 @@ body { font-family: Arial, sans-serif; background: #0a0a0a; color: #fff; overflo
 .info-display { background: #000; color: #0f0; border: 2px solid #0f0; padding: 4px; font-size: 8px; font-weight: bold; min-height: 20px; margin-top: 5px; overflow: visible; display: block; }
 
 @media (max-width: 768px), (orientation: portrait) {
-    body { overflow: hidden !important; }
-    .main-container {
-        flex-direction: column !important;
-        height: 100vh !important;
-        height: 100dvh !important;
-        overflow: hidden !important;
-        padding: 6px !important;
-        gap: 6px !important;
-    }
-    .robot-section {
-        flex: 0 0 32vh !important;
-        min-height: 130px !important;
-        max-height: 200px !important;
-        border-radius: 6px;
-        width: 100%;
+    .main-container { flex-direction: column; overflow: hidden; padding: 6px; gap: 6px; }
+    .robot-section { flex: none; height: 35vh; min-width: 100%; }
+    .console-wrapper { width: 100%; height: 65vh; overflow-y: auto; padding-right: 2px; }
+    .console-main { padding: 8px; border-width: 4px; }
+    .lcd-display { height: 180px; }
+    #canvas { height: 100%; }
+}
         overflow: hidden;
     }
     .console-wrapper {
@@ -874,8 +866,8 @@ body { font-family: Arial, sans-serif; background: #0a0a0a; color: #fff; overflo
                             <div class="kb-bot-btn numpad-key" onclick="showMsg('2')">2</div>
                             <div class="kb-bot-btn numpad-key" onclick="showMsg('3')">3</div>
                             <div class="kb-bot-btn numpad-key" onclick="showMsg('0')">0</div>
-                            <div class="kb-bot-btn numpad-key" onclick="showMsg('.')">.</div>
-                            <div class="kb-bot-btn numpad-key" onclick="showMsg('-')">-</div>
+                            <div class="kb-bot-btn numpad-key" onclick="handleToolKey(1)">.<br><span style="font-size:3.5px; color:#2b4b9b; font-weight:bold;">TOOL 1 ON/OFF</span></div>
+                            <div class="kb-bot-btn numpad-key" onclick="handleToolKey(2)">-<br><span style="font-size:3.5px; color:#2b4b9b; font-weight:bold;">TOOL 2 ON/OFF</span></div>
                         </div>
 
                         <div class="kb-bot-col">
@@ -2902,6 +2894,27 @@ function updateClockScreen() {
     if (fmtEl) fmtEl.textContent = clockFormat;
 }
 
+function handleToolKey(num) {
+    if (RobotState.mode !== 'TEACH') {
+        showMsg("ERROR: SOLO EN MODO TEACH");
+        return;
+    }
+    if (!RobotState.deadman) {
+        showMsg("ERROR: PULSE DEADMAN");
+        return;
+    }
+    if (!isServoOn) {
+        showMsg("ERROR: ACTIVE SERVO ON");
+        return;
+    }
+    
+    // Si pasa seguridad, conmutamos la pinza
+    const currentState = digitalOutputs[num] ? 'ON' : 'OFF';
+    const newState = currentState === 'OFF' ? 'ON' : 'OFF';
+    controlPinza(num, newState === 'ON' ? 'close' : 'open');
+    showMsg(`TOOL ${num}: ${newState === 'ON' ? 'CERRADA' : 'ABIERTA'}`);
+}
+
 function setClockFormat(fmt) {
     clockFormat = fmt;
     updateClockScreen();
@@ -3580,6 +3593,7 @@ window.changeSpeed = changeSpeed;
 window.changeInstruction = changeInstruction;
 window.updateJobDetail = updateJobDetail;
 window.renderJob = renderJob;
+window.handleToolKey = handleToolKey;
 </script>
 </body>
 </html>
