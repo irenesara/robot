@@ -7,26 +7,26 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: Arial, sans-serif; background: #0a0a0a; color: #fff; overflow: hidden; }
+body { font-family: Arial, sans-serif; background: #0a0a0a; color: #fff; overflow-x: hidden; overflow-y: auto; }
 
-.main-container { display: flex; height: 100vh; height: 100dvh; gap: 8px; padding: 8px; }
-.robot-section { flex: 1; background: linear-gradient(135deg, #1a2a3a, #0f1820); border-radius: 10px; border: 2px solid #444; overflow: hidden; display: flex; flex-direction: column; }
+.main-container { display: flex; flex-direction: row; height: auto; min-height: 100vh; gap: 15px; padding: 15px; align-items: flex-start; justify-content: center; width: 100%; max-width: 1400px; margin: 0 auto; }
+.robot-section { flex: 1.5; min-width: 400px; background: linear-gradient(135deg, #1a2a3a, #0f1820); border-radius: 10px; border: 2px solid #444; overflow: hidden; display: flex; flex-direction: column; height: 600px; position: sticky; top: 15px; }
 #canvas { flex: 1; touch-action: none; }
 .robot-info { background: rgba(0,0,0,0.95); padding: 6px; border-top: 1px solid #444; font-size: 8px; line-height: 1.4; font-family: monospace; }
 
-.console-wrapper { display: flex; flex-direction: column; gap: 6px; width: auto; max-width: 500px; overflow: visible; padding-bottom: 5px; }
-.console-main { background: linear-gradient(135deg, #888888, #777777); border-radius: 16px; padding: 8px; box-shadow: 0 20px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.3); border: 6px solid #555; display: flex; flex-direction: column; max-height: calc(100vh - 50px); overflow: hidden; }
+.console-wrapper { width: 480px; flex-shrink: 0; padding: 0; margin-top: 10px; }
+.console-main { background: linear-gradient(135deg, #888888, #777777); border-radius: 16px; padding: 15px; box-shadow: 0 20px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.3); border: 6px solid #555; display: flex; flex-direction: column; gap: 8px; width: 100%; transition: all 0.3s ease; }
 
-.top-operation-buttons { display: flex; gap: 10px; align-items: center; justify-content: flex-start; padding: 3px 10px; background: rgba(0,0,0,0.1); border-radius: 6px; flex-wrap: wrap; }
-.op-button { width: 44px; height: 44px; border-radius: 50%; cursor: pointer; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; font-size: 6px; border: 3px solid; transition: all 0.1s; text-align: center; line-height: 1.1; padding: 2px; }
+.top-operation-buttons { display: flex; gap: 8px; align-items: center; justify-content: space-between; padding: 3px 10px; background: rgba(0,0,0,0.1); border-radius: 6px; flex-wrap: nowrap; overflow: hidden; width: 100%; }
+.op-button { width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; font-size: 5px; border: 3px solid; transition: all 0.1s; text-align: center; line-height: 1.1; padding: 2px; flex-shrink: 0; }
 .op-button:active { transform: scale(0.95); }
 .op-remote { background: linear-gradient(135deg, #d0d0d0, #b0b0b0); border-color: #666; color: #222; }
 .op-teach { background: radial-gradient(circle at 30% 30%, #00ff00, #00aa00); border-color: #005500; color: white; }
 .op-start { background: radial-gradient(circle at 30% 30%, #ffffff, #e0e0e0); border-color: #999; color: #222; }
 .op-hold { background: radial-gradient(circle at 30% 30%, #ffffff, #e0e0e0); border-color: #999; color: #222; }
-.op-emg { width: 52px; height: 52px; background: radial-gradient(circle at 30% 30%, #ff3333, #cc0000); border-color: #aa0000; border-width: 4px; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 0 0 4px #ffdd00; }
+.op-emg { width: 48px; height: 48px; background: radial-gradient(circle at 30% 30%, #ff3333, #cc0000); border-color: #aa0000; border-width: 4px; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 0 0 4px #ffdd00; flex-shrink: 0; font-size: 5px; }
 
-.back-controls-box { background: rgba(0,0,0,0.15); border: 2px dashed #ffaa00; border-radius: 6px; padding: 6px 8px; display: flex; gap: 8px; align-items: center; justify-content: center; }
+.back-controls-box { background: rgba(0,0,0,0.15); border: 2px dashed #ffaa00; border-radius: 6px; padding: 3px 6px; display: flex; gap: 5px; align-items: center; justify-content: center; flex-shrink: 0; margin-left: auto; }
 .back-controls-title { color: #ffaa00; font-weight: bold; font-size: 6px; writing-mode: vertical-rl; text-orientation: mixed; margin-right: 2px; }
 .deadman-section { background: rgba(255, 170, 0, 0.1); border: 2px solid #ffaa00; border-radius: 4px; padding: 3px 5px; text-align: center; display: flex; flex-direction: column; gap: 2px; }
 .deadman-label { color: #ffff00; font-weight: bold; font-size: 5px; line-height: 1.1; white-space: nowrap; }
@@ -41,13 +41,13 @@ body { font-family: Arial, sans-serif; background: #0a0a0a; color: #fff; overflo
 .key-label-teach { top: -2px; right: -26px; color: #0f0; }
 .key-current-position { position: absolute; bottom: 1px; font-size: 4px; font-weight: bold; color: #ff6600; background: rgba(0,0,0,0.7); padding: 0px 2px; border-radius: 2px; }
 
-.lcd-display { background: #e0e0e0; border: 3px solid #222; border-radius: 3px; min-height: 200px; flex-shrink: 0; color: #000; font-family: Arial, sans-serif; box-shadow: inset 0 3px 8px rgba(0,0,0,0.5); display: flex; flex-direction: column; overflow-y: scroll !important; margin-bottom: 4px; user-select: none; max-height: 300px; }
+.lcd-display { background: #e0e0e0; border: 3px solid #222; border-radius: 3px; height: 240px; flex-shrink: 0; color: #000; font-family: Arial, sans-serif; box-shadow: inset 0 3px 8px rgba(0,0,0,0.5); display: flex; flex-direction: column; overflow: hidden; margin: 0; user-select: none; position: relative; }
 .lcd-top-bar { background: linear-gradient(to bottom, #1a3a6a, #0a2a5a); color: white; padding: 1px 4px; font-size: 7px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; border-bottom: 2px solid #000; flex-wrap: wrap; gap: 2px; }
 .lcd-body { display: flex; flex: 1; height: auto; overflow: visible; }
 .lcd-sidebar { width: 50px; background: #c0c0c0; border-right: 1px solid #999; display: flex; flex-direction: column; padding: 2px; overflow-y: auto; flex-shrink: 0; }
 .lcd-sidebar-btn { min-height: 15px; font-size: 3px; text-align: center; border: 1px solid #a0a0a0; background: linear-gradient(to bottom, #f0f0f0, #d0d0d0); cursor: pointer; font-weight: bold; border-radius: 2px; display: flex; align-items: center; justify-content: center; line-height: 1.1; margin: 1px 0; padding: 1px; word-break: break-word; }
 .lcd-sidebar-btn:active, .lcd-sidebar-btn.active { background: #fff; border-left: 3px solid #1a3a6a; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
-.lcd-main { flex: 1; display: flex; flex-direction: column; background: #fff; font-family: 'Courier New', monospace; font-size: 8px; position: relative; overflow-y: auto; max-height: 250px; }
+.lcd-main { flex: 1; display: flex; flex-direction: column; background: #fff; font-family: 'Courier New', monospace; font-size: 8px; position: relative; overflow-y: auto; overflow-x: hidden; }
 .lcd-header { background: #e0e0e0; border-bottom: 1px solid #ccc; padding: 1px 4px; display: flex; gap: 8px; font-weight: bold; font-size: 5px; color: #333; flex-shrink: 0; }
 .job-content { flex: 1; overflow-y: auto; padding: 1px; background: #fff; font-size: 7px; }
 .job-line { padding: 1px 2px; display: flex; gap: 4px; cursor: pointer; border-bottom: 1px solid #f0f0f0; }
@@ -157,14 +157,14 @@ body { font-family: Arial, sans-serif; background: #0a0a0a; color: #fff; overflo
         overflow-y: auto !important;
         overflow-x: hidden !important;
         -webkit-overflow-scrolling: touch;
-        padding-bottom: 8px !important;
+        overflow: visible !important;
     }
     .console-main {
         max-height: none !important;
         overflow: visible !important;
         height: auto !important;
     }
-    .lcd-display { height: 220px !important; min-height: 220px !important; flex-shrink: 0; overflow-y: auto !important; }
+    .lcd-display { height: 200px !important; min-height: 200px !important; flex-shrink: 0; }
     .top-operation-buttons { justify-content: center; flex-shrink: 0; flex-wrap: wrap; }
     .kb-container { overflow-y: visible !important; height: auto !important; flex-shrink: 0; }
     .kb-btn-sq { font-size: 3px !important; }
@@ -211,7 +211,7 @@ body { font-family: Arial, sans-serif; background: #0a0a0a; color: #fff; overflo
 
                 <div class="lcd-display">
                     <div class="lcd-top-bar">
-                        <span>SIMULADOR ROBOT</span>
+                        <span>SIMULADOR ROBOT <small style="font-size: 5px; opacity: 0.7;">v2.4</small></span>
                         <span>STATUS: <span id="lcd-status" style="color:#0f0;">READY</span></span>
                         <span>MODE: <span id="lcd-mode" style="color:#ff0;">TEACH</span></span>
                         <span>COORD: <span id="lcd-coord" style="color:#0ff;">JOINT</span></span>
@@ -306,9 +306,9 @@ body { font-family: Arial, sans-serif; background: #0a0a0a; color: #fff; overflo
                                 <div id="job-content-area" style="flex: 1; overflow-y: auto; background: #000; padding: 2px; font-family: 'Courier New', monospace; font-size: 7px; color: #0f0;"></div>
                             </div>
 
-                            <div id="multi-layout-screen" style="display: none; flex-direction: row; height: 100%; min-height: 150px; background: #1a1a2e;">
+                             <div id="multi-layout-screen" style="display: none; flex-direction: row; height: 100%; min-height: 150px; background: #1a1a2e;">
                                 <!-- Panel izquierdo: programa -->
-                                <div style="flex: 1; display: flex; flex-direction: column; border-right: 2px solid #2b4b9b;">
+                                <div id="ml-job-window" style="flex: 1; display: flex; flex-direction: column; border: 2px solid transparent; border-right: 2px solid #2b4b9b;">
                                     <div style="background: #1a3a6a; color: #fff; padding: 2px 4px; font-size: 5px; font-weight: bold; border-bottom: 1px solid #0a2a5a; display:flex; justify-content:space-between;">
                                         <span>JOB: <span id="ml-job-name" style="color:#ff0;">---</span></span>
                                         <span>STEP: <span id="ml-step" style="color:#0f0;">0000</span></span>
@@ -316,7 +316,7 @@ body { font-family: Arial, sans-serif; background: #0a0a0a; color: #fff; overflo
                                     <div id="ml-job-area" style="flex: 1; overflow-y: auto; background: #000; padding: 2px; font-family: 'Courier New', monospace; font-size: 6px; color: #0f0;"></div>
                                 </div>
                                 <!-- Panel derecho: posición actual -->
-                                <div style="width: 90px; display: flex; flex-direction: column; background: #111;">
+                                <div id="ml-coord-window" style="width: 90px; display: flex; flex-direction: column; background: #111; border: 2px solid transparent;">
                                     <div style="background: #1a3a6a; color: #fff; padding: 2px 4px; font-size: 5px; font-weight: bold; border-bottom: 1px solid #0a2a5a; text-align:center;">JOINT COORD</div>
                                     <div style="flex:1; padding: 4px 3px; font-family: 'Courier New', monospace; font-size: 6px; color: #0f0; display: flex; flex-direction: column; gap: 3px;">
                                         <div style="display:flex; justify-content:space-between;"><span style="color:#aaa;">S:</span><span id="ml-s">0.000°</span></div>
@@ -750,6 +750,13 @@ body { font-family: Arial, sans-serif; background: #0a0a0a; color: #fff; overflo
                                     <button onclick="closeHomeConfirm(false)" style="padding: 2px 14px; border: 1px solid #000; background: #e0e0e0; font-family: 'Courier New', Courier, monospace; font-weight: bold; cursor: pointer; font-size: 10px; box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #aaa; outline: 1px dotted #000; outline-offset: -2px;">NO</button>
                                 </div>
                             </div>
+                            <div id="assist-screen" style="display: none; position: absolute; bottom: 10px; left: 10px; right: 10px; background: rgba(0, 40, 90, 0.95); border: 2px solid #fff; border-radius: 4px; padding: 8px; z-index: 200; color: #fff; font-family: sans-serif; box-shadow: 0 4px 20px rgba(0,0,0,0.6);">
+                                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #aaa; padding-bottom: 4px; margin-bottom: 6px;">
+                                    <span style="font-weight: bold; font-size: 8px; color: #ff0;">ASSISTANT / HELP</span>
+                                    <span style="cursor: pointer; font-size: 8px;" onclick="document.getElementById('assist-screen').style.display='none'">[X]</span>
+                                </div>
+                                <div id="assist-content" style="font-size: 7px; line-height: 1.4;"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -795,13 +802,13 @@ body { font-family: Arial, sans-serif; background: #0a0a0a; color: #fff; overflo
                         <div class="kb-top-center">
                             <div class="kb-btn-sq kb-btn-blue" id="multi-layout-btn" onclick="toggleMultiLayout()">MULTI<br>LAYOUT</div>
                             <div class="kb-btn-sq kb-btn-blue" id="tool-coord-btn" onclick="toggleCoordSystem()">TOOL SEL<br>COORD</div>
-                            <div class="kb-btn-sq" onclick="showMsg('DIRECT OPEN')">DIRECT<br>OPEN</div>
-                            <div class="kb-btn-sq" onclick="showMsg('GO BACK PAGE')">GO BACK<br>PAGE</div>
-                            <div class="kb-btn-sq" onclick="showMsg('LANGUAGE AREA')">LANGUAGE<br>AREA</div>
-                            <div class="kb-btn-sq kb-btn-blue" onclick="showMsg('MAIN MENU')">MAIN<br>MENU</div>
-                            <div class="kb-btn-sq kb-btn-blue" onclick="showMsg('ENTRY SIMPLE MENU')">ENTRY<br>SIMPLE</div>
+                            <div class="kb-btn-sq" onclick="handleDirectOpen()">DIRECT<br>OPEN</div>
+                            <div class="kb-btn-sq" onclick="handleGoBack()">GO BACK<br>PAGE</div>
+                            <div class="kb-btn-sq" onclick="handleLanguageArea()">LANGUAGE<br>AREA</div>
+                            <div class="kb-btn-sq kb-btn-blue" onclick="handleMainMenu()">MAIN<br>MENU</div>
+                            <div class="kb-btn-sq kb-btn-blue" onclick="handleSimpleMenu()">ENTRY<br>SIMPLE</div>
                             <div class="kb-btn-sq kb-btn-blue" id="servo-btn" onclick="toggleServo()">SERVO ON<br>READY</div>
-                            <div class="kb-btn-sq kb-btn-blue" onclick="showMsg('ASSIST')">ASSIST</div>
+                            <div class="kb-btn-sq kb-btn-blue" onclick="handleAssist()">ASSIST</div>
                             <div class="kb-btn-sq" onclick="pressCancel()">CANCEL</div>
                         </div>
 
@@ -922,12 +929,16 @@ const DxState = {
     isModifying: false,
     clipboard: null,
     insertType: 'MOVJ',
-    insertSpeed: 50
+    insertSpeed: 50,
+    jobHistory: [],
+    focusedWindowIndex: 0,
+    isSimpleMenu: false
 };
 
 let robotJobs = {
     "JOB_ALAMBRE": [
         { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, code: 'NOP', desc: 'INICIO' },
+        { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, code: 'CALL JOB:SUB_PROG', desc: 'LLAMADA A SUBRUTINA' },
         { s: 30, l: -20, u: 50, r: 0, b: -45, t: 0, code: 'MOVJ VJ=50.00', desc: 'IR A ROLLO HILO' },
         { s: 30, l: -40, u: 70, r: 0, b: -90, t: 0, code: 'MOVJ VJ=25.00', desc: 'BAJAR A HILO' },
         { s: 30, l: -40, u: 70, r: 0, b: -90, t: 0, code: 'DOUT OG#(1) ON', desc: 'CERRAR PINZA 1 (COGER)' },
@@ -938,6 +949,11 @@ let robotJobs = {
         { s: -45, l: -10, u: 40, r: 180, b: 0, t: -180, code: 'DOUT OG#(1) OFF', desc: 'SOLTAR ALAMBRE' },
         { s: -45, l: -30, u: 60, r: 0, b: 0, t: 0, code: 'MOVJ VJ=100.00', desc: 'RETORNO SEGURO' },
         { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, code: 'END', desc: 'FIN BUCLE' }
+    ],
+    "SUB_PROG": [
+        { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, code: 'NOP', desc: 'INICIO SUB' },
+        { s: 0, l: 0, u: 0, r: 180, b: 0, t: 0, code: 'MOVJ VJ=50.00', desc: 'POSICIÓN SEGURA' },
+        { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, code: 'END', desc: 'VOLVER' }
     ]
 };
 
@@ -994,7 +1010,15 @@ function loadJobsLocally() {
         const saved = localStorage.getItem('dx200_robotJobs');
         if (saved) {
             let parsed = JSON.parse(saved);
-            if (!parsed['JOB_ALAMBRE']) parsed['JOB_ALAMBRE'] = robotJobs['JOB_ALAMBRE'];
+            if (!parsed['JOB_ALAMBRE']) {
+                parsed['JOB_ALAMBRE'] = robotJobs['JOB_ALAMBRE'];
+            } else {
+                // Asegurar que la linea CALL JOB está presente para que el usuario pueda probar
+                if (!parsed['JOB_ALAMBRE'].some(l => l.code && l.code.includes('CALL JOB:'))) {
+                    parsed['JOB_ALAMBRE'].splice(1, 0, { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, code: 'CALL JOB:SUB_PROG', desc: 'LLAMADA A SUBRUTINA' });
+                }
+            }
+            if (!parsed['SUB_PROG']) parsed['SUB_PROG'] = robotJobs['SUB_PROG'];
             robotJobs = parsed;
         }
         if (!robotJobs[DxState.currentJobId]) {
@@ -1047,75 +1071,78 @@ function buildRobot() {
     robotGroup = new THREE.Group();
     scene.add(robotGroup);
 
-    const yBlue = 0x0077C8;
-    const yGrey = 0x888CA0;
-    const yDark = 0x333333;
+    const yBlue = 0x005BBF; // Cobalt Blue
+    const yGrey = 0xA0A0A0;
+    const yDark = 0x222222;
 
-    const floorPlateGeom = new THREE.BoxGeometry(0.6, 0.02, 0.6);
-    const floorPlateMat = new THREE.MeshPhongMaterial({ color: 0x444444, shininess: 90, specular: 0x444444 });
+    const floorPlateGeom = new THREE.BoxGeometry(0.8, 0.03, 0.8);
+    const floorPlateMat = new THREE.MeshPhongMaterial({ color: 0x333333, shininess: 50 });
     const floorPlate = new THREE.Mesh(floorPlateGeom, floorPlateMat);
     floorPlate.receiveShadow = true;
-    floorPlate.position.y = 0.01;
+    floorPlate.position.y = 0.015;
     scene.add(floorPlate);
 
-    const baseGeom = new THREE.CylinderGeometry(0.14, 0.18, 0.12, 32);
-    const baseMat = new THREE.MeshPhongMaterial({ color: yBlue, shininess: 90, specular: 0x444444 });
-    const base = new THREE.Mesh(baseGeom, baseMat);
+    const baseGeom = new THREE.CylinderGeometry(0.18, 0.22, 0.15, 32);
+    const base = new THREE.Mesh(baseGeom, new THREE.MeshPhongMaterial({ color: yBlue, shininess: 100, specular: 0x222222 }));
     base.castShadow = true;
     base.receiveShadow = true;
-    base.position.y = 0.08;
+    base.position.y = 0.09;
     robotGroup.add(base);
 
-    const baseStructGeom = new THREE.CylinderGeometry(0.12, 0.14, 0.20, 32);
-    const baseStructMat = new THREE.MeshPhongMaterial({ color: yBlue, shininess: 90 });
-    const baseStruct = new THREE.Mesh(baseStructGeom, baseStructMat);
+    // Detalle de tornillos y base circular
+    const baseRing = new THREE.Mesh(new THREE.TorusGeometry(0.20, 0.015, 16, 64), new THREE.MeshPhongMaterial({ color: yDark }));
+    baseRing.rotation.x = Math.PI / 2;
+    baseRing.position.y = 0.02;
+    robotGroup.add(baseRing);
+
+    const baseStructGeom = new THREE.CylinderGeometry(0.14, 0.16, 0.25, 32);
+    const baseStruct = new THREE.Mesh(baseStructGeom, new THREE.MeshPhongMaterial({ color: yBlue, shininess: 100, specular: 0x222222 }));
     baseStruct.castShadow = true;
-    baseStruct.position.y = 0.20;
+    baseStruct.position.y = 0.22;
     robotGroup.add(baseStruct);
 
-    const sMotorGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.15, 16);
-    const sMotor = new THREE.Mesh(sMotorGeo, new THREE.MeshPhongMaterial({ color: yDark, shininess: 90 }));
+    const sMotorGeo = new THREE.CylinderGeometry(0.065, 0.065, 0.18, 16);
+    const sMotor = new THREE.Mesh(sMotorGeo, new THREE.MeshPhongMaterial({ color: yDark, shininess: 100 }));
     sMotor.rotation.z = Math.PI / 2;
-    sMotor.position.set(-0.15, 0.20, 0);
+    sMotor.position.set(-0.16, 0.22, 0);
     robotGroup.add(sMotor);
 
     const joint0 = new THREE.Group();
     joint0.position.y = 0.30;
     robotGroup.add(joint0);
 
-    const shoulderGeom = new THREE.CylinderGeometry(0.10, 0.10, 0.14, 24);
-    const shoulder = new THREE.Mesh(shoulderGeom, new THREE.MeshPhongMaterial({ color: yBlue, shininess: 90 }));
+    const shoulderGeom = new THREE.CylinderGeometry(0.11, 0.11, 0.16, 24);
+    const shoulder = new THREE.Mesh(shoulderGeom, new THREE.MeshPhongMaterial({ color: yBlue, shininess: 100, specular: 0x222222 }));
     shoulder.castShadow = true;
-    shoulder.position.y = 0;
     joint0.add(shoulder);
 
-    const lMotor = new THREE.Mesh(sMotorGeo, new THREE.MeshPhongMaterial({ color: yDark, shininess: 90 }));
-    lMotor.position.set(0, 0, -0.12);
+    const lMotor = new THREE.Mesh(sMotorGeo, new THREE.MeshPhongMaterial({ color: yDark, shininess: 100 }));
+    lMotor.position.set(0, 0, -0.14);
     lMotor.rotation.x = Math.PI / 2;
     joint0.add(lMotor);
 
     const joint1 = new THREE.Group();
-    joint1.position.y = 0.04;
+    joint1.position.y = 0.05;
     joint0.add(joint1);
 
-    const upperArmGeom = new THREE.CylinderGeometry(0.045, 0.07, 0.32, 16);
-    const upperArm = new THREE.Mesh(upperArmGeom, new THREE.MeshPhongMaterial({ color: yBlue, shininess: 90 }));
+    const upperArmGeom = new THREE.CylinderGeometry(0.055, 0.08, 0.32, 24);
+    const upperArm = new THREE.Mesh(upperArmGeom, new THREE.MeshPhongMaterial({ color: yBlue, shininess: 100, specular: 0x222222 }));
     upperArm.castShadow = true;
     upperArm.rotation.z = Math.PI / 2;
     upperArm.position.x = 0.16;
     joint1.add(upperArm);
 
     const elbowJoint = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.06, 0.06, 0.11, 16),
-        new THREE.MeshPhongMaterial({ color: yGrey, shininess: 90 })
+        new THREE.CylinderGeometry(0.07, 0.07, 0.13, 16),
+        new THREE.MeshPhongMaterial({ color: yGrey, shininess: 100, specular: 0x222222 })
     );
     elbowJoint.castShadow = true;
     elbowJoint.rotation.x = Math.PI / 2;
     elbowJoint.position.x = 0.32;
     joint1.add(elbowJoint);
 
-    const uMotor = new THREE.Mesh(sMotorGeo, new THREE.MeshPhongMaterial({ color: yDark, shininess: 90 }));
-    uMotor.position.set(0.32, 0, 0.10);
+    const uMotor = new THREE.Mesh(sMotorGeo, new THREE.MeshPhongMaterial({ color: yDark, shininess: 100 }));
+    uMotor.position.set(0.32, 0, 0.12);
     uMotor.rotation.x = Math.PI / 2;
     joint1.add(uMotor);
 
@@ -1126,16 +1153,21 @@ function buildRobot() {
     joint2.position.x = 0.32;
     joint1.add(joint2);
 
-    const foreArmGeom = new THREE.CylinderGeometry(0.045, 0.045, 0.20, 16);
-    const foreArm = new THREE.Mesh(foreArmGeom, new THREE.MeshPhongMaterial({ color: yBlue, shininess: 90 }));
+    const foreArmGeom = new THREE.CylinderGeometry(0.05, 0.05, 0.20, 24);
+    const foreArm = new THREE.Mesh(foreArmGeom, new THREE.MeshPhongMaterial({ color: yBlue, shininess: 100, specular: 0x222222 }));
     foreArm.castShadow = true;
     foreArm.rotation.z = Math.PI / 2;
     foreArm.position.x = 0.10;
     joint2.add(foreArm);
 
+    // Carcasa superior del antebrazo
+    const foreArmCase = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.06, 0.08), new THREE.MeshPhongMaterial({ color: yBlue, shininess: 100, specular: 0x222222 }));
+    foreArmCase.position.set(0.10, 0.05, 0);
+    joint2.add(foreArmCase);
+
     const wristBase = new THREE.Mesh(
-        new THREE.SphereGeometry(0.045, 16, 16),
-        new THREE.MeshPhongMaterial({ color: yGrey, shininess: 90 })
+        new THREE.SphereGeometry(0.05, 20, 20),
+        new THREE.MeshPhongMaterial({ color: yGrey, shininess: 120 })
     );
     wristBase.castShadow = true;
     wristBase.position.x = 0.20;
@@ -1532,27 +1564,50 @@ function toggleDeadman() {
     if (RobotState.deadman) {
         btn.textContent = '✓ ACTIVO';
         btn.classList.add('active');
-        setInfoDisplay('✓ Deadman ACTIVO');
+        setInfoDisplay('✓ Deadman ACTIVO (Listo para Servo)');
     } else {
         btn.textContent = 'INACTIVO';
         btn.classList.remove('active');
-        setInfoDisplay('⚠️ Deadman INACTIVO');
+        if (isServoOn) {
+            isServoOn = false;
+            const sBtn = document.getElementById('servo-btn');
+            if (sBtn) {
+                sBtn.style.background = '#ccc';
+                sBtn.style.color = '#222';
+                sBtn.style.boxShadow = 'none';
+            }
+            setInfoDisplay('⚠️ Deadman SUELTO: Servos DESCONECTADOS');
+        } else {
+            setInfoDisplay('⚠️ Deadman INACTIVO');
+        }
     }
 }
 
 function toggleServo() {
     const btn = document.getElementById('servo-btn');
-    isServoOn = !isServoOn;
-    if (isServoOn) {
-        btn.style.background = '#d00000';
-        btn.style.color = '#fff';
-        btn.style.boxShadow = '0 0 8px #ff0000';
-        setInfoDisplay('✓ Servo activado (POWER ON)');
+    
+    if (!isServoOn) {
+        // Intentando encender
+        if (RobotState.mode === 'TEACH' && !RobotState.deadman) {
+            setInfoDisplay('⚠️ RECHAZADO: Mantenga pulsado DEADMAN (Espacio)');
+            // Feedback de error (parpadeo rojo)
+            btn.style.background = '#a00';
+            setTimeout(() => btn.style.background = '#ccc', 200);
+            return;
+        }
+        isServoOn = true;
+        btn.style.background = '#00ff00';
+        btn.style.color = '#000';
+        btn.style.boxShadow = '0 0 15px #00ff00, inset 0 0 10px #fff';
+        btn.style.fontWeight = 'bold';
+        setInfoDisplay('✓ SERVO ON: Motores con potencia');
     } else {
+        // Apagando
+        isServoOn = false;
         btn.style.background = '#ccc';
         btn.style.color = '#222';
         btn.style.boxShadow = 'none';
-        setInfoDisplay('⚠ Servo desactivado');
+        setInfoDisplay('⚠ SERVO OFF: Motores sin potencia');
     }
 }
 
@@ -1608,14 +1663,45 @@ function handleFunc(func) {
 }
 
 function pressCancel() {
+    // Feedback visual tecla
+    const btn = Array.from(document.querySelectorAll('.kb-btn-sq')).find(b => b.textContent.includes('CANCEL'));
+    if (btn) {
+        const oldBg = btn.style.background;
+        btn.style.background = '#fff';
+        setTimeout(() => btn.style.background = oldBg, 150);
+    }
+
+    // 1. Cerrar ventana de ASSIST
+    const assist = document.getElementById('assist-screen');
+    if (assist && assist.style.display !== 'none') {
+        assist.style.display = 'none';
+        setInfoDisplay('CANCEL: Ayuda cerrada');
+        return;
+    }
+
+    // 2. Cerrar dropdowns abiertos
+    const dropdowns = document.querySelectorAll('.dropdown-menu');
+    let closedAny = false;
+    dropdowns.forEach(d => {
+        if (d.style.display === 'flex' || d.style.display === 'block') {
+            d.style.display = 'none';
+            closedAny = true;
+        }
+    });
+    if (closedAny) {
+        setInfoDisplay('CANCEL: Menú cerrado');
+        return;
+    }
+
+    // 3. Cancelar operaciones de edición
     if (DxState.isInserting || DxState.isDeleting || DxState.isModifying) {
         DxState.isInserting = false;
         DxState.isDeleting = false;
         DxState.isModifying = false;
         document.getElementById('insert-view').style.display = 'none';
         document.getElementById('job-content-area').style.display = 'block';
-        document.getElementById('job-mode-indicator').style.display = 'none';
-        setInfoDisplay('CANCEL: Operacion cancelada');
+        if (document.getElementById('job-mode-indicator')) document.getElementById('job-mode-indicator').style.display = 'none';
+        setInfoDisplay('CANCEL: Operación cancelada');
         renderJob();
     } else {
         setInfoDisplay('CANCEL');
@@ -1653,7 +1739,18 @@ function moveAxis(axis, dir) {
         return;
     }
     if (!RobotState.deadman) {
-        setInfoDisplay('⚠️ Deadman (ESPACIO)');
+        setInfoDisplay('⚠️ Requiere DEADMAN (Espacio)');
+        return;
+    }
+    if (!isServoOn) {
+        setInfoDisplay('⚠️ Requiere SERVO ON READY (Luz verde)');
+        // Feedback visual error en el botón servo
+        const sBtn = document.getElementById('servo-btn');
+        if (sBtn) {
+            const oldBg = sBtn.style.background;
+            sBtn.style.background = '#a00';
+            setTimeout(() => sBtn.style.background = oldBg, 200);
+        }
         return;
     }
     const axisMap = { x: 's', y: 'l', z: 'u', r: 'r', b: 'b', t: 't' };
@@ -1765,6 +1862,217 @@ function handleDir(dir) {
     } else {
         setInfoDisplay('Dirección ' + dir + ' pulsada');
     }
+}
+
+function handleDirectOpen() {
+    // Feedback visual del botón
+    const btn = Array.from(document.querySelectorAll('.kb-btn-sq')).find(b => b.textContent.includes('DIRECT'));
+    if (btn) {
+        const oldBg = btn.style.background;
+        btn.style.background = '#fff';
+        setTimeout(() => btn.style.background = oldBg, 150);
+    }
+
+    if (DxState.view === 'JOB') {
+        const currentProgram = robotJobs[DxState.currentJobId];
+        if (!currentProgram || !currentProgram[DxState.selectedLineIndex]) return;
+        const lineCode = currentProgram[DxState.selectedLineIndex].code || '';
+
+        // Si es una llamada a otro programa (CALL JOB)
+        if (lineCode.includes('CALL JOB:')) {
+            const jobNameMatch = lineCode.match(/CALL JOB:([A-Za-z0-9_]+)/);
+            if (jobNameMatch && jobNameMatch[1]) {
+                const targetJob = jobNameMatch[1];
+                if (robotJobs[targetJob]) {
+                    DxState.jobHistory.push(DxState.currentJobId);
+                    DxState.currentJobId = targetJob;
+                    DxState.selectedLineIndex = 0;
+                    renderJob();
+                    setInfoDisplay('✓ DIRECT OPEN: Abriendo ' + targetJob);
+                } else {
+                    setInfoDisplay('⚠ Error: JOB ' + targetJob + ' no encontrado');
+                }
+            }
+        } 
+        // Si es una variable
+        else if (lineCode.includes('B00') || lineCode.includes('I00') || lineCode.includes('D00') || lineCode.includes('R00')) {
+            setView('VARIABLE');
+            setInfoDisplay('✓ DIRECT OPEN: Variables');
+        }
+        else {
+            setInfoDisplay('ℹ DIRECT OPEN: Seleccione CALL o Variable');
+        }
+    } else if (DxState.view === 'LIST') {
+        const jobKeys = Object.keys(robotJobs);
+        const targetJob = jobKeys[DxState.selectedListIndex];
+        if (targetJob) {
+            DxState.jobHistory.push(DxState.currentJobId);
+            DxState.currentJobId = targetJob;
+            DxState.selectedLineIndex = 0;
+            setView('JOB');
+            setInfoDisplay('✓ DIRECT OPEN: Abriendo ' + targetJob);
+        }
+    } else {
+        setInfoDisplay('ℹ DIRECT OPEN: Cambie a JOB o LIST');
+    }
+}
+
+function handleGoBack() {
+    // Feedback visual
+    const btn = Array.from(document.querySelectorAll('.kb-btn-sq')).find(b => b.textContent.includes('BACK'));
+    if (btn) {
+        const oldBg = btn.style.background;
+        btn.style.background = '#fff';
+        setTimeout(() => btn.style.background = oldBg, 150);
+    }
+
+    if (DxState.jobHistory.length > 0) {
+        const prevJob = DxState.jobHistory.pop();
+        DxState.currentJobId = prevJob;
+        DxState.selectedLineIndex = 0;
+        setView('JOB');
+        renderJob();
+        setInfoDisplay('⇠ GO BACK: Regresando a ' + prevJob);
+    } else {
+        setInfoDisplay('ℹ GO BACK: No hay historial');
+    }
+}
+
+function handleLanguageArea() {
+    // Feedback visual tecla
+    const btn = Array.from(document.querySelectorAll('.kb-btn-sq')).find(b => b.textContent.includes('LANGUAGE'));
+    if (btn) {
+        const oldBg = btn.style.background;
+        btn.style.background = '#fff';
+        setTimeout(() => btn.style.background = oldBg, 150);
+    }
+
+    if (isMultiLayout) {
+        DxState.focusedWindowIndex = (DxState.focusedWindowIndex + 1) % 2;
+        updateMultiLayout();
+        setInfoDisplay('✓ LANGUAGE AREA: Foco movido a ventana ' + (DxState.focusedWindowIndex === 0 ? 'IZQUIERDA (JOB)' : 'DERECHA (COORD)'));
+    } else {
+        setInfoDisplay('ℹ LANGUAGE AREA: Solo activa en MULTI LAYOUT');
+    }
+}
+
+function handleMainMenu() {
+    // Feedback visual
+    const btn = Array.from(document.querySelectorAll('.kb-btn-sq')).find(b => b.textContent.includes('MAIN'));
+    if (btn) {
+        const oldBg = btn.style.background;
+        btn.style.background = '#fff';
+        setTimeout(() => btn.style.background = oldBg, 150);
+    }
+
+    const sidebar = document.querySelector('.lcd-sidebar');
+    if (sidebar) {
+        const isHidden = sidebar.style.display === 'none';
+        sidebar.style.display = isHidden ? 'flex' : 'none';
+        setInfoDisplay(isHidden ? '✓ MAIN MENU: Visualizando menú principal' : '✓ MAIN MENU: Menú oculto (Pantalla completa)');
+    }
+}
+
+function handleSimpleMenu() {
+    // Feedback visual
+    const btn = Array.from(document.querySelectorAll('.kb-btn-sq')).find(b => b.textContent.includes('SIMPLE'));
+    if (btn) {
+        const oldBg = btn.style.background;
+        btn.style.background = '#fff';
+        setTimeout(() => btn.style.background = oldBg, 150);
+    }
+
+    DxState.isSimpleMenu = !DxState.isSimpleMenu;
+    updateSidebarUI();
+    setInfoDisplay(DxState.isSimpleMenu ? '✓ SIMPLE MENU: Modo Operador Activado' : '✓ STANDARD MENU: Modo Programador Activado');
+}
+
+function handleAssist() {
+    // Feedback visual tecla
+    const btn = Array.from(document.querySelectorAll('.kb-btn-sq')).find(b => b.textContent.includes('ASSIST'));
+    if (btn) {
+        const oldBg = btn.style.background;
+        btn.style.background = '#fff';
+        setTimeout(() => btn.style.background = oldBg, 150);
+    }
+
+    const currentProgram = robotJobs[DxState.currentJobId];
+    const assistScreen = document.getElementById('assist-screen');
+    const assistContent = document.getElementById('assist-content');
+    
+    if (!currentProgram || !currentProgram[DxState.selectedLineIndex]) {
+        setInfoDisplay('ℹ ASSIST: Seleccione una instrucción');
+        return;
+    }
+
+    const line = currentProgram[DxState.selectedLineIndex];
+    const code = line.code || '';
+    let helpText = '';
+
+    if (code.includes('MOVJ')) {
+        helpText = '<b>MOVJ (Movimiento por Juntas)</b><br>El robot mueve todos los ejes simultáneamente para alcanzar el punto. Es el movimiento más rápido pero la trayectoria del extremo no es una línea recta.';
+    } else if (code.includes('MOVL')) {
+        helpText = '<b>MOVL (Movimiento Lineal)</b><br>El robot mueve el extremo en una línea recta perfecta. Ideal para soldadura o seguimiento de bordes.';
+    } else if (code.includes('DOUT')) {
+        helpText = '<b>DOUT (Salida Digital)</b><br>Activa o desactiva una señal eléctrica de salida. Se usa para abrir/cerrar pinzas o encender máquinas externas.';
+    } else if (code.includes('TIMER')) {
+        helpText = '<b>TIMER (Espera)</b><br>Detiene la ejecución del programa durante el tiempo indicado (segundos). Útil para esperar a que una pinza cierre.';
+    } else if (code.includes('CALL JOB')) {
+        helpText = '<b>CALL JOB (Llamada a Programa)</b><br>Salta a ejecutar el programa indicado. Al terminar con un END, el robot volverá a este punto para seguir con la siguiente línea.';
+    } else if (code.includes('NOP')) {
+        helpText = '<b>NOP (Sin operación)</b><br>Marca el inicio del programa. No ejecuta ninguna acción física.';
+    } else if (code.includes('END')) {
+        helpText = '<b>END (Fin de programa)</b><br>Marca el final del archivo. Si es un programa principal, se detiene. Si es una subrutina, regresa al que la llamó.';
+    } else {
+        helpText = `<b>Instrucción: ${code}</b><br>No hay ayuda específica disponible para este comando todavía.`;
+    }
+
+    assistContent.innerHTML = helpText;
+    assistScreen.style.display = 'block';
+    setInfoDisplay('ℹ ASSIST: Mostrando ayuda del comando');
+}
+
+function updateSidebarUI() {
+    const sidebar = document.querySelector('.lcd-sidebar');
+    if (!sidebar) return;
+
+    if (DxState.isSimpleMenu) {
+        sidebar.innerHTML = `
+            <div style="font-size: 5px; color: #aaa; text-align: center; margin-bottom: 4px;">SIMPLE MENU</div>
+            <div class="lcd-sidebar-btn active" onclick="setView('JOB')" style="height: 35px; flex-direction: column; justify-content: center; font-size: 6px;">
+                <span style="font-size: 10px;">📄</span>
+                <span>JOB</span>
+            </div>
+            <div class="lcd-sidebar-btn" onclick="setView('ALARM')" style="height: 35px; flex-direction: column; justify-content: center; font-size: 6px;">
+                <span style="font-size: 10px;">⚠️</span>
+                <span>ALARM</span>
+            </div>
+            <div class="lcd-sidebar-btn" onclick="setView('ROBOT-CURRENT')" style="height: 35px; flex-direction: column; justify-content: center; font-size: 6px;">
+                <span style="font-size: 10px;">📍</span>
+                <span>POS</span>
+            </div>
+            <div class="lcd-sidebar-btn" onclick="setView('SYSTEM-INFO')" style="height: 35px; flex-direction: column; justify-content: center; font-size: 6px;">
+                <span style="font-size: 10px;">⚙️</span>
+                <span>SYS</span>
+            </div>
+        `;
+    } else {
+        sidebar.innerHTML = `
+            <div class="lcd-sidebar-btn active" id="btn-view-job" onclick="setView('JOB')">PROGRAMA</div>
+            <div class="lcd-sidebar-btn" id="btn-view-general" onclick="setView('GENERAL')">GENERAL</div>
+            <div class="lcd-sidebar-btn" id="btn-view-variable" onclick="setView('VARIABLE')">VARIABLE</div>
+            <div class="lcd-sidebar-btn" id="btn-view-inout" onclick="setView('INOUT')">ENT/SAL</div>
+            <div class="lcd-sidebar-btn" id="btn-view-robot" onclick="setView('ROBOT')">ROBOT</div>
+            <div class="lcd-sidebar-btn" id="btn-view-sysinfo" onclick="setView('SYSTEM-INFO')">INFORM.SISTEMA</div>
+            <div class="lcd-sidebar-btn" id="btn-view-utility" onclick="setView('UTILITY')">EX.SISTEMA</div>
+        `;
+    }
+    // Re-aplicar clases active si corresponde
+    document.querySelectorAll('.lcd-sidebar-btn').forEach(b => {
+        const txt = b.textContent.toUpperCase();
+        if (txt.includes(DxState.view)) b.classList.add('active');
+        else b.classList.remove('active');
+    });
 }
 
 function handleEditAction(action) {
@@ -2733,6 +3041,19 @@ function updateMultiLayout() {
                 try { lines[DxState.selectedLineIndex].scrollIntoView({ block: 'nearest' }); } catch(e) {}
             }
         }
+    }
+
+    // Resaltar ventana con foco
+    const winJob = document.getElementById('ml-job-window');
+    const winCoord = document.getElementById('ml-coord-window');
+    if (winJob && winCoord) {
+        winJob.style.borderColor = DxState.focusedWindowIndex === 0 ? '#4a9eff' : 'transparent';
+        if (DxState.focusedWindowIndex === 0) winJob.style.boxShadow = 'inset 0 0 5px #4a9eff';
+        else winJob.style.boxShadow = 'none';
+        
+        winCoord.style.borderColor = DxState.focusedWindowIndex === 1 ? '#4a9eff' : 'transparent';
+        if (DxState.focusedWindowIndex === 1) winCoord.style.boxShadow = 'inset 0 0 5px #4a9eff';
+        else winCoord.style.boxShadow = 'none';
     }
 }
 
