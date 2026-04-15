@@ -214,6 +214,7 @@ body { font-family: Arial, sans-serif; background: #0a0a0a; color: #fff; overflo
                         <span>SIMULADOR ROBOT</span>
                         <span>STATUS: <span id="lcd-status" style="color:#0f0;">READY</span></span>
                         <span>MODE: <span id="lcd-mode" style="color:#ff0;">TEACH</span></span>
+                        <span>COORD: <span id="lcd-coord" style="color:#0ff;">JOINT</span></span>
                         <span>OG#1:<span id="og1-status" style="color:#666;">OFF</span></span>
                         <span>OG#2:<span id="og2-status" style="color:#666;">OFF</span></span>
                     </div>
@@ -305,6 +306,32 @@ body { font-family: Arial, sans-serif; background: #0a0a0a; color: #fff; overflo
                                 <div id="job-content-area" style="flex: 1; overflow-y: auto; background: #000; padding: 2px; font-family: 'Courier New', monospace; font-size: 7px; color: #0f0;"></div>
                             </div>
 
+                            <div id="multi-layout-screen" style="display: none; flex-direction: row; height: 100%; min-height: 150px; background: #1a1a2e;">
+                                <!-- Panel izquierdo: programa -->
+                                <div style="flex: 1; display: flex; flex-direction: column; border-right: 2px solid #2b4b9b;">
+                                    <div style="background: #1a3a6a; color: #fff; padding: 2px 4px; font-size: 5px; font-weight: bold; border-bottom: 1px solid #0a2a5a; display:flex; justify-content:space-between;">
+                                        <span>JOB: <span id="ml-job-name" style="color:#ff0;">---</span></span>
+                                        <span>STEP: <span id="ml-step" style="color:#0f0;">0000</span></span>
+                                    </div>
+                                    <div id="ml-job-area" style="flex: 1; overflow-y: auto; background: #000; padding: 2px; font-family: 'Courier New', monospace; font-size: 6px; color: #0f0;"></div>
+                                </div>
+                                <!-- Panel derecho: posición actual -->
+                                <div style="width: 90px; display: flex; flex-direction: column; background: #111;">
+                                    <div style="background: #1a3a6a; color: #fff; padding: 2px 4px; font-size: 5px; font-weight: bold; border-bottom: 1px solid #0a2a5a; text-align:center;">JOINT COORD</div>
+                                    <div style="flex:1; padding: 4px 3px; font-family: 'Courier New', monospace; font-size: 6px; color: #0f0; display: flex; flex-direction: column; gap: 3px;">
+                                        <div style="display:flex; justify-content:space-between;"><span style="color:#aaa;">S:</span><span id="ml-s">0.000°</span></div>
+                                        <div style="display:flex; justify-content:space-between;"><span style="color:#aaa;">L:</span><span id="ml-l">0.000°</span></div>
+                                        <div style="display:flex; justify-content:space-between;"><span style="color:#aaa;">U:</span><span id="ml-u">0.000°</span></div>
+                                        <div style="display:flex; justify-content:space-between;"><span style="color:#aaa;">R:</span><span id="ml-r">0.000°</span></div>
+                                        <div style="display:flex; justify-content:space-between;"><span style="color:#aaa;">B:</span><span id="ml-b">0.000°</span></div>
+                                        <div style="display:flex; justify-content:space-between;"><span style="color:#aaa;">T:</span><span id="ml-t">0.000°</span></div>
+                                    </div>
+                                    <div style="border-top: 1px solid #333; padding: 3px; font-family: 'Courier New', monospace; font-size: 5px; color: #0a0;">
+                                        OG#1: <span id="ml-og1" style="color:#666;">OFF</span><br>
+                                        OG#2: <span id="ml-og2" style="color:#666;">OFF</span>
+                                    </div>
+                                </div>
+                            </div>
                             <div id="general-screen" style="display: none; flex-direction: column; background: #eaeff2; min-height: 100%;">
                                 <div style="background: #1a3a6a; color: white; padding: 4px 8px; font-size: 8px; font-weight: bold;">GENERAL - PINZAS</div>
                                 <div style="padding: 8px; font-family: 'Courier New', monospace; font-size: 8px; color: #000;">
@@ -766,8 +793,8 @@ body { font-family: Arial, sans-serif; background: #0a0a0a; color: #fff; overflo
                         </div>
 
                         <div class="kb-top-center">
-                            <div class="kb-btn-sq kb-btn-blue" onclick="showMsg('MULTI LAYOUT')">MULTI<br>LAYOUT</div>
-                            <div class="kb-btn-sq kb-btn-blue" onclick="showMsg('TOOL SEL/COORD')">TOOL SEL<br>COORD</div>
+                            <div class="kb-btn-sq kb-btn-blue" id="multi-layout-btn" onclick="toggleMultiLayout()">MULTI<br>LAYOUT</div>
+                            <div class="kb-btn-sq kb-btn-blue" id="tool-coord-btn" onclick="toggleCoordSystem()">TOOL SEL<br>COORD</div>
                             <div class="kb-btn-sq" onclick="showMsg('DIRECT OPEN')">DIRECT<br>OPEN</div>
                             <div class="kb-btn-sq" onclick="showMsg('GO BACK PAGE')">GO BACK<br>PAGE</div>
                             <div class="kb-btn-sq" onclick="showMsg('LANGUAGE AREA')">LANGUAGE<br>AREA</div>
@@ -785,12 +812,12 @@ body { font-family: Arial, sans-serif; background: #0a0a0a; color: #fff; overflo
 
                     <div class="kb-row-mid">
                         <div class="kb-axes-grid red">
-                            <div class="kb-axis-btn" onclick="moveAxis('x', -1)">X-<br>S-</div>
-                            <div class="kb-axis-btn" onclick="moveAxis('x', 1)">X+<br>S+</div>
-                            <div class="kb-axis-btn" onclick="moveAxis('y', -1)">Y-<br>L-</div>
-                            <div class="kb-axis-btn" onclick="moveAxis('y', 1)">Y+<br>L+</div>
-                            <div class="kb-axis-btn" onclick="moveAxis('z', -1)">Z-<br>U-</div>
-                            <div class="kb-axis-btn" onclick="moveAxis('z', 1)">Z+<br>U+</div>
+                            <div id="jog-x-n" class="kb-axis-btn" onclick="moveAxis('x', -1)">X-<br>S-</div>
+                            <div id="jog-x-p" class="kb-axis-btn" onclick="moveAxis('x', 1)">X+<br>S+</div>
+                            <div id="jog-y-n" class="kb-axis-btn" onclick="moveAxis('y', -1)">Y-<br>L-</div>
+                            <div id="jog-y-p" class="kb-axis-btn" onclick="moveAxis('y', 1)">Y+<br>L+</div>
+                            <div id="jog-z-n" class="kb-axis-btn" onclick="moveAxis('z', -1)">Z-<br>U-</div>
+                            <div id="jog-z-p" class="kb-axis-btn" onclick="moveAxis('z', 1)">Z+<br>U+</div>
                             <div class="kb-axis-btn" onclick="moveAxis('e', -1)">E-</div>
                             <div class="kb-axis-btn" onclick="moveAxis('e', 1)">E+</div>
                         </div>
@@ -803,12 +830,12 @@ body { font-family: Arial, sans-serif; background: #0a0a0a; color: #fff; overflo
                         </div>
 
                         <div class="kb-axes-grid red">
-                            <div class="kb-axis-btn" onclick="moveAxis('r', -1)">X-<br>R-</div>
-                            <div class="kb-axis-btn" onclick="moveAxis('r', 1)">X+<br>R+</div>
-                            <div class="kb-axis-btn" onclick="moveAxis('b', -1)">Y-<br>B-</div>
-                            <div class="kb-axis-btn" onclick="moveAxis('b', 1)">Y+<br>B+</div>
-                            <div class="kb-axis-btn" onclick="moveAxis('t', -1)">Z-<br>T-</div>
-                            <div class="kb-axis-btn" onclick="moveAxis('t', 1)">Z+<br>T+</div>
+                            <div id="jog-r-n" class="kb-axis-btn" onclick="moveAxis('r', -1)">X-<br>R-</div>
+                            <div id="jog-r-p" class="kb-axis-btn" onclick="moveAxis('r', 1)">X+<br>R+</div>
+                            <div id="jog-b-n" class="kb-axis-btn" onclick="moveAxis('b', -1)">Y-<br>B-</div>
+                            <div id="jog-b-p" class="kb-axis-btn" onclick="moveAxis('b', 1)">Y+<br>B+</div>
+                            <div id="jog-t-n" class="kb-axis-btn" onclick="moveAxis('t', -1)">Z-<br>T-</div>
+                            <div id="jog-t-p" class="kb-axis-btn" onclick="moveAxis('t', 1)">Z+<br>T+</div>
                             <div class="kb-axis-btn green" onclick="moveAxis('a', -1)">8-</div>
                             <div class="kb-axis-btn green" onclick="moveAxis('a', 1)">8+</div>
                         </div>
@@ -1071,11 +1098,11 @@ function buildRobot() {
     joint1.position.y = 0.04;
     joint0.add(joint1);
 
-    const upperArmGeom = new THREE.CylinderGeometry(0.045, 0.07, 0.38, 16);
+    const upperArmGeom = new THREE.CylinderGeometry(0.045, 0.07, 0.32, 16);
     const upperArm = new THREE.Mesh(upperArmGeom, new THREE.MeshPhongMaterial({ color: yBlue, shininess: 90 }));
     upperArm.castShadow = true;
     upperArm.rotation.z = Math.PI / 2;
-    upperArm.position.x = 0.19;
+    upperArm.position.x = 0.16;
     joint1.add(upperArm);
 
     const elbowJoint = new THREE.Mesh(
@@ -1084,11 +1111,11 @@ function buildRobot() {
     );
     elbowJoint.castShadow = true;
     elbowJoint.rotation.x = Math.PI / 2;
-    elbowJoint.position.x = 0.38;
+    elbowJoint.position.x = 0.32;
     joint1.add(elbowJoint);
 
     const uMotor = new THREE.Mesh(sMotorGeo, new THREE.MeshPhongMaterial({ color: yDark, shininess: 90 }));
-    uMotor.position.set(0.38, 0, 0.10);
+    uMotor.position.set(0.32, 0, 0.10);
     uMotor.rotation.x = Math.PI / 2;
     joint1.add(uMotor);
 
@@ -1096,14 +1123,14 @@ function buildRobot() {
     joints.push(joint1);
 
     const joint2 = new THREE.Group();
-    joint2.position.x = 0.38;
+    joint2.position.x = 0.32;
     joint1.add(joint2);
 
-    const foreArmGeom = new THREE.CylinderGeometry(0.035, 0.045, 0.35, 16);
+    const foreArmGeom = new THREE.CylinderGeometry(0.045, 0.045, 0.20, 16);
     const foreArm = new THREE.Mesh(foreArmGeom, new THREE.MeshPhongMaterial({ color: yBlue, shininess: 90 }));
     foreArm.castShadow = true;
     foreArm.rotation.z = Math.PI / 2;
-    foreArm.position.x = 0.175;
+    foreArm.position.x = 0.10;
     joint2.add(foreArm);
 
     const wristBase = new THREE.Mesh(
@@ -1111,47 +1138,54 @@ function buildRobot() {
         new THREE.MeshPhongMaterial({ color: yGrey, shininess: 90 })
     );
     wristBase.castShadow = true;
-    wristBase.position.x = 0.35;
+    wristBase.position.x = 0.20;
     joint2.add(wristBase);
 
     joints.push(joint2);
 
     const joint3 = new THREE.Group();
-    joint3.position.x = 0.35;
+    joint3.position.x = 0.20;
     joint2.add(joint3);
 
-    const wristAdapter = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.04, 0.04, 0.06, 16),
-        new THREE.MeshPhongMaterial({ color: yBlue, shininess: 90 })
-    );
-    wristAdapter.castShadow = true;
-    wristAdapter.rotation.x = Math.PI / 2;
-    joint3.add(wristAdapter);
-
+    // EJE R: Roll (Rotación del antebrazo)
+    const wristRollGeom = new THREE.CylinderGeometry(0.04, 0.045, 0.12, 16);
+    const wristRoll = new THREE.Mesh(wristRollGeom, new THREE.MeshPhongMaterial({ color: yBlue, shininess: 90 }));
+    wristRoll.rotation.z = Math.PI / 2;
+    wristRoll.position.x = 0.06;
+    joint3.add(wristRoll);
     joints.push(joint3);
 
     const joint4 = new THREE.Group();
-    joint4.position.z = 0;
+    joint4.position.x = 0.12;
     joint3.add(joint4);
 
-    const toolAdapterGeom = new THREE.CylinderGeometry(0.03, 0.03, 0.03, 16);
-    const toolAdapter = new THREE.Mesh(toolAdapterGeom, new THREE.MeshPhongMaterial({ color: 0x222222, shininess: 90 }));
-    toolAdapter.castShadow = true;
-    toolAdapter.rotation.z = Math.PI / 2;
-    toolAdapter.position.x = 0.035;
-    joint4.add(toolAdapter);
+    // EJE B: Bend (Giro arriba/abajo - Cabeceo)
+    // Esta es la "pequeña pieza" que menciona el usuario
+    const wristBendGeom = new THREE.BoxGeometry(0.06, 0.05, 0.05);
+    const wristBend = new THREE.Mesh(wristBendGeom, new THREE.MeshPhongMaterial({ color: yBlue, shininess: 90 }));
+    wristBend.position.x = 0.02;
+    joint4.add(wristBend);
 
+    const bendMotor = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.06, 16), new THREE.MeshPhongMaterial({ color: yDark }));
+    bendMotor.rotation.x = Math.PI / 2;
+    joint4.add(bendMotor);
     joints.push(joint4);
 
     const joint5 = new THREE.Group();
-    joint5.position.x = 0.05;
+    joint5.position.x = 0.04;
     joint4.add(joint5);
 
+    // EJE T: Twist (Rotación de las pinzas)
+    const toolFlangeGeom = new THREE.CylinderGeometry(0.035, 0.035, 0.02, 16);
+    const toolFlange = new THREE.Mesh(toolFlangeGeom, new THREE.MeshPhongMaterial({ color: yGrey, shininess: 90 }));
+    toolFlange.rotation.z = Math.PI / 2;
+    toolFlange.position.x = 0.01;
+    joint5.add(toolFlange);
     joints.push(joint5);
 
     gripperGroup = new THREE.Group();
-    gripperGroup.position.x = 0.08;
-    gripperGroup.position.z = 0.05;
+    gripperGroup.position.x = 0.04;
+    gripperGroup.position.z = 0.035;
     gripperGroup.rotation.x = Math.PI / 2;
     joint5.add(gripperGroup);
 
@@ -1180,8 +1214,8 @@ function buildRobot() {
     gripperGroup.add(fingerBottom);
 
     scissorGroup = new THREE.Group();
-    scissorGroup.position.x = 0.08;
-    scissorGroup.position.z = -0.05;
+    scissorGroup.position.x = 0.04;
+    scissorGroup.position.z = -0.035;
     scissorGroup.rotation.x = Math.PI / 2;
     joint5.add(scissorGroup);
 
@@ -1373,9 +1407,9 @@ function updateRobotDisplay() {
         joints[0].rotation.y = RobotState.angles.s * Math.PI / 180;
         joints[1].rotation.z = RobotState.angles.l * Math.PI / 180;
         joints[2].rotation.z = RobotState.angles.u * Math.PI / 180;
-        joints[3].rotation.y = RobotState.angles.r * Math.PI / 180;
-        joints[4].rotation.x = RobotState.angles.b * Math.PI / 180;
-        joints[5].rotation.y = RobotState.angles.t * Math.PI / 180;
+        joints[3].rotation.x = RobotState.angles.r * Math.PI / 180;
+        joints[4].rotation.z = RobotState.angles.b * Math.PI / 180;
+        joints[5].rotation.x = RobotState.angles.t * Math.PI / 180;
 
         if (gripperGroup) {
             gripperGroup.children.forEach(child => {
@@ -1671,6 +1705,7 @@ function updateDisplay() {
     renderVariable();
     updateGeneralScreen();
     updateCalibrationScreen();
+    updateMultiLayout();
 }
 
 function checkTeachMode(actionName) {
@@ -2390,6 +2425,9 @@ function controlPinza(num, action) {
 function updateGeneralScreen() {
     const p1 = document.getElementById('gen-pinza1-status');
     const p2 = document.getElementById('gen-pinza2-status');
+    const og1 = document.getElementById('og1-status');
+    const og2 = document.getElementById('og2-status');
+    
     if (p1) {
         p1.textContent = digitalOutputs[1] ? 'CERRADA' : 'ABIERTA';
         p1.style.color = digitalOutputs[1] ? '#a00' : '#0a0';
@@ -2397,6 +2435,14 @@ function updateGeneralScreen() {
     if (p2) {
         p2.textContent = digitalOutputs[2] ? 'CERRADA' : 'ABIERTA';
         p2.style.color = digitalOutputs[2] ? '#a00' : '#0a0';
+    }
+    if (og1) {
+        og1.textContent = digitalOutputs[1] ? 'ON' : 'OFF';
+        og1.style.color = digitalOutputs[1] ? '#0f0' : '#666';
+    }
+    if (og2) {
+        og2.textContent = digitalOutputs[2] ? 'ON' : 'OFF';
+        og2.style.color = digitalOutputs[2] ? '#0f0' : '#666';
     }
 }
 
@@ -2612,12 +2658,19 @@ function resetLayout() {
     fontSizeLevel = 'medium';
     robotInfoVisible = true;
     lcdBrightness = 100;
+    isMultiLayout = false;
     
     document.querySelectorAll('.lcd-main').forEach(el => el.style.fontSize = '8px');
     document.querySelectorAll('.job-content').forEach(el => el.style.fontSize = '7px');
     document.querySelectorAll('.lcd-header').forEach(el => el.style.fontSize = '5px');
     document.querySelectorAll('.lcd-display').forEach(el => el.style.filter = 'brightness(1)');
     document.querySelectorAll('.robot-info').forEach(el => el.style.display = 'block');
+    const mlScr = document.getElementById('multi-layout-screen');
+    if (mlScr) mlScr.style.display = 'none';
+    const jsScr = document.getElementById('job-screen');
+    if (jsScr) jsScr.style.display = 'flex';
+    const mlBtn = document.getElementById('multi-layout-btn');
+    if (mlBtn) { mlBtn.style.background = ''; mlBtn.style.color = ''; mlBtn.style.boxShadow = ''; }
     
     const btn = document.getElementById('brightness-btn');
     if (btn) btn.textContent = 'LCD BRIGHT: 100%';
@@ -2626,6 +2679,61 @@ function resetLayout() {
     
     setInfoDisplay('LAYOUT RESET');
     toggleDropdown('display-dropdown');
+}
+
+let isMultiLayout = false;
+
+function toggleMultiLayout() {
+    isMultiLayout = !isMultiLayout;
+    const btn = document.getElementById('multi-layout-btn');
+    const mlScreen = document.getElementById('multi-layout-screen');
+    if (isMultiLayout) {
+        document.querySelectorAll('.lcd-main > div').forEach(el => { el.style.display = 'none'; });
+        mlScreen.style.display = 'flex';
+        if (btn) { btn.style.background = '#0055aa'; btn.style.color = '#fff'; btn.style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.5)'; }
+        updateMultiLayout();
+        setInfoDisplay('MULTI LAYOUT ON: JOB | COORD');
+    } else {
+        mlScreen.style.display = 'none';
+        setView(DxState.view || 'JOB');
+        if (btn) { btn.style.background = ''; btn.style.color = ''; btn.style.boxShadow = ''; }
+        setInfoDisplay('MULTI LAYOUT OFF');
+    }
+}
+
+function updateMultiLayout() {
+    if (!isMultiLayout) return;
+    const a = RobotState.angles;
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    set('ml-s', a.s.toFixed(3) + '°');
+    set('ml-l', a.l.toFixed(3) + '°');
+    set('ml-u', a.u.toFixed(3) + '°');
+    set('ml-r', a.r.toFixed(3) + '°');
+    set('ml-b', a.b.toFixed(3) + '°');
+    set('ml-t', a.t.toFixed(3) + '°');
+    const og1El = document.getElementById('ml-og1');
+    const og2El = document.getElementById('ml-og2');
+    if (og1El) { og1El.textContent = digitalOutputs[1] ? 'ON' : 'OFF'; og1El.style.color = digitalOutputs[1] ? '#0f0' : '#666'; }
+    if (og2El) { og2El.textContent = digitalOutputs[2] ? 'ON' : 'OFF'; og2El.style.color = digitalOutputs[2] ? '#0f0' : '#666'; }
+    set('ml-job-name', DxState.currentJobId || '---');
+    set('ml-step', String(DxState.selectedLineIndex).padStart(4, '0'));
+    const mlArea = document.getElementById('ml-job-area');
+    if (mlArea) {
+        const prog = robotJobs[DxState.currentJobId];
+        if (prog) {
+            mlArea.innerHTML = prog.map((step, i) => {
+                const isSelected = i === DxState.selectedLineIndex;
+                const stepNum = i === 0 ? 'NOP' : i === prog.length - 1 ? 'END' : String(i).padStart(4, '0');
+                const bg = isSelected ? '#1a3a6a' : 'transparent';
+                const col = isSelected ? '#ff0' : '#0f0';
+                return `<div style="background:${bg};color:${col};padding:1px 2px;white-space:nowrap;overflow:hidden;">${stepNum} ${step.code || ''}</div>`;
+            }).join('');
+            const lines = mlArea.querySelectorAll('div');
+            if (lines[DxState.selectedLineIndex]) {
+                try { lines[DxState.selectedLineIndex].scrollIntoView({ block: 'nearest' }); } catch(e) {}
+            }
+        }
+    }
 }
 
 function createNewJob() {
@@ -2756,6 +2864,84 @@ function pressEnter() {
 
     if (DxState.view === 'JOB') {
         setInfoDisplay('READY - Use INSERT/DELETE/MODIFY + ENTER');
+    }
+}
+
+let stepModeActive = false;
+
+function toggleStepMode() {
+    stepModeActive = !stepModeActive;
+    const btn = document.getElementById('step-mode-btn');
+    if (btn) {
+        btn.style.background = stepModeActive ? '#b060ff' : '';
+        btn.style.color = stepModeActive ? '#fff' : '#b060ff';
+        btn.style.boxShadow = stepModeActive ? 'inset 0 2px 4px rgba(0,0,0,0.4), 0 0 8px rgba(176,96,255,0.6)' : '';
+    }
+    setInfoDisplay(stepModeActive ? '⬛ STEP MODE ON — FWD/BWD = 1 paso' : '⬛ STEP MODE OFF — modo continuo');
+}
+
+function stepProgram(dir) {
+    const currentProgram = robotJobs[DxState.currentJobId];
+    if (!currentProgram || currentProgram.length === 0) {
+        setInfoDisplay('⚠ No hay programa cargado');
+        return;
+    }
+
+    if (stepModeActive) {
+        // STEP MODE: mueve una instrucción cada vez
+        if (dir === 'FWD') {
+            RobotState.programStep = Math.min(RobotState.programStep + 1, currentProgram.length - 1);
+        } else {
+            RobotState.programStep = Math.max(RobotState.programStep - 1, 0);
+        }
+        const step = currentProgram[RobotState.programStep];
+        DxState.selectedLineIndex = RobotState.programStep;
+
+        // Ejecutar la instrucción del paso actual
+        if (step.code && step.code.startsWith('MOV')) {
+            // Mover robot a la posición del paso
+            const startAngles = { ...RobotState.angles };
+            const target = { s: step.s || 0, l: step.l || 0, u: step.u || 0, r: step.r || 0, b: step.b || 0, t: step.t || 0 };
+            let p = 0;
+            const anim = setInterval(() => {
+                p = Math.min(p + 0.06, 1.0);
+                RobotState.angles.s = startAngles.s + (target.s - startAngles.s) * p;
+                RobotState.angles.l = startAngles.l + (target.l - startAngles.l) * p;
+                RobotState.angles.u = startAngles.u + (target.u - startAngles.u) * p;
+                RobotState.angles.r = startAngles.r + (target.r - startAngles.r) * p;
+                RobotState.angles.b = startAngles.b + (target.b - startAngles.b) * p;
+                RobotState.angles.t = startAngles.t + (target.t - startAngles.t) * p;
+                updateDisplay();
+                if (p >= 1.0) clearInterval(anim);
+            }, 30);
+        } else if (step.code && step.code.startsWith('DOUT')) {
+            const m = step.code.match(/DOUT OG#\((\d)\) (ON|OFF)/);
+            if (m) {
+                const port = parseInt(m[1]);
+                const on = m[2] === 'ON';
+                digitalOutputs[port] = on;
+                if (port === 1) gripperAngle = on ? 0 : 0.015;
+                if (port === 2) gripper2Angle = on ? 0 : 0.015;
+            }
+        }
+
+        const stepLabel = RobotState.programStep === 0 ? 'NOP' :
+                          RobotState.programStep === currentProgram.length - 1 ? 'END' :
+                          String(RobotState.programStep);
+        setInfoDisplay(`${dir === 'FWD' ? '▶' : '◀'} STEP ${stepLabel}: ${step.code || '---'}`);
+        document.getElementById('job-step-indicator').textContent = String(RobotState.programStep).padStart(4, '0');
+        if (DxState.view === 'JOB') renderJob();
+
+    } else {
+        // MODO CONTINUO: FWD/BWD mueve cursor de línea en la pantalla JOB
+        if (dir === 'FWD') {
+            DxState.selectedLineIndex = Math.min(DxState.selectedLineIndex + 1, currentProgram.length - 1);
+        } else {
+            DxState.selectedLineIndex = Math.max(DxState.selectedLineIndex - 1, 0);
+        }
+        document.getElementById('job-step-indicator').textContent = String(DxState.selectedLineIndex).padStart(4, '0');
+        setInfoDisplay(`${dir} — Línea ${DxState.selectedLineIndex}: ${currentProgram[DxState.selectedLineIndex].code}`);
+        if (DxState.view === 'JOB') renderJob();
     }
 }
 
