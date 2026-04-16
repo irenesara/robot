@@ -7,14 +7,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-@media (max-width: 800px) and (orientation: portrait) {
-    html, body { overflow-y: auto; height: auto; min-height: 100vh; }
-    .main-container { flex-direction: column; height: auto; min-height: 100vh; }
-    .robot-section { width: 100%; height: 35vh; min-height: 120px; flex: none; }
-    #canvas { width: 100%; height: 100%; }
-    .console-wrapper { width: 100%; height: auto; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-    .console-main { min-height: calc(65vh); }
-}
 body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflow: hidden; height: 100vh; height: 100dvh; }
 
 .main-container { display: flex; flex-direction: row; height: 100%; width: 100%; gap: 15px; padding: 15px; align-items: stretch; justify-content: center; max-width: 1400px; margin: 0 auto; overflow: hidden; }
@@ -141,6 +133,15 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
 
 .info-display { background: #000; color: #0f0; border: 2px solid #0f0; padding: 4px; font-size: 8px; font-weight: bold; min-height: 20px; margin-top: 5px; overflow: visible; display: block; }
 /* Responsive overrides removed for authentic fixed-size UI */
+@media (max-width: 800px) {
+    body { overflow: hidden; height: 100dvh; display: flex; flex-direction: column; }
+    .main-container { flex-direction: column; height: 100%; padding: 0; gap: 0; overflow: hidden; margin: 0; max-width: none; }
+    .robot-section { width: 100%; height: 33dvh; flex: none; border: none; border-bottom: 2px solid #444; }
+    #canvas { width: 100%; height: 100%; }
+    .console-wrapper { width: 100%; flex: 1; height: calc(67dvh); overflow-y: auto; padding-right: 0; -webkit-overflow-scrolling: touch; }
+    .console-main { min-height: 100%; padding: 10px; border-width: 4px; border-radius: 0; }
+    .robot-info { font-size: 7px; padding: 4px; }
+}
     </style>
 </head>
 <body>
