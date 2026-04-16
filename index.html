@@ -3343,6 +3343,21 @@ function stepProgram(direction) {
         }
         return;
     }
+
+    if (DxState.view === 'HOME-POSITION') {
+        if (direction === 'FWD') {
+            if (!RobotState.deadman) {
+                setInfoDisplay('⚠ MANTENGA DEADMAN (ESPACIO) + FWD PARA IR A HOME');
+                return;
+            }
+            if (!isServoOn) {
+                setInfoDisplay('⚠ CONECTE SERVOS (ON) PARA IR A HOME');
+                return;
+            }
+            resetToZero();
+        }
+        return;
+    }
     
     if (!RobotState.deadman) {
         setInfoDisplay('⚠ Active DEADMAN (ESPACIO) para FWD/BWD'); 
