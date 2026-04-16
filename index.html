@@ -136,11 +136,17 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
 @media (max-width: 800px) {
     body { overflow: hidden; height: 100dvh; display: flex; flex-direction: column; }
     .main-container { flex-direction: column; height: 100%; padding: 0; gap: 0; overflow: hidden; margin: 0; max-width: none; }
-    .robot-section { width: 100%; height: 33dvh; flex: none; border: none; border-bottom: 2px solid #444; }
+    .robot-section { width: 100%; height: 33dvh; flex: none; border: none; border-bottom: 1px solid #444; }
     #canvas { width: 100%; height: 100%; }
-    .console-wrapper { width: 100%; flex: 1; height: calc(67dvh); overflow-y: auto; padding-right: 0; -webkit-overflow-scrolling: touch; }
-    .console-main { min-height: 100%; padding: 10px; border-width: 4px; border-radius: 0; }
+    .console-wrapper { width: 100%; flex: 1; height: calc(67dvh); overflow-y: auto; padding-right: 0; -webkit-overflow-scrolling: touch; background: #555; }
+    .console-main { min-height: 0; padding: 5px; border-width: 0; gap: 2px; }
+    .top-operation-buttons { flex-wrap: wrap; justify-content: center; padding: 5px; gap: 5px; }
+    .op-button { width: 36px; height: 36px; font-size: 6px; }
+    .back-controls-box { width: 100%; margin: 0; justify-content: center; padding: 4px; border-style: solid; margin-top: 2px; }
+    .deadman-btn { padding: 2px 8px; font-size: 8px; }
+    .lcd-display { height: 160px; margin-top: 0; }
     .robot-info { font-size: 7px; padding: 4px; }
+    .kb-container { padding: 2px; gap: 2px; }
 }
     </style>
 </head>
