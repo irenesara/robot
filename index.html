@@ -93,6 +93,9 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
 .sec-mode { padding: 2px 4px; font-size: 8px; cursor: pointer; color: #000; font-family: 'Courier New', monospace; }
 .sec-mode:hover { background: #e0e0ff; }
 .sec-mode.selected { background: #0000aa; color: #fff; font-weight: bold; }
+.op-emg { background: #cc0000; color: #fff; font-size: 6px; }
+.op-start.active { background: #00ff00 !important; box-shadow: 0 0 15px #00ff00, inset 0 2px 5px rgba(255,255,255,0.5); border-color: #fff; color: #000; }
+.op-hold.active { background: #ffa500 !important; box-shadow: 0 0 15px #ffa500, inset 0 2px 5px rgba(255,255,255,0.5); border-color: #fff; color: #000; }
 .sec-screen-inner { padding: 8px 12px; display: flex; gap: 40px; flex: 1; background: #eaeff2; font-family: 'Courier New', monospace; }
 .sec-mode-box { border: 2px solid #0000aa; background: #fff; width: 130px; display: flex; flex-direction: column; height: fit-content; margin-top: -2px; }
 .coord-row { display: flex; justify-content: space-between; border-bottom: 1px dashed #444; padding: 2px 0; }
@@ -166,8 +169,6 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
         <div class="console-wrapper">
             <div class="console-main">
                 <div class="top-operation-buttons">
-                    <div class="op-button op-remote" title="REMOTE/PLAY" onclick="setMode('REMOTE')">REMOTE</div>
-                    <div class="op-button op-teach" title="TEACH" onclick="setMode('TEACH')">TEACH</div>
                     <div class="op-button op-start" title="START" onclick="startProgram()">START</div>
                     <div class="op-button op-hold" title="HOLD" onclick="handleFunc('hold')">HOLD</div>
                     <div class="op-button op-emg" title="EMERGENCY STOP" onclick="emergencyStop()">E-STOP</div>
@@ -3426,6 +3427,12 @@ window.addEventListener('load', () => {
 
     function gameLoop() {
         requestAnimationFrame(gameLoop);
+
+        // Actualizar luces de botones superiores
+        const startBtn = document.querySelector('.op-start');
+        const holdBtn = document.querySelector('.op-hold');
+        if (startBtn) startBtn.classList.toggle('active', RobotState.programRunning);
+        if (holdBtn) holdBtn.classList.toggle('active', !RobotState.programRunning && DxState.view === 'JOB');
 
         const currentProgram = robotJobs[DxState.currentJobId];
         if (RobotState.programRunning && currentProgram && currentProgram.length > 0) {
