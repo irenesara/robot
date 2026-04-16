@@ -48,7 +48,7 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
 .lcd-top-bar { background: #000000; color: #0f0; padding: 1px 4px; font-size: 7px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; border-bottom: 2px solid #0f0; }
 .lcd-body { display: flex; flex: 1; height: auto; overflow: visible; }
 .lcd-sidebar { width: 50px; background: #000000; border-right: 1px solid #0f0; display: flex; flex-direction: column; padding: 2px; overflow-y: auto; flex-shrink: 0; }
-.lcd-sidebar-btn { min-height: 15px; font-size: 3px; text-align: center; border: 1px solid #0f0; background: #000000; cursor: pointer; font-weight: bold; border-radius: 2px; display: flex; align-items: center; justify-content: center; line-height: 1.1; margin: 1px 0; padding: 1px; }
+.lcd-sidebar-btn { min-height: 22px; font-size: 6px; text-align: center; border: 1px solid #0f0; background: #000000; cursor: pointer; font-weight: bold; border-radius: 2px; display: flex; align-items: center; justify-content: center; line-height: 1.1; margin: 1px 0; padding: 2px; }
 .lcd-sidebar-btn:active, .lcd-sidebar-btn.active { background: #fff; border-left: 3px solid #1a3a6a; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
 .lcd-main { flex: 1; display: flex; flex-direction: column; background: #fff; font-family: 'Courier New', monospace; font-size: 8px; position: relative; overflow-y: auto; overflow-x: hidden; }
 .lcd-header { background: #e0e0e0; border-bottom: 1px solid #ccc; padding: 1px 4px; display: flex; gap: 8px; font-weight: bold; font-size: 5px; color: #333; flex-shrink: 0; }
@@ -194,6 +194,7 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                         <span>SIMULADOR ROBOT <small style="font-size: 5px; opacity: 0.7;">v2.4</small></span>
                         <span>STATUS: <span id="lcd-status" style="color:#0f0;">READY</span></span>
                         <span>MODE: <span id="lcd-mode" style="color:#ff0;">TEACH</span></span>
+                        <span>SEC: <span id="lcd-security" style="color:#f0f;">OPER</span></span>
                         <span>COORD: <span id="lcd-coord" style="color:#0ff;">JOINT</span></span>
                         <span>OG#1:<span id="og1-status" style="color:#666;">OFF</span></span>
                         <span>OG#2:<span id="og2-status" style="color:#666;">OFF</span></span>
@@ -1509,8 +1510,16 @@ function selectHomeAxis(element) {
 }
 
 function setSecurityMode(modeName, element) {
+    DxState.securityMode = modeName;
     document.querySelectorAll('.sec-mode').forEach(el => el.classList.remove('selected'));
-    element.classList.add('selected');
+    if (element) element.classList.add('selected');
+    
+    const secIndicator = document.getElementById('lcd-security');
+    if (secIndicator) {
+        secIndicator.textContent = modeName === 'OPERATION' ? 'OPER' : (modeName === 'EDITING' ? 'EDIT' : (modeName === 'MANAGEMENT' ? 'MGMT' : 'SAFE'));
+        secIndicator.style.color = modeName === 'OPERATION' ? '#f0f' : (modeName === 'EDITING' ? '#ff3300' : '#ffea00');
+    }
+    
     setInfoDisplay('✓ Nivel de seguridad: ' + modeName + ' MODE');
 }
 
