@@ -7,24 +7,24 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: Arial, sans-serif; background: #0a0a0a; color: #fff; overflow: hidden; height: 100vh; height: 100dvh; }
+body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflow: hidden; height: 100vh; height: 100dvh; }
 
 .main-container { display: flex; flex-direction: row; height: 100%; width: 100%; gap: 15px; padding: 15px; align-items: stretch; justify-content: center; max-width: 1400px; margin: 0 auto; overflow: hidden; }
-.robot-section { flex: 1.2; min-width: 350px; background: linear-gradient(135deg, #1a2a3a, #0f1820); border-radius: 10px; border: 2px solid #444; overflow: hidden; display: flex; flex-direction: column; height: 100%; position: relative; }
+.robot-section { flex: 1.2; min-width: 350px; background: #000000; border: 2px solid #444; overflow: hidden; display: flex; flex-direction: column; height: 100%; position: relative; }
 #canvas { flex: 1; touch-action: none; }
 .robot-info { background: rgba(0,0,0,0.95); padding: 6px; border-top: 1px solid #444; font-size: 8px; line-height: 1.4; font-family: monospace; }
 
 .console-wrapper { width: 480px; flex-shrink: 0; height: 100%; overflow-y: auto; padding-right: 5px; scroll-behavior: smooth; }
-.console-main { background: linear-gradient(135deg, #888888, #777777); border-radius: 16px; padding: 15px; box-shadow: 0 20px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.3); border: 6px solid #555; display: flex; flex-direction: column; gap: 8px; width: 100%; transition: all 0.3s ease; }
+.console-main { background: #555555; border-radius: 0; padding: 15px; border: 6px solid #555; display: flex; flex-direction: column; gap: 8px; width: 100%; }
 
 .top-operation-buttons { display: flex; gap: 8px; align-items: center; justify-content: space-between; padding: 3px 10px; background: rgba(0,0,0,0.1); border-radius: 6px; flex-wrap: nowrap; overflow: hidden; width: 100%; }
 .op-button { width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; font-size: 5px; border: 3px solid; transition: all 0.1s; text-align: center; line-height: 1.1; padding: 2px; flex-shrink: 0; }
 .op-button:active { transform: scale(0.95); }
-.op-remote { background: linear-gradient(135deg, #d0d0d0, #b0b0b0); border-color: #666; color: #222; }
-.op-teach { background: radial-gradient(circle at 30% 30%, #00ff00, #00aa00); border-color: #005500; color: white; }
-.op-start { background: radial-gradient(circle at 30% 30%, #ffffff, #e0e0e0); border-color: #999; color: #222; }
-.op-hold { background: radial-gradient(circle at 30% 30%, #ffffff, #e0e0e0); border-color: #999; color: #222; }
-.op-emg { width: 48px; height: 48px; background: radial-gradient(circle at 30% 30%, #ff3333, #cc0000); border-color: #aa0000; border-width: 4px; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 0 0 4px #ffdd00; flex-shrink: 0; font-size: 5px; }
+.op-remote { background: #0000c0; border-color: #0000c0; color: #fff; }
+.op-teach { background: #00c000; border-color: #00c000; color: #fff; }
+.op-start { background: #c0c000; border-color: #c0c000; color: #000; }
+.op-hold { background: #c0c000; border-color: #c0c000; color: #000; }
+.op-emg { width: 48px; height: 48px; background: #c00000; border-color: #c00000; border-width: 4px; color: #fff; flex-shrink: 0; font-size: 5px; }
 
 .back-controls-box { background: rgba(0,0,0,0.15); border: 2px dashed #ffaa00; border-radius: 6px; padding: 3px 6px; display: flex; gap: 5px; align-items: center; justify-content: center; flex-shrink: 0; margin-left: auto; }
 .back-controls-title { color: #ffaa00; font-weight: bold; font-size: 6px; writing-mode: vertical-rl; text-orientation: mixed; margin-right: 2px; }
@@ -41,11 +41,11 @@ body { font-family: Arial, sans-serif; background: #0a0a0a; color: #fff; overflo
 .key-label-teach { top: -2px; right: -26px; color: #0f0; }
 .key-current-position { position: absolute; bottom: 1px; font-size: 4px; font-weight: bold; color: #ff6600; background: rgba(0,0,0,0.7); padding: 0px 2px; border-radius: 2px; }
 
-.lcd-display { background: #e0e0e0; border: 3px solid #222; border-radius: 3px; height: 240px; flex-shrink: 0; color: #000; font-family: Arial, sans-serif; box-shadow: inset 0 3px 8px rgba(0,0,0,0.5); display: flex; flex-direction: column; overflow: hidden; margin: 0; user-select: none; position: relative; }
-.lcd-top-bar { background: linear-gradient(to bottom, #1a3a6a, #0a2a5a); color: white; padding: 1px 4px; font-size: 7px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; border-bottom: 2px solid #000; flex-wrap: wrap; gap: 2px; }
+.lcd-display { background: #000000; border: 3px solid #0f0; border-radius: 0; height: 240px; flex-shrink: 0; color: #0f0; font-family: "Courier New", monospace; display: flex; flex-direction: column; overflow: hidden; margin: 0; user-select: none; position: relative; }
+.lcd-top-bar { background: #000000; color: #0f0; padding: 1px 4px; font-size: 7px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; border-bottom: 2px solid #0f0; }
 .lcd-body { display: flex; flex: 1; height: auto; overflow: visible; }
-.lcd-sidebar { width: 50px; background: #c0c0c0; border-right: 1px solid #999; display: flex; flex-direction: column; padding: 2px; overflow-y: auto; flex-shrink: 0; }
-.lcd-sidebar-btn { min-height: 15px; font-size: 3px; text-align: center; border: 1px solid #a0a0a0; background: linear-gradient(to bottom, #f0f0f0, #d0d0d0); cursor: pointer; font-weight: bold; border-radius: 2px; display: flex; align-items: center; justify-content: center; line-height: 1.1; margin: 1px 0; padding: 1px; word-break: break-word; }
+.lcd-sidebar { width: 50px; background: #000000; border-right: 1px solid #0f0; display: flex; flex-direction: column; padding: 2px; overflow-y: auto; flex-shrink: 0; }
+.lcd-sidebar-btn { min-height: 15px; font-size: 3px; text-align: center; border: 1px solid #0f0; background: #000000; cursor: pointer; font-weight: bold; border-radius: 2px; display: flex; align-items: center; justify-content: center; line-height: 1.1; margin: 1px 0; padding: 1px; }
 .lcd-sidebar-btn:active, .lcd-sidebar-btn.active { background: #fff; border-left: 3px solid #1a3a6a; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
 .lcd-main { flex: 1; display: flex; flex-direction: column; background: #fff; font-family: 'Courier New', monospace; font-size: 8px; position: relative; overflow-y: auto; overflow-x: hidden; }
 .lcd-header { background: #e0e0e0; border-bottom: 1px solid #ccc; padding: 1px 4px; display: flex; gap: 8px; font-weight: bold; font-size: 5px; color: #333; flex-shrink: 0; }
@@ -125,43 +125,14 @@ body { font-family: Arial, sans-serif; background: #0a0a0a; color: #fff; overflo
 .kb-bot-col { display: flex; flex-direction: column; gap: 4px; }
 .kb-numpad { display: grid; grid-template-columns: repeat(3, 36px); grid-template-rows: repeat(4, 26px); gap: 3px; background: #e6f0fa; padding: 4px; border-radius: 4px; border: 2px solid #1a3a6a; }
 .kb-bot-btn { background: #e0e0e0; border: 1px solid #888; border-radius: 3px; font-size: 5px; font-weight: bold; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; box-shadow: inset 1px 1px 2px #fff, 0 2px 2px rgba(0,0,0,0.3); height: 26px; line-height: 1.1; color: #222; }
+.kb-bot-btn { background: #e0e0e0; border: 1px solid #888; border-radius: 3px; font-size: 5px; font-weight: bold; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; height: 26px; line-height: 1.1; color: #222; }
 .kb-bot-btn.blue-text { color: #1a3a6a; }
 .kb-bot-btn.purple-text { color: #60c; }
-.kb-bot-btn.numpad-key { font-size: 10px; background: #fff; border: 1px solid #999; box-shadow: inset 1px 1px 2px #fff, 0 2px 2px rgba(0,0,0,0.2); }
-.kb-bot-btn:active { transform: translateY(1px); box-shadow: inset 0 1px 3px rgba(0,0,0,0.2); }
+.kb-bot-btn.numpad-key { font-size: 10px; background: #fff; border: 1px solid #999; }
+.kb-bot-btn:active { transform: translateY(1px); }
 
 .info-display { background: #000; color: #0f0; border: 2px solid #0f0; padding: 4px; font-size: 8px; font-weight: bold; min-height: 20px; margin-top: 5px; overflow: visible; display: block; }
-
-@media (max-width: 768px), (orientation: portrait) {
-    .main-container { flex-direction: column; overflow: hidden; padding: 6px; gap: 6px; }
-    .robot-section { flex: none; height: 35vh; min-width: 100%; }
-    .console-wrapper { width: 100%; height: 65vh; overflow-y: auto; padding-right: 2px; }
-    .console-main { padding: 8px; border-width: 4px; }
-    .lcd-display { height: 180px; }
-    #canvas { height: 100%; }
-}
-        overflow: hidden;
-    }
-    .console-wrapper {
-        flex: 1 1 0 !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        overflow-y: auto !important;
-        overflow-x: hidden !important;
-        -webkit-overflow-scrolling: touch;
-        overflow: visible !important;
-    }
-    .console-main {
-        max-height: none !important;
-        overflow: visible !important;
-        height: auto !important;
-    }
-    .lcd-display { height: 200px !important; min-height: 200px !important; flex-shrink: 0; }
-    .top-operation-buttons { justify-content: center; flex-shrink: 0; flex-wrap: wrap; }
-    .kb-container { overflow-y: visible !important; height: auto !important; flex-shrink: 0; }
-    .kb-btn-sq { font-size: 3px !important; }
-    .lcd-sidebar-btn { font-size: 4px !important; }
-}
+/* Responsive overrides removed for authentic fixed-size UI */
     </style>
 </head>
 <body>
@@ -177,18 +148,18 @@ body { font-family: Arial, sans-serif; background: #0a0a0a; color: #fff; overflo
         <div class="console-wrapper">
             <div class="console-main">
                 <div class="top-operation-buttons">
-                    <div class="op-button op-remote" title="REMOTE/PLAY">◄</div>
-                    <div class="op-button op-teach" title="TEACH" onclick="setMode('teach')">TEACH</div>
-                    <div class="op-button op-start" title="START" onclick="startProgram()">START</div>
-                    <div class="op-button op-hold" title="HOLD" onclick="handleFunc('hold')">HOLD</div>
-                    <div class="op-button op-emg" title="EMERGENCY STOP" onclick="emergencyStop()">E-STOP</div>
+                    <div class="op-button op-remote" title="REMOTE/PLAY">REMOTE</div>
+                    <div class="op-button op-teach" title="TEACH">TEACH</div>
+                    <div class="op-button op-start" title="START">START</div>
+                    <div class="op-button op-hold" title="HOLD">HOLD</div>
+                    <div class="op-button op-emg" title="EMERGENCY STOP">E-STOP</div>
                     
                     <div class="back-controls-box">
                         <div class="back-controls-title">REAR</div>
                         <div class="key-switch-container" title="Llave Selectora - Click para rotar">
                             <div class="key-switch-label key-label-remote">REM</div>
                             <div class="key-switch-label key-label-teach">TEA</div>
-                            <div class="key-switch-dial" id="keySwitch" onclick="rotateKeySwitch()">
+                            <div class="key-switch-dial" id="keySwitch">
                                 <div class="key-indicator" id="keyIndicator"></div>
                                 <div class="key-current-position" id="keyPosition">OFF</div>
                             </div>
