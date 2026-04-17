@@ -161,7 +161,65 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
 @keyframes cursor-blink-anim { 50% { opacity: 0; } }
 .blink-active { animation: blink-active-anim 0.8s ease-in-out infinite !important; background: #ffea00 !important; color: #000 !important; border: 2px solid #fff !important; box-shadow: 0 0 15px #ffea00 !important; z-index: 10; }
 @keyframes blink-active-anim { 0%, 100% { background: #ffea00 !important; color: #000 !important; } 50% { background: #000 !important; color: #ffea00 !important; } }
-    </style>
+    /* INFORM LIST SIDEBAR */
+.inform-sidebar {
+    width: 100px;
+    background: #1a3a6a;
+    border-left: 1px solid #fff;
+    display: none;
+    flex-direction: column;
+    z-index: 100;
+}
+.inform-sidebar.active {
+    display: flex;
+}
+.inform-header {
+    background: #000;
+    color: #fff;
+    font-size: 6px;
+    padding: 2px 4px;
+    text-align: center;
+    border-bottom: 1px solid #555;
+}
+.inform-item {
+    padding: 4px 6px;
+    font-size: 6px;
+    color: #fff;
+    border-bottom: 1px solid #444;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+}
+.inform-item:hover {
+    background: #2b4b9b;
+}
+.inform-item span.arrow {
+    color: #0ff;
+}
+
+/* BUFFER LINE */
+#lcd-buffer-line {
+    background: #000;
+    color: #ff0;
+    font-family: 'Courier New', monospace;
+    font-size: 8px;
+    padding: 2px 6px;
+    border-top: 1px solid #ff0;
+    min-height: 16px;
+    display: flex;
+    align-items: center;
+    display: none;
+}
+#lcd-buffer-line.active {
+    display: flex;
+    animation: buffer-pulse 2s infinite;
+}
+@keyframes buffer-pulse {
+    0% { background: #000; }
+    50% { background: #110; }
+    100% { background: #000; }
+}
+</style>
 </head>
 <body>
     <div class="main-container">
@@ -299,10 +357,24 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                                     <div><span style="color:#aaa;">VJ:</span> <span id="job-speed-indicator">50.00</span></div>
                                 </div>
 
-                                <div id="job-content-area" style="flex: 1; overflow-y: auto; background: #000; padding: 2px; font-family: 'Courier New', monospace; font-size: 7px; color: #0f0;"></div>
+                                <div style="display: flex; flex: 1; overflow: hidden;">
+                                    <div id="job-content-area" style="flex: 1; overflow-y: auto; background: #000; padding: 2px; font-family: 'Courier New', monospace; font-size: 7px; color: #0f0;"></div>
+                                    
+                                    <!-- INFORM LIST SIDEBAR -->
+                                    <div id="inform-sidebar" class="inform-sidebar">
+                                        <div class="inform-header" id="inform-title">INFORM LIST</div>
+                                        <div id="inform-list-content"></div>
+                                    </div>
+                                </div>
                                 
+                                <!-- INSTRUCTION BUFFER LINE -->
+                                <div id="lcd-buffer-line" onclick="clearBuffer()">
+                                    <span style="color:#666; margin-right:5px;">BUF:</span>
+                                    <span id="buffer-text"></span>
+                                </div>
+
                                 <div id="job-buffer-area" style="background: #1a1a2e; border-top: 1px solid #555; padding: 2px 6px; color: #fff; font-size: 7px; height: 14px; display: flex; align-items: center;">
-                                    <span style="color:#666;">READY</span>
+                                    <span id="job-bottom-status" style="color:#666;">READY</span>
                                 </div>
                             </div>
 
@@ -858,7 +930,7 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                         
                         <div class="kb-bot-col">
                             <div class="kb-bot-btn blue-text" id="interlock-btn" onclick="toggleInterlock()">INTER<br>LOCK</div>
-                            <div class="kb-bot-btn" onclick="showMsg('INFORM LIST')">INFORM<br>LIST</div>
+                            <div class="kb-bot-btn" onclick="toggleInformList()">INFORM<br>LIST</div>
                             <div class="kb-bot-btn" onclick="showMsg('WELD ON/OFF')">WELD<br>ON/OFF</div>
                             <div class="kb-bot-btn" onclick="showMsg('MOTION TYPE')">MOTION<br>TYPE</div>
                         </div>
@@ -921,6 +993,9 @@ const RobotState = {
 const DxState = {
     view: 'JOB',
     currentJobId: 'JOB_ALAMBRE',
+    isInformListOpen: false,
+    informMenuLevel: 'ROOT', // ROOT, MOTION, IO, CONTROL
+    instructionBuffer: '',
     selectedLineIndex: 0,
     selectedListIndex: 0,
     selectedTokenIndex: 0,
@@ -1566,6 +1641,152 @@ function selectWgravLine(idx) {
             }
         }
     }
+}
+
+/* ==========================================================================
+   INFORM LIST LOGIC (Industrial Fidelity)
+   ========================================================================== */
+
+const INFORM_MENU = {
+    'ROOT': [
+        { label: 'MOTION', type: 'cat', value: 'MOTION' },
+        { label: 'IN/OUT', type: 'cat', value: 'IO' },
+        { label: 'CONTROL', type: 'cat', value: 'CONTROL' },
+        { label: 'DEVICE', type: 'cat', value: 'DEVICE' },
+        { label: 'ARITH', type: 'cat', value: 'ARITH' }
+    ],
+    'MOTION': [
+        { label: 'MOVJ', type: 'inst', value: 'MOVJ VJ=50.00' },
+        { label: 'MOVL', type: 'inst', value: 'MOVL V=100.0' },
+        { label: 'MOVC', type: 'inst', value: 'MOVC V=100.0' },
+        { label: '◄ ATRÁS', type: 'cat', value: 'ROOT' }
+    ],
+    'IO': [
+        { label: 'DOUT', type: 'inst', value: 'DOUT OG#(1) ON' },
+        { label: 'DIN', type: 'inst', value: 'WAIT IN#(1)=ON' },
+        { label: 'PULSE', type: 'inst', value: 'PULSE OT#(1) T=1.0' },
+        { label: '◄ ATRÁS', type: 'cat', value: 'ROOT' }
+    ],
+    'CONTROL': [
+        { label: 'TIMER', type: 'inst', value: 'TIMER T=1.00' },
+        { label: 'WAIT', type: 'inst', value: 'WAIT T=1.00' },
+        { label: 'JUMP', type: 'inst', value: 'JUMP *LABEL' },
+        { label: 'CALL', type: 'inst', value: 'CALL JOB:JOB_NAME' },
+        { label: 'LABEL', type: 'inst', value: '*LABEL' },
+        { label: '◄ ATRÁS', type: 'cat', value: 'ROOT' }
+    ],
+    'DEVICE': [
+        { label: 'HAND', type: 'inst', value: 'HAND' },
+        { label: '◄ ATRÁS', type: 'cat', value: 'ROOT' }
+    ],
+    'ARITH': [
+        { label: 'SET', type: 'inst', value: 'SET D000 0' },
+        { label: 'ADD', type: 'inst', value: 'ADD D000 1' },
+        { label: '◄ ATRÁS', type: 'cat', value: 'ROOT' }
+    ]
+};
+
+function toggleInformList() {
+    if (DxState.view !== 'JOB') setView('JOB');
+    DxState.isInformListOpen = !DxState.isInformListOpen;
+    DxState.informMenuLevel = 'ROOT';
+    renderInformMenu();
+}
+
+function renderInformMenu() {
+    const sidebar = document.getElementById('inform-sidebar');
+    const content = document.getElementById('inform-list-content');
+    const title = document.getElementById('inform-title');
+    
+    if (!DxState.isInformListOpen) {
+        if (sidebar) sidebar.classList.remove('active');
+        return;
+    }
+    
+    if (sidebar) sidebar.classList.add('active');
+    if (title) title.textContent = `INFORM LIST (${DxState.informMenuLevel})`;
+    if (content) {
+        content.innerHTML = '';
+        const items = INFORM_MENU[DxState.informMenuLevel] || [];
+        items.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'inform-item';
+            div.innerHTML = `<span>${item.label}</span> ${item.type === 'cat' ? '<span class="arrow">▶</span>' : ''}`;
+            div.onclick = () => {
+                if (item.type === 'cat') {
+                    DxState.informMenuLevel = item.value;
+                    renderInformMenu();
+                } else {
+                    stageInstruction(item.value);
+                }
+            };
+            content.appendChild(div);
+        });
+    }
+}
+
+function stageInstruction(code) {
+    DxState.instructionBuffer = code;
+    DxState.isInformListOpen = false;
+    renderInformMenu();
+    updateBufferDisplay();
+}
+
+function updateBufferDisplay() {
+    const bufferLine = document.getElementById('lcd-buffer-line');
+    const bufferText = document.getElementById('buffer-text');
+    const bottomStatus = document.getElementById('job-bottom-status');
+
+    if (DxState.instructionBuffer) {
+        if (bufferLine) bufferLine.classList.add('active');
+        if (bufferText) bufferText.textContent = DxState.instructionBuffer;
+        if (bottomStatus) {
+            bottomStatus.textContent = 'CONFIRME CON [ENTER]';
+            bottomStatus.style.color = '#ff0';
+        }
+    } else {
+        if (bufferLine) bufferLine.classList.remove('active');
+        if (bottomStatus) {
+            bottomStatus.textContent = 'READY';
+            bottomStatus.style.color = '#666';
+        }
+    }
+}
+
+function clearBuffer() {
+    DxState.instructionBuffer = '';
+    updateBufferDisplay();
+}
+
+function confirmInstructionInsertion() {
+    const currentJob = robotJobs[DxState.currentJobId];
+    if (!currentJob) return;
+
+    // Si la línea seleccionada es 'END', no insertamos después
+    if (DxState.selectedLineIndex >= currentJob.length) {
+        setInfoDisplay('❌ No se puede insertar después de END');
+        return;
+    }
+
+    const newInst = JSON.parse(JSON.stringify(currentJob[0])); // Clonar estructura básica
+    newInst.code = DxState.instructionBuffer;
+    
+    // Si es un movimiento, capturar posición actual
+    if (newInst.code.startsWith('MOV')) {
+        Object.assign(newInst, RobotState.angles);
+    }
+    
+    if (isInserting) {
+        currentJob.splice(DxState.selectedLineIndex, 0, newInst);
+        setInfoDisplay('✓ INSTRUCCIÓN INSERTADA');
+    } else {
+        currentJob[DxState.selectedLineIndex] = newInst;
+        setInfoDisplay('✓ INSTRUCCIÓN MODIFICADA');
+    }
+    
+    DxState.instructionBuffer = '';
+    updateBufferDisplay();
+    renderJob();
 }
 
 function toggleInterlock(active) {
@@ -3183,6 +3404,13 @@ function createNewJob() {
 }
 
 function pressEnter() {
+    // 1. Si hay una instrucción en el búfer (INFORM LIST), la insertamos/modificamos
+    if (DxState.instructionBuffer) {
+        confirmInstructionInsertion();
+        return;
+    }
+
+    // 2. Lógica existente para WGRAV
     if (DxState.view === 'WGRAV') {
         const wInput = document.getElementById('wgrav-val-w');
         if (wInput && wInput.textContent !== '*.*** kg') {
