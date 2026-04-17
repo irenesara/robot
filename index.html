@@ -155,10 +155,12 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
     .op-button { width: 36px; height: 36px; font-size: 6px; }
     .back-controls-box { width: 100%; margin: 0; justify-content: center; padding: 18px 5px 6px 5px; border-style: solid; margin-top: 5px; }
     .deadman-btn { padding: 2px 8px; font-size: 8px; }
-    .lcd-display { height: 160px; margin-top: 0; }
-    .robot-info { font-size: 7px; padding: 4px; }
-    .kb-container { padding: 2px; gap: 2px; }
 }
+
+.cursor-blink { animation: cursor-blink-anim 1s step-end infinite; color: #fff; font-weight: bold; }
+@keyframes cursor-blink-anim { 50% { opacity: 0; } }
+.blink-active { animation: blink-active-anim 0.8s ease-in-out infinite !important; background: #ffea00 !important; color: #000 !important; border: 2px solid #fff !important; box-shadow: 0 0 15px #ffea00 !important; z-index: 10; }
+@keyframes blink-active-anim { 0%, 100% { background: #ffea00 !important; color: #000 !important; } 50% { background: #000 !important; color: #ffea00 !important; } }
     </style>
 </head>
 <body>
@@ -206,7 +208,7 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                         <span>OG#2:<span id="og2-status" style="color:#666;">OFF</span></span>
                     </div>
                     <div class="lcd-menu-bar" style="position: relative;">
-                        <div class="menu-tab" onclick="toggleDropdown('data-dropdown', this)">DATA</div>
+                        <div class="menu-tab" onclick="toggleDropdown('job-dropdown', this)">JOB</div>
                         <div class="menu-tab" onclick="toggleDropdown('edit-dropdown', this); const sm = document.getElementById('edit-submenu'); if(sm) sm.style.display='none';">EDIT</div>
                         <div class="menu-tab" id="display-tab" onclick="toggleDropdown('display-dropdown', this)">DISPLAY</div>
                         <div class="menu-tab" onclick="toggleDropdown('utility-dropdown', this)">UTILITY</div>
@@ -214,7 +216,13 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                             <span style="color:#2b4b9b;">1⇆2</span> <span style="font-size:10px;">📐</span> <span style="color:green;">📶</span> <span>🗝️</span>
                         </div>
                         
-                        <div id="data-dropdown" class="dropdown-menu" style="width: 130px; left: 0;">
+                        <div id="job-dropdown" class="dropdown-menu" style="width: 140px; left: 0;">
+                            <div class="dropdown-item" onclick="setView('LIST'); toggleDropdown('job-dropdown')">SELECT JOB</div>
+                            <div class="dropdown-item" onclick="createNewJob(); toggleDropdown('job-dropdown')">CREATE NEW JOB</div>
+                            <div class="dropdown-item" onclick="showDataInfo('total'); toggleDropdown('job-dropdown')">JOB CAPACITY</div>
+                        </div>
+
+                        <div id="data-dropdown" class="dropdown-menu" style="width: 130px; left: 25%;">
                             <div class="dropdown-item" onclick="showDataInfo('total')">TOTAL TIME</div>
                             <div class="dropdown-item" onclick="showDataInfo('cycle')">CYCLE TIME</div>
                             <div class="dropdown-item" onclick="showDataInfo('count')">CYCLE COUNT</div>
@@ -291,6 +299,10 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                                 </div>
 
                                 <div id="job-content-area" style="flex: 1; overflow-y: auto; background: #000; padding: 2px; font-family: 'Courier New', monospace; font-size: 7px; color: #0f0;"></div>
+                                
+                                <div id="job-buffer-area" style="background: #1a1a2e; border-top: 1px solid #555; padding: 2px 6px; color: #fff; font-size: 7px; height: 14px; display: flex; align-items: center;">
+                                    <span style="color:#666;">READY</span>
+                                </div>
                             </div>
 
                              <div id="multi-layout-screen" style="display: none; flex-direction: row; height: 100%; min-height: 150px; background: #1a1a2e;">
@@ -868,14 +880,14 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                         <div class="kb-bot-col">
                             <div class="kb-bot-btn purple-text" onclick="startProgram()">TEST<br>START</div>
                             <div class="kb-bot-btn purple-text" onclick="stepProgram('BWD')">BWD</div>
-                            <div class="kb-bot-btn" onclick="pressDelete()">DELETE</div>
-                            <div class="kb-bot-btn" onclick="pressModify()">MODIFY</div>
+                            <div class="kb-bot-btn" id="delete-btn" onclick="pressDelete()">DELETE</div>
+                            <div class="kb-bot-btn" id="modify-btn" onclick="pressModify()">MODIFY</div>
                         </div>
                         
                         <div class="kb-bot-col">
                             <div class="kb-bot-btn" onclick="toggleShift()">SHIFT</div>
                             <div class="kb-bot-btn purple-text" onclick="stepProgram('FWD')">FWD</div>
-                            <div class="kb-bot-btn" onclick="pressInsert()">INSERT</div>
+                            <div class="kb-bot-btn" id="insert-btn" onclick="pressInsert()">INSERT</div>
                             <div class="kb-bot-btn" onclick="pressEnter()" style="flex:1;">ENTER</div>
                         </div>
                     </div>
@@ -914,6 +926,9 @@ const DxState = {
     isInserting: false,
     isDeleting: false,
     isModifying: false,
+    activeEditAction: null, // 'MODIFY', 'INSERT', 'DELETE'
+    editingBuffer: '',      // Línea de comandos en preparación
+    securityMode: 'EDITING', // Por defecto en edición para facilitar pruebas
     clipboard: null,
     insertType: 'MOVJ',
     insertSpeed: 50,
@@ -1140,30 +1155,33 @@ function buildRobot() {
     joint2.position.x = 0.32;
     joint1.add(joint2);
 
-    const foreArmGeom = new THREE.CylinderGeometry(0.05, 0.05, 0.20, 24);
-    const foreArm = new THREE.Mesh(foreArmGeom, new THREE.MeshPhongMaterial({ color: yBlue, shininess: 100, specular: 0x222222 }));
-    foreArm.castShadow = true;
-    foreArm.rotation.z = Math.PI / 2;
-    foreArm.position.x = 0.10;
-    joint2.add(foreArm);
+    // NUEVA PIEZA ÚNICA ARQUEADA (Eje U) - Reducida 1/4
+    const uArmShape = new THREE.Shape();
+    uArmShape.moveTo(0, 0.03);
+    uArmShape.quadraticCurveTo(0.075, 0.05, 0.15, 0.02); // Curva hacia abajo al final
+    uArmShape.lineTo(0.15, -0.02);
+    uArmShape.quadraticCurveTo(0.075, 0, 0, -0.03);
+    uArmShape.lineTo(0, 0.03);
 
-    // Carcasa superior del antebrazo
-    const foreArmCase = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.06, 0.08), new THREE.MeshPhongMaterial({ color: yBlue, shininess: 100, specular: 0x222222 }));
-    foreArmCase.position.set(0.10, 0.05, 0);
-    joint2.add(foreArmCase);
+    const extrudeSettings = { depth: 0.07, bevelEnabled: true, bevelThickness: 0.005, bevelSize: 0.01, bevelSegments: 2 };
+    const uArmGeom = new THREE.ExtrudeGeometry(uArmShape, extrudeSettings);
+    const uArm = new THREE.Mesh(uArmGeom, new THREE.MeshPhongMaterial({ color: yBlue, shininess: 100, specular: 0x222222 }));
+    uArm.castShadow = true;
+    uArm.position.z = -0.035; // Centrar la extrusión
+    joint2.add(uArm);
 
     const wristBase = new THREE.Mesh(
-        new THREE.SphereGeometry(0.05, 20, 20),
+        new THREE.SphereGeometry(0.04, 20, 20),
         new THREE.MeshPhongMaterial({ color: yGrey, shininess: 120 })
     );
     wristBase.castShadow = true;
-    wristBase.position.x = 0.20;
+    wristBase.position.x = 0.15; // Ajustado por la reducción de tamaño
     joint2.add(wristBase);
 
     joints.push(joint2);
 
     const joint3 = new THREE.Group();
-    joint3.position.x = 0.20;
+    joint3.position.x = 0.15; // Ajustado por la reducción de tamaño
     joint2.add(joint3);
 
     // EJE R: Roll (Rotación del antebrazo)
@@ -1721,40 +1739,36 @@ function moveAxis(axis, dir) {
 
     if (axis === 'a') {
         const maxOpen = 0.030;
-        gripperAngle = Math.max(0, Math.min(maxOpen, gripperAngle + (0.03 * dir)));
-        const pct = Math.round((gripperAngle / maxOpen) * 100);
-        if (gripperAngle <= 0.001) setInfoDisplay('✓ PINZA 1 CERRADA');
-        else if (gripperAngle >= maxOpen - 0.001) setInfoDisplay('✓ PINZA 1 ABIERTA');
-        else setInfoDisplay(`✓ PINZA 1: ${pct}%`);
+        gripperAngle = Math.max(0, Math.min(maxOpen, gripperAngle + (0.01 * dir)));
+        setInfoDisplay(`✓ PINZA 1: ${Math.round((gripperAngle / maxOpen) * 100)}%`);
         return;
     }
     if (axis === 'e') {
         const maxOpen = 0.030;
-        gripper2Angle = Math.max(0, Math.min(maxOpen, gripper2Angle + (0.03 * dir)));
-        if (gripper2Angle <= 0.001) setInfoDisplay('✓ PINZA 2 CERRADA');
-        else if (gripper2Angle >= maxOpen - 0.001) setInfoDisplay('✓ PINZA 2 ABIERTA');
-        else setInfoDisplay(`✓ PINZA 2: ${Math.round((gripper2Angle / maxOpen) * 100)}%`);
+        gripper2Angle = Math.max(0, Math.min(maxOpen, gripper2Angle + (0.01 * dir)));
+        setInfoDisplay(`✓ PINZA 2: ${Math.round((gripper2Angle / maxOpen) * 100)}%`);
         return;
     }
+    
+    // REQUISITOS DE MOVIMIENTO (Auténticos)
     if (!RobotState.deadman) {
-        setInfoDisplay('⚠️ Requiere DEADMAN (Espacio)');
+        setInfoDisplay('⚠️ SEGURIDAD: Mantenga DEADMAN (ESPACIO) presionado');
         return;
     }
     if (!isServoOn) {
-        setInfoDisplay('⚠️ Requiere SERVO ON READY (Luz verde)');
-        // Feedback visual error en el botón servo
+        setInfoDisplay('⚠️ POTENCIA: Pulse [SERVO ON READY] (Luz verde)');
         const sBtn = document.getElementById('servo-btn');
         if (sBtn) {
-            const oldBg = sBtn.style.background;
             sBtn.style.background = '#a00';
-            setTimeout(() => sBtn.style.background = oldBg, 200);
+            setTimeout(() => sBtn.style.background = isServoOn ? '#0f0' : '#ccc', 200);
         }
         return;
     }
+
     const axisMap = { x: 's', y: 'l', z: 'u', r: 'r', b: 'b', t: 't' };
     const sAxis = axisMap[axis];
     if (sAxis && RobotState.angles[sAxis] !== undefined) {
-        const inc = RobotState.speed * 0.18 * dir;
+        const inc = (RobotState.speed * 0.15) * dir;
         RobotState.angles[sAxis] = Math.max(
             RobotState.limits[sAxis].min,
             Math.min(RobotState.limits[sAxis].max, RobotState.angles[sAxis] + inc)
@@ -1762,7 +1776,7 @@ function moveAxis(axis, dir) {
         const axisToJoint = { s: 0, l: 1, u: 2, r: 3, b: 4, t: 5 };
         highlightJoint(axisToJoint[sAxis]);
         updateDisplay();
-        setInfoDisplay(`✓ ${sAxis.toUpperCase()} ${dir > 0 ? '+' : '−'}`);
+        setInfoDisplay(`✓ MOVIENDO ${sAxis.toUpperCase()} ${dir > 0 ? '+' : '−'}`);
     }
 }
 
@@ -2223,78 +2237,81 @@ function closeHomeConfirm(accepted) {
     }
 }
 
+function cancelEdit() {
+    DxState.activeEditAction = null;
+    DxState.isModifying = false;
+    DxState.isInserting = false;
+    DxState.isDeleting = false;
+    DxState.editingBuffer = '';
+    document.querySelectorAll('.blink-active').forEach(el => el.classList.remove('blink-active'));
+    renderJob();
+}
+
 function pressModify() {
     if (DxState.view === 'WGRAV') {
         setInfoDisplay('⚠ MANTENGA PULSADO [FWD] PARA MEDICIÓN'); return;
     }
-    if (DxState.view !== 'JOB') { setInfoDisplay('⚠ MODIFY: Cambie a pantalla JOB'); return; }
+    if (DxState.view !== 'JOB') { setInfoDisplay('⚠ MODIFY: Cambie a JOB'); return; }
     if (!checkTeachMode('MODIFY')) return;
-    DxState.isModifying = true; DxState.isInserting = false; DxState.isDeleting = false;
-    document.getElementById('job-mode-indicator').style.display = 'block';
-    const currentProgram = robotJobs[DxState.currentJobId];
-    if (currentProgram && currentProgram[DxState.selectedLineIndex]) {
-        const step = currentProgram[DxState.selectedLineIndex];
-        document.getElementById('job-mode-indicator').textContent = 'MODIFY: ' + step.code;
+    if (DxState.securityMode === 'OPERATION') { setInfoDisplay('❌ SECURITY ERROR: REQUIRE EDITING MODE'); return; }
+    
+    const btn = document.getElementById('modify-btn');
+    if (DxState.activeEditAction === 'MODIFY') {
+        cancelEdit();
     } else {
-        document.getElementById('job-mode-indicator').textContent = 'MODIFY MODE';
+        cancelEdit();
+        DxState.activeEditAction = 'MODIFY';
+        DxState.isModifying = true;
+        if (btn) btn.classList.add('blink-active');
+
+        // Poblar buffer con la línea actual
+        const currentProgram = robotJobs[DxState.currentJobId];
+        const step = currentProgram[DxState.selectedLineIndex];
+        DxState.editingBuffer = step.code || '';
+
+        setInfoDisplay('MODIFY: Mueva robot luego ENTER');
+        renderJob();
     }
-    setInfoDisplay('MODIFY: Mueva robot a nueva posicion, luego ENTER');
-    renderJob();
 }
 
 function pressInsert() {
-    if (DxState.view !== 'JOB') { 
-        setInfoDisplay('⚠ Cambie a JOB'); 
-        return; 
+    if (DxState.view !== 'JOB') { setInfoDisplay('⚠ Cambie a JOB'); return; }
+    if (!checkTeachMode('INSERT')) return;
+    if (DxState.securityMode === 'OPERATION') { setInfoDisplay('❌ SECURITY ERROR: REQUIRE EDITING MODE'); return; }
+
+    const btn = document.getElementById('insert-btn');
+    if (DxState.activeEditAction === 'INSERT') {
+        cancelEdit();
+    } else {
+        cancelEdit();
+        DxState.activeEditAction = 'INSERT';
+        DxState.isInserting = true;
+        if (btn) btn.classList.add('blink-active');
+
+        // Definir instrucción por defecto en buffer
+        DxState.editingBuffer = 'MOVJ VJ=' + RobotState.speed + '.00';
+        setInfoDisplay('INSERT: ' + DxState.editingBuffer + ' - ENTER para insertar');
+        renderJob();
     }
-    
-    DxState.insertType = 'MOVJ';
-    DxState.insertSpeed = 50;
-    DxState.isInserting = true;
-    DxState.isDeleting = false;
-    DxState.isModifying = false;
-    
-    document.getElementById('job-mode-indicator').style.display = 'block';
-    document.getElementById('job-mode-indicator').textContent = 'INSERT: ' + DxState.insertType + ' VJ=' + DxState.insertSpeed;
-    setInfoDisplay('INSERT: ' + DxState.insertType + ' VJ=' + DxState.insertSpeed + '.00 - ENTER para insertar');
 }
 
 function pressDelete() {
-    if (DxState.view !== 'JOB') { 
-        setInfoDisplay('⚠ DELETE: Cambie a pantalla JOB'); 
-        return; 
+    if (DxState.view !== 'JOB') { setInfoDisplay('⚠ DELETE: Cambie a JOB'); return; }
+    if (!checkTeachMode('DELETE')) return;
+    if (DxState.securityMode === 'OPERATION') { setInfoDisplay('❌ SECURITY ERROR: REQUIRE EDITING MODE'); return; }
+
+    const btn = document.getElementById('delete-btn');
+    if (DxState.activeEditAction === 'DELETE') {
+        cancelEdit();
+    } else {
+        cancelEdit();
+        DxState.activeEditAction = 'DELETE';
+        DxState.isDeleting = true;
+        if (btn) btn.classList.add('blink-active');
+
+        setInfoDisplay('DELETE: ENTER para borrar');
+        renderJob();
     }
-    if (RobotState.mode !== 'TEACH') {
-        setInfoDisplay('❌ DELETE: Modo TEACH requerido');
-        return;
-    }
-    const currentProgram = robotJobs[DxState.currentJobId];
-    if (!currentProgram || currentProgram.length === 0) {
-        setInfoDisplay('⚠ No hay lineas para borrar');
-        return;
-    }
-    if (DxState.selectedLineIndex < 0 || DxState.selectedLineIndex >= currentProgram.length) {
-        setInfoDisplay('⚠ Seleccione una linea primero');
-        return;
-    }
-    const step = currentProgram[DxState.selectedLineIndex];
-    if (step.code === 'NOP' || step.code === 'END') {
-        setInfoDisplay('⚠ No se puede borrar NOP o END');
-        return;
-    }
-    
-    DxState.isDeleting = true;
-    DxState.isInserting = false;
-    DxState.isModifying = false;
-    
-    const modeEl = document.getElementById('job-mode-indicator');
-    if (modeEl) {
-        modeEl.textContent = 'DELETE MODE';
-        modeEl.style.color = '#f00';
-    }
-    
-    setInfoDisplay('DELETE: Linea ' + DxState.selectedLineIndex + ' - ENTER para borrar');
-    renderJob();
 }
 
 function goToTop() {
@@ -2340,30 +2357,24 @@ function renderJob() {
         return;
     }
 
-    const isAtPosition = (step) => {
-        const threshold = 1.0;
-        return Math.abs(step.s - RobotState.angles.s) < threshold &&
-               Math.abs(step.l - RobotState.angles.l) < threshold &&
-               Math.abs(step.u - RobotState.angles.u) < threshold &&
-               Math.abs(step.r - RobotState.angles.r) < threshold &&
-               Math.abs(step.b - RobotState.angles.b) < threshold &&
-               Math.abs(step.t - RobotState.angles.t) < threshold;
-    };
-
     currentProgram.forEach((step, index) => {
         const line = document.createElement('div');
         const isSelected = index === DxState.selectedLineIndex;
-        const atPos = isAtPosition(step);
         
-        line.className = 'job-line';
+        line.className = 'job-line' + (isSelected ? ' selected' : '');
         
-        if (DxState.isDeleting && isSelected) {
-            line.style.cssText = 'background:#800;color:#fff;padding:1px 2px;cursor:pointer;border-bottom:1px solid #600;';
-        } else if (isSelected) {
-            line.style.cssText = 'background:#1a3a6a;color:#fff;padding:1px 2px;cursor:pointer;border-bottom:1px solid #0a2050;';
-        } else {
-            line.style.cssText = 'padding:1px 2px;cursor:pointer;border-bottom:1px solid #333;';
+        // Estilo de línea seleccionada o en edición
+        let lineStyle = 'padding:1px 2px;cursor:pointer;border-bottom:1px solid #333;';
+        let lineNumStyle = 'color:#888;width:25px;display:inline-block;text-align:right;margin-right:4px;';
+
+        if (isSelected) {
+            lineStyle = 'background:#1a3a6a;color:#fff;padding:1px 2px;cursor:pointer;border-bottom:1px solid #0a2050;';
+            if (DxState.activeEditAction) {
+                lineNumStyle += 'text-decoration: underline; color: #fff; font-weight: bold;';
+            }
         }
+
+        line.style.cssText = lineStyle;
 
         const code = step.code || 'MOVJ VJ=50.00';
         const tokens = code.split(' ');
@@ -2371,28 +2382,41 @@ function renderJob() {
         tokens.forEach((token, tIndex) => {
             let style = 'color:inherit;';
             if (isSelected) {
-                style = tIndex === 0 ? 'color:#ff0;font-weight:bold;' : 'color:#0ff;';
+                if (tIndex === 0) style = 'color:#ff0;font-weight:bold;';
+                else if (tIndex === DxState.selectedTokenIndex) style = 'background: #000; color: #ffea00; padding: 0 2px; border-radius: 2px; border: 1px solid #ffea00;';
+                else style = 'color:#0ff;';
             }
             tokenHtml += `<span style="${style}">${token}</span> `;
         });
 
         const stepNum = index === 0 ? 'NOP' : index === currentProgram.length - 1 ? 'END' : String(index);
-        line.innerHTML = `<span style="color:#888;width:25px;display:inline-block;text-align:right;margin-right:4px;">${stepNum}</span><span>${tokenHtml}</span>`;
+        line.innerHTML = `<span style="${lineNumStyle}">${stepNum}</span><span>${tokenHtml}</span>`;
         
         line.onclick = (e) => {
             e.stopPropagation();
             DxState.selectedLineIndex = index;
             DxState.selectedTokenIndex = 0;
-            DxState.isInserting = false; DxState.isDeleting = false; DxState.isModifying = false;
+            cancelEdit();
             renderJob();
-            updateJobDetail();
         };
         container.appendChild(line);
     });
 
+    // RENDER LÍNEA DE BUFFER
+    const bufferContainer = document.getElementById('job-buffer-area');
+    if (bufferContainer) {
+        if (DxState.activeEditAction) {
+            let actionColor = DxState.activeEditAction === 'DELETE' ? '#f44' : '#4f4';
+            bufferContainer.innerHTML = `<span style="color:${actionColor}; font-weight:bold; margin-right:8px;">${DxState.activeEditAction}:</span> <span>${DxState.editingBuffer}</span><span class="cursor-blink">_</span>`;
+            bufferContainer.style.background = '#0a2050';
+        } else {
+            bufferContainer.innerHTML = '<span style="color:#666;">READY</span>';
+            bufferContainer.style.background = '#1a1a2e';
+        }
+    }
+
     updateJobDetail();
     updateJobStatusIndicator();
-    updateJobCmdButtons();
 
     const selectedElem = container.querySelector('.selected');
     if (selectedElem) {
@@ -3077,8 +3101,15 @@ function updateMultiLayout() {
 }
 
 function createNewJob() {
-    const num = Object.keys(robotJobs).length + 1;
-    const newName = 'NEW_JOB_' + num;
+    let newName = prompt("NOMBRE DEL JOB:", "JOB_001");
+    if (!newName) return;
+    newName = newName.toUpperCase().replace(/\s+/g, '_');
+
+    if (robotJobs[newName]) {
+        alert("¡Error! Ya existe un JOB con ese nombre.");
+        return;
+    }
+
     robotJobs[newName] = [
         { s: 0, l: 0, u: 0, r: 0, b: 0, t: 0, code: 'NOP', desc: 'INICIO' },
         { s: 0, l: 0, u: 0, r: 0, b: 0, t: 0, code: 'END', desc: 'FIN' }
@@ -3088,6 +3119,7 @@ function createNewJob() {
     saveJobsLocally();
     setView('JOB');
     setInfoDisplay('✓ Nuevo trabajo creado: ' + newName);
+    renderJob();
 }
 
 function pressEnter() {
@@ -3113,97 +3145,56 @@ function pressEnter() {
     }
 
     const currentProgram = robotJobs[DxState.currentJobId];
+    if (!currentProgram) return;
 
-    if (DxState.isInserting) {
-        document.getElementById('insert-view').style.display = 'none';
-        document.getElementById('job-content-area').style.display = 'block';
-        
-        const sk = DxState.insertType === 'MOVJ' ? 'VJ' : DxState.insertType === 'MOVL' ? 'VL' : DxState.insertType === 'MOVC' ? 'V' : 'V';
+    // LÓGICA DE COMMIT (Confirmación de edición)
+    if (DxState.activeEditAction === 'INSERT') {
         const newStep = {
             s: RobotState.angles.s, l: RobotState.angles.l, u: RobotState.angles.u,
             r: RobotState.angles.r, b: RobotState.angles.b, t: RobotState.angles.t,
-            code: DxState.insertType + ' ' + sk + '=' + DxState.insertSpeed.toFixed(2), 
-            desc: 'PUNTO ' + (currentProgram.length + 1)
+            code: DxState.editingBuffer || ('MOVJ VJ=' + RobotState.speed.toFixed(2)), 
+            desc: 'Punto ENSEÑADO'
         };
-        if (DxState.selectedLineIndex >= 0 && DxState.selectedLineIndex < currentProgram.length) {
-            currentProgram.splice(DxState.selectedLineIndex + 1, 0, newStep);
-            DxState.selectedLineIndex++;
-        } else {
-            currentProgram.push(newStep);
-            DxState.selectedLineIndex = currentProgram.length - 1;
-        }
-        setInfoDisplay('INSERT: ' + newStep.code + ' insertado');
-        DxState.isInserting = false;
-        document.getElementById('job-mode-indicator').style.display = 'none';
+        currentProgram.splice(DxState.selectedLineIndex + 1, 0, newStep);
+        DxState.selectedLineIndex++;
+        setInfoDisplay('✓ INSERT: Instrucción añadida');
+        cancelEdit();
         saveJobsLocally();
-        renderJob();
         return;
     }
 
-    if (DxState.isDeleting) {
-        if (DxState.selectedLineIndex < 0 || !currentProgram || DxState.selectedLineIndex >= currentProgram.length) {
-            setInfoDisplay('⚠ No hay linea seleccionada');
-            DxState.isDeleting = false;
+    if (DxState.activeEditAction === 'DELETE') {
+        const step = currentProgram[DxState.selectedLineIndex];
+        if (step.code === 'NOP' || step.code === 'END') {
+            setInfoDisplay('❌ No se permite borrar NOP / END');
+            cancelEdit();
             return;
         }
-        const stepCode = currentProgram[DxState.selectedLineIndex].code;
-        if (stepCode === 'NOP' || stepCode === 'END') {
-            setInfoDisplay('⚠ No se puede borrar NOP o END');
-            DxState.isDeleting = false;
-            const modeEl = document.getElementById('job-mode-indicator');
-            if (modeEl) modeEl.style.display = 'none';
-            renderJob();
-            return;
-        }
-        const deletedLine = DxState.selectedLineIndex;
         currentProgram.splice(DxState.selectedLineIndex, 1);
-        if (DxState.selectedLineIndex >= currentProgram.length && currentProgram.length > 0) {
-            DxState.selectedLineIndex = currentProgram.length - 1;
-        } else if (currentProgram.length === 0) {
-            DxState.selectedLineIndex = -1;
-        }
-        DxState.isDeleting = false;
-        const modeEl = document.getElementById('job-mode-indicator');
-        if (modeEl) {
-            modeEl.textContent = 'INSERT MODE';
-            modeEl.style.color = '#ff0';
-        }
-        setInfoDisplay('✅ DELETE: Linea ' + deletedLine + ' borrada');
+        DxState.selectedLineIndex = Math.max(0, DxState.selectedLineIndex - 1);
+        setInfoDisplay('✓ DELETE: Línea eliminada');
+        cancelEdit();
         saveJobsLocally();
-        renderJob();
         return;
     }
 
-    if (DxState.isModifying) {
-        if (DxState.selectedLineIndex < 0 || !currentProgram || DxState.selectedLineIndex >= currentProgram.length) {
-            setInfoDisplay('⚠ No hay linea seleccionada');
-            return;
-        }
-        if (!isServoOn) {
-            setInfoDisplay('⚠ Active SERVO ON primero');
-            return;
-        }
-        let step = currentProgram[DxState.selectedLineIndex];
-        step.s = RobotState.angles.s;
-        step.l = RobotState.angles.l;
-        step.u = RobotState.angles.u;
-        step.r = RobotState.angles.r;
-        step.b = RobotState.angles.b;
-        step.t = RobotState.angles.t;
-        const codeMatch = step.code.match(/^(\w+)\s+(V[^\s=]+=\d+\.\d+)/i);
-        if (codeMatch) {
-            step.code = codeMatch[1] + ' ' + codeMatch[2];
-        }
-        setInfoDisplay('MODIFY: Posicion actualizada');
-        DxState.isModifying = false;
-        document.getElementById('job-mode-indicator').style.display = 'none';
+    if (DxState.activeEditAction === 'MODIFY') {
+        const step = currentProgram[DxState.selectedLineIndex];
+        if (step.code === 'NOP' || step.code === 'END') return;
+        
+        // Actualizar coordenadas a la posición actual del robot
+        step.s = RobotState.angles.s; step.l = RobotState.angles.l; step.u = RobotState.angles.u;
+        step.r = RobotState.angles.r; step.b = RobotState.angles.b; step.t = RobotState.angles.t;
+        step.code = DxState.editingBuffer;
+        
+        setInfoDisplay('✓ MODIFY: Posición y comando actualizados');
+        cancelEdit();
         saveJobsLocally();
-        renderJob();
         return;
     }
 
     if (DxState.view === 'JOB') {
-        setInfoDisplay('READY - Use INSERT/DELETE/MODIFY + ENTER');
+        setInfoDisplay('✓ READY - Use [INSERT], [DELETE] o [MODIFY] para editar');
     }
 }
 
