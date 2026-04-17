@@ -202,8 +202,9 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                         <span>SIMULADOR ROBOT <small style="font-size: 5px; opacity: 0.7;">v2.4</small></span>
                         <span>STATUS: <span id="lcd-status" style="color:#0f0;">READY</span></span>
                         <span>MODE: <span id="lcd-mode" style="color:#ff0;">TEACH</span></span>
+                        <span>SPD: <span id="lcd-speed" style="color:#ff0;">50%</span></span>
                         <span>SEC: <span id="lcd-security" style="color:#f0f;">OPER</span></span>
-                        <span>COORD: <span id="lcd-coord" style="color:#0ff;">JOINT</span></span>
+                        <span>COORD: <span id="lcd-coord" style="color:#0ff;">JOINT</span><small id="lcd-tool-no" style="font-size:7px; color:#fff; display:none;">(00)</small></span>
                         <span>OG#1:<span id="og1-status" style="color:#666;">OFF</span></span>
                         <span>OG#2:<span id="og2-status" style="color:#666;">OFF</span></span>
                     </div>
@@ -856,7 +857,7 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                         </div>
                         
                         <div class="kb-bot-col">
-                            <div class="kb-bot-btn blue-text" onclick="showMsg('INTERLOCK')">INTER<br>LOCK</div>
+                            <div class="kb-bot-btn blue-text" id="interlock-btn" onclick="toggleInterlock()">INTER<br>LOCK</div>
                             <div class="kb-bot-btn" onclick="showMsg('INFORM LIST')">INFORM<br>LIST</div>
                             <div class="kb-bot-btn" onclick="showMsg('WELD ON/OFF')">WELD<br>ON/OFF</div>
                             <div class="kb-bot-btn" onclick="showMsg('MOTION TYPE')">MOTION<br>TYPE</div>
@@ -962,6 +963,7 @@ let robotJobs = {
 let wgravSelectedIdx = 0;
 let wgravCompleted = [false, false, false, false, false];
 let isShiftPressed = false;
+let isInterlockPressed = false;
 let isServoOn = false;
 let keyPosition = 0;
 const keyPositions = ['OFF', 'REMOTE', 'TEACH'];
@@ -1566,13 +1568,34 @@ function selectWgravLine(idx) {
     }
 }
 
+function toggleInterlock(active) {
+    if (active !== undefined && isInterlockPressed === active) return;
+    isInterlockPressed = (active !== undefined) ? active : !isInterlockPressed;
+    
+    const btn = document.getElementById('interlock-btn');
+    if (btn) {
+        btn.style.background = isInterlockPressed ? '#2b4b9b' : '';
+        btn.style.color = isInterlockPressed ? '#fff' : '';
+        btn.style.boxShadow = isInterlockPressed ? '0 0 10px #3b5bdb' : '';
+    }
+    
+    setInfoDisplay(isInterlockPressed ? '✓ INTERLOCK: ACTIVADO (Fuerce de Seguridad)' : '✓ INTERLOCK: DESACTIVADO');
+}
+
 function toggleShift(active) {
     if (active !== undefined && isShiftPressed === active) return;
     isShiftPressed = (active !== undefined) ? active : !isShiftPressed;
-    setInfoDisplay(isShiftPressed ? '✓ SHIFT: BLOQUEADO (Activo)' : '✓ SHIFT: LIBERADO (Inactivo)');
+    
     document.querySelectorAll('.kb-bot-btn').forEach(b => {
-        if (b.textContent.trim() === 'SHIFT') b.style.background = isShiftPressed ? '#a0a0a0' : '';
+        if (b.textContent.trim() === 'SHIFT') {
+            b.style.background = isShiftPressed ? '#3b5bdb' : '';
+            b.style.color = isShiftPressed ? '#fff' : '';
+            b.style.boxShadow = isShiftPressed ? '0 0 10px #3b5bdb' : '';
+        }
     });
+
+    // Pequeño indicador visual en el LCD (opcional, muy auténtico)
+    setInfoDisplay(isShiftPressed ? '✓ SHIFT: ACTIVADO (Segunda Función)' : '✓ SHIFT: DESACTIVADO');
 }
 
 function toggleDeadman() {
@@ -1636,7 +1659,9 @@ function setMode(mode) {
 
 function setSpeed(speed) {
     RobotState.speed = speed;
-    setInfoDisplay(`⚡ Velocidad: ${speed}%`);
+    const speedEl = document.getElementById('lcd-speed');
+    if (speedEl) speedEl.textContent = speed + '%';
+    setInfoDisplay(`⚡ Velocidad Manual: ${speed}%`);
 }
 
 function rotateKeySwitch() {
@@ -1848,6 +1873,19 @@ function handleDir(dir) {
     }
     if (DxState.view === 'JOB') {
         const currentProgram = robotJobs[DxState.currentJobId];
+        
+        // COMBINACIÓN SHIFT: Ajuste fino de velocidad (1% en 1%)
+        if (isShiftPressed && (dir === 'up' || dir === 'down')) {
+            if (dir === 'up') RobotState.speed = Math.min(100, RobotState.speed + 1);
+            else RobotState.speed = Math.max(1, RobotState.speed - 1);
+            
+            const speedEl = document.getElementById('lcd-speed');
+            if (speedEl) speedEl.textContent = RobotState.speed + '%';
+            
+            setInfoDisplay(`⚡ Velocidad: ${RobotState.speed}% (Ajuste Fino)`);
+            return;
+        }
+
         if (currentProgram && currentProgram.length > 0) {
             if (dir === 'up') {
                 DxState.selectedLineIndex = Math.max(0, DxState.selectedLineIndex - 1);
@@ -2319,6 +2357,29 @@ function goToTop() {
     if (DxState.view !== 'JOB') setView('JOB');
     else renderJob();
     setInfoDisplay('↑ CURSOR EN INICIO DEL PROGRAMA');
+}
+
+function toggleCoordSystem() {
+    if (isShiftPressed) {
+        // SHIFT + COORD: Cambiar número de herramienta (Tool No)
+        DxState.currentToolNo = (DxState.currentToolNo === 0) ? 1 : 0;
+        setInfoDisplay('✓ TOOL SELECT: Herramienta #' + DxState.currentToolNo);
+        const el = document.getElementById('lcd-tool-no');
+        if (el) el.textContent = '(' + String(DxState.currentToolNo).padStart(2, '0') + ')';
+        return;
+    }
+
+    const systems = ['JOINT', 'ROBOT', 'TOOL', 'USER'];
+    const idx = systems.indexOf(DxState.coordSystem);
+    DxState.coordSystem = systems[(idx + 1) % systems.length];
+    
+    const coordEl = document.getElementById('lcd-coord');
+    const toolEl = document.getElementById('lcd-tool-no');
+    if (coordEl) coordEl.textContent = DxState.coordSystem;
+    if (toolEl) toolEl.style.display = (DxState.coordSystem === 'TOOL' || DxState.coordSystem === 'USER') ? 'inline' : 'none';
+    
+    setInfoDisplay('Coordenadas: ' + DxState.coordSystem);
+    updateKeyIcons();
 }
 
 function resetToZero() {
@@ -3211,73 +3272,21 @@ function toggleStepMode() {
     setInfoDisplay(stepModeActive ? '⬛ STEP MODE ON — FWD/BWD = 1 paso' : '⬛ STEP MODE OFF — modo continuo');
 }
 
-function stepProgram(dir) {
-    const currentProgram = robotJobs[DxState.currentJobId];
-    if (!currentProgram || currentProgram.length === 0) {
-        setInfoDisplay('⚠ No hay programa cargado');
-        return;
-    }
-
-    if (stepModeActive) {
-        // STEP MODE: mueve una instrucción cada vez
-        if (dir === 'FWD') {
-            RobotState.programStep = Math.min(RobotState.programStep + 1, currentProgram.length - 1);
-        } else {
-            RobotState.programStep = Math.max(RobotState.programStep - 1, 0);
-        }
-        const step = currentProgram[RobotState.programStep];
-        DxState.selectedLineIndex = RobotState.programStep;
-
-        // Ejecutar la instrucción del paso actual
-        if (step.code && step.code.startsWith('MOV')) {
-            // Mover robot a la posición del paso
-            const startAngles = { ...RobotState.angles };
-            const target = { s: step.s || 0, l: step.l || 0, u: step.u || 0, r: step.r || 0, b: step.b || 0, t: step.t || 0 };
-            let p = 0;
-            const anim = setInterval(() => {
-                p = Math.min(p + 0.06, 1.0);
-                RobotState.angles.s = startAngles.s + (target.s - startAngles.s) * p;
-                RobotState.angles.l = startAngles.l + (target.l - startAngles.l) * p;
-                RobotState.angles.u = startAngles.u + (target.u - startAngles.u) * p;
-                RobotState.angles.r = startAngles.r + (target.r - startAngles.r) * p;
-                RobotState.angles.b = startAngles.b + (target.b - startAngles.b) * p;
-                RobotState.angles.t = startAngles.t + (target.t - startAngles.t) * p;
-                updateDisplay();
-                if (p >= 1.0) clearInterval(anim);
-            }, 30);
-        } else if (step.code && step.code.startsWith('DOUT')) {
-            const m = step.code.match(/DOUT OG#\((\d)\) (ON|OFF)/);
-            if (m) {
-                const port = parseInt(m[1]);
-                const on = m[2] === 'ON';
-                digitalOutputs[port] = on;
-                if (port === 1) gripperAngle = on ? 0 : 0.015;
-                if (port === 2) gripper2Angle = on ? 0 : 0.015;
-            }
-        }
-
-        const stepLabel = RobotState.programStep === 0 ? 'NOP' :
-                          RobotState.programStep === currentProgram.length - 1 ? 'END' :
-                          String(RobotState.programStep);
-        setInfoDisplay(`${dir === 'FWD' ? '▶' : '◀'} STEP ${stepLabel}: ${step.code || '---'}`);
-        document.getElementById('job-step-indicator').textContent = String(RobotState.programStep).padStart(4, '0');
-        if (DxState.view === 'JOB') renderJob();
-
-    } else {
-        // MODO CONTINUO: FWD/BWD mueve cursor de línea en la pantalla JOB
-        if (dir === 'FWD') {
-            DxState.selectedLineIndex = Math.min(DxState.selectedLineIndex + 1, currentProgram.length - 1);
-        } else {
-            DxState.selectedLineIndex = Math.max(DxState.selectedLineIndex - 1, 0);
-        }
-        document.getElementById('job-step-indicator').textContent = String(DxState.selectedLineIndex).padStart(4, '0');
-        setInfoDisplay(`${dir} — Línea ${DxState.selectedLineIndex}: ${currentProgram[DxState.selectedLineIndex].code}`);
-        if (DxState.view === 'JOB') renderJob();
-    }
-}
+// Función eliminada por duplicidad (ver abajo)
 
 function startProgram() {
     if (!RobotState.programRunning) {
+        // SEGURIDAD: En modo TEACH se requiere INTERLOCK + START
+        if (RobotState.mode === 'TEACH' && !isInterlockPressed) {
+            setInfoDisplay('⚠️ SEGURIDAD: Mantenga [INTERLOCK] + [START]');
+            const btn = document.getElementById('interlock-btn');
+            if (btn) {
+                btn.style.background = '#a00';
+                setTimeout(() => btn.style.background = isInterlockPressed ? '#555' : '', 300);
+            }
+            return;
+        }
+
         RobotState.programRunning = true;
         const currentProgram = robotJobs[DxState.currentJobId];
         if (currentProgram && RobotState.programStep >= currentProgram.length) {
@@ -3538,14 +3547,17 @@ window.addEventListener('load', () => {
 window.addEventListener('keydown', (e) => {
     if (e.code === 'Space') { e.preventDefault(); toggleDeadman(); }
     if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') { toggleShift(true); }
+    if (e.code === 'AltLeft' || e.code === 'AltRight') { e.preventDefault(); toggleInterlock(true); }
 });
 window.addEventListener('keyup', (e) => {
     if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') { toggleShift(false); }
+    if (e.code === 'AltLeft' || e.code === 'AltRight') { toggleInterlock(false); }
 });
 
 window.setView = setView;
 window.toggleDeadman = toggleDeadman;
 window.toggleShift = toggleShift;
+window.toggleInterlock = toggleInterlock;
 window.rotateKeySwitch = rotateKeySwitch;
 window.emergencyStop = emergencyStop;
 window.handleFunc = handleFunc;
@@ -3570,6 +3582,7 @@ window.pressModify = pressModify;
 window.pressInsert = pressInsert;
 window.goToTop = goToTop;
 window.resetToZero = resetToZero;
+window.toggleCoordSystem = toggleCoordSystem;
 window.selectHomeAxis = selectHomeAxis;
 window.setSecurityMode = setSecurityMode;
 window.selectWgravLine = selectWgravLine;
