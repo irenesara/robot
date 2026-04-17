@@ -851,9 +851,9 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                     <div class="kb-row-bot">
                         <div class="kb-bot-col">
                             <div class="kb-bot-btn" onclick="toggleShift()">SHIFT</div>
-                            <div class="kb-bot-btn" onclick="showMsg('ROBOT ACTIVADO')">ROBOT</div>
-                            <div class="kb-bot-btn" onclick="showMsg('EX.AXIS')">EX.AXIS</div>
-                            <div class="kb-bot-btn" onclick="showMsg('AUX')">AUX</div>
+                            <div class="kb-bot-btn" id="btn-sel-robot" onclick="setView('ROBOT-CURRENT'); setInfoDisplay('✓ GRUPO SELECCIONADO: ROBOT 1');">ROBOT</div>
+                            <div class="kb-bot-btn" id="btn-sel-exaxis" onclick="setInfoDisplay('⚠ NO HAY EJES EXTERNOS CONFIGURADOS');">EX.AXIS</div>
+                            <div class="kb-bot-btn" id="btn-sel-aux" onclick="setInfoDisplay('⚠ NO HAY DISPOSITIVOS AUXILIARES');">AUX</div>
                         </div>
                         
                         <div class="kb-bot-col">
@@ -1806,6 +1806,7 @@ function moveAxis(axis, dir) {
 }
 
 function updateDisplay() {
+    // 1. Actualizar barra superior de info
     document.getElementById('s').textContent = RobotState.angles.s.toFixed(1) + '°';
     document.getElementById('l').textContent = RobotState.angles.l.toFixed(1) + '°';
     document.getElementById('u').textContent = RobotState.angles.u.toFixed(1) + '°';
@@ -1813,6 +1814,7 @@ function updateDisplay() {
     document.getElementById('b').textContent = RobotState.angles.b.toFixed(1) + '°';
     document.getElementById('t').textContent = RobotState.angles.t.toFixed(1) + '°';
 
+    // 2. Actualizar paneles del LCD (ROBOT POSITION)
     const lcdS = document.getElementById('lcd-s');
     if (lcdS) {
         lcdS.textContent = RobotState.angles.s.toFixed(3) + ' °';
@@ -1823,23 +1825,20 @@ function updateDisplay() {
         document.getElementById('lcd-t').textContent = RobotState.angles.t.toFixed(3) + ' °';
     }
 
+    // 3. Sync model 3D
+    updateRobotDisplay();
+
+    // 4. Refrescar otras pantallas
     const og1 = document.getElementById('og1-status');
     const og2 = document.getElementById('og2-status');
     if (og1) { og1.textContent = digitalOutputs[1] ? 'ON' : 'OFF'; og1.style.color = digitalOutputs[1] ? '#0f0' : '#666'; }
     if (og2) { og2.textContent = digitalOutputs[2] ? 'ON' : 'OFF'; og2.style.color = digitalOutputs[2] ? '#0f0' : '#666'; }
 
-    document.getElementById('amp-s').textContent = (RobotState.angles.s * 0.5).toFixed(2) + ' mm';
-    document.getElementById('amp-l').textContent = (RobotState.angles.l * 0.5).toFixed(2) + ' mm';
-    document.getElementById('amp-u').textContent = (RobotState.angles.u * 0.5).toFixed(2) + ' mm';
-    document.getElementById('amp-r').textContent = RobotState.angles.r.toFixed(2) + ' °';
-    document.getElementById('amp-b').textContent = RobotState.angles.b.toFixed(2) + ' °';
-    document.getElementById('amp-t').textContent = RobotState.angles.t.toFixed(2) + ' °';
-
     renderInout();
     renderVariable();
     updateGeneralScreen();
     updateCalibrationScreen();
-    updateMultiLayout();
+    if (isMultiLayout) updateMultiLayout();
 }
 
 function checkTeachMode(actionName) {
@@ -3413,6 +3412,9 @@ function stepProgram(direction) {
         RobotState.angles.r = startAngles.r + (target.r - startAngles.r) * p;
         RobotState.angles.b = startAngles.b + (target.b - startAngles.b) * p;
         RobotState.angles.t = startAngles.t + (target.t - startAngles.t) * p;
+        
+        // REFRESCAR TODO (LCD + 3D)
+        updateDisplay();
     }, 30);
 
     if (DxState.view !== 'JOB') setView('JOB');
@@ -3538,7 +3540,8 @@ window.addEventListener('load', () => {
             }
         }
 
-        updateRobotDisplay();
+        // Actualizar TODO el simulador (LCD Angulos + 3D Model)
+        updateDisplay();
     }
 
     gameLoop();
