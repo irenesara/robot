@@ -2,9 +2,9 @@
  * DX-200 Robot Simulator - Job Manager
  */
 
-import { DxState, robotJobs, saveJobsLocally, gripperAngle } from './state.js';
+import { DxState, robotJobs, saveJobsLocally, gripperAngle, isInterlockPressed } from './state.js';
 import { RobotState } from './state.js';
-import { setInfoDisplay, setView, checkTeachMode } from './ui.js';
+import { setInfoDisplay, setView, checkTeachMode, cancelEdit } from './ui.js';
 
 function renderJob() {
     const container = document.getElementById('job-content-area');
@@ -13,11 +13,45 @@ function renderJob() {
 
     const currentProgram = robotJobs[DxState.currentJobId];
     document.getElementById('current-job-name').textContent = DxState.currentJobId;
-    document.getElementById('job-line-indicator').textContent = String(DxState.selectedLineIndex).padStart(4, '0');
+    
+    // Fix: The ID in index.html is job-step-indicator, not job-line-indicator
+    const stepInd = document.getElementById('job-step-indicator');
+    if (stepInd) stepInd.textContent = String(DxState.selectedLineIndex).padStart(4, '0');
+
+    // Update Header Indicators (METHOD and SPEED)
+    const methodInd = document.getElementById('job-method-indicator');
+    const speedInd = document.getElementById('job-speed-indicator');
+    
+    let currentMethod = '---';
+    let currentSpeed = '---';
+
+    // If we are editing, take info from buffer
+    if (DxState.activeEditAction && DxState.editingBuffer) {
+        const parts = DxState.editingBuffer.split(' ');
+        currentMethod = parts[0];
+        const spdPart = parts.find(p => p.includes('='));
+        if (spdPart) currentSpeed = spdPart.split('=')[1];
+    } else if (currentProgram && currentProgram[DxState.selectedLineIndex]) {
+        // Otherwise take from the selected line
+        const code = currentProgram[DxState.selectedLineIndex].code || '';
+        const parts = code.split(' ');
+        currentMethod = parts[0];
+        const spdPart = parts.find(p => p.includes('='));
+        if (spdPart) currentSpeed = spdPart.split('=')[1];
+    }
+
+    if (methodInd) methodInd.textContent = currentMethod;
+    if (speedInd) speedInd.textContent = currentSpeed;
 
     currentProgram.forEach((step, index) => {
         const line = document.createElement('div');
         line.className = 'job-line' + (index === DxState.selectedLineIndex ? ' selected' : '');
+
+        // Visual feedback for EDITING: Underline line number if this line is being modified/deleted
+        let lineNumStyle = '';
+        if (index === DxState.selectedLineIndex && DxState.activeEditAction) {
+            lineNumStyle = 'text-decoration: underline; color: #fff; font-weight: bold;';
+        }
 
         let tokenHtml = '';
         const tokens = (step.code || 'MOVJ VJ=50.00').split(' ');
@@ -29,15 +63,33 @@ function renderJob() {
             tokenHtml += `<span style="${style}">${token}</span> `;
         });
 
-        line.innerHTML = `<span class="job-line-num">${String(index).padStart(4, '0')}</span> <span>${tokenHtml}</span> <span style="color:#aaa; font-size: 8px;">// ${step.desc || ''}</span>`;
+        line.innerHTML = `<span class="job-line-num" style="${lineNumStyle}">${String(index).padStart(4, '0')}</span> <span>${tokenHtml}</span> <span style="color:#aaa; font-size: 8px;">// ${step.desc || ''}</span>`;
         line.onclick = () => {
             DxState.selectedLineIndex = index;
             DxState.selectedTokenIndex = 0;
-            DxState.isInserting = false; DxState.isDeleting = false; DxState.isModifying = false;
+            cancelEdit();
             renderJob();
         };
         container.appendChild(line);
     });
+
+    // RENDER BUFFER LINE
+    let bufferContainer = document.getElementById('job-buffer-area');
+    if (!bufferContainer) {
+        bufferContainer = document.createElement('div');
+        bufferContainer.id = 'job-buffer-area';
+        bufferContainer.style = 'background: #1a1a2e; border-top: 1px solid #555; padding: 2px 6px; color: #fff; font-size: 7px; height: 14px; display: flex; align-items: center;';
+        container.parentElement.appendChild(bufferContainer);
+    }
+
+    if (DxState.activeEditAction) {
+        let actionColor = DxState.activeEditAction === 'DELETE' ? '#f44' : '#4f4';
+        bufferContainer.innerHTML = `<span style="color:${actionColor}; font-weight:bold; margin-right:8px;">${DxState.activeEditAction}:</span> <span>${DxState.editingBuffer}</span><span class="cursor-blink">_</span>`;
+        bufferContainer.style.background = '#0a2050';
+    } else {
+        bufferContainer.innerHTML = '<span style="color:#666;">READY</span>';
+        bufferContainer.style.background = '#1a1a2e';
+    }
 
     const selectedElem = container.querySelector('.selected');
     if (selectedElem) {
@@ -103,7 +155,7 @@ function pressEnter() {
         const newStep = {
             s: RobotState.angles.s, l: RobotState.angles.l, u: RobotState.angles.u,
             r: RobotState.angles.r, b: RobotState.angles.b, t: RobotState.angles.t,
-            gripper: gripperAngle, code: 'MOVJ VJ=' + RobotState.speed + '.00', desc: 'Punto ENSEÑADO'
+            gripper: gripperAngle, code: DxState.editingBuffer || ('MOVJ VJ=' + RobotState.speed + '.00'), desc: 'Punto ENSEÑADO'
         };
         if (DxState.selectedLineIndex >= 0 && DxState.selectedLineIndex < currentProgram.length) {
             currentProgram.splice(DxState.selectedLineIndex + 1, 0, newStep);
@@ -113,7 +165,7 @@ function pressEnter() {
             DxState.selectedLineIndex = currentProgram.length - 1;
         }
         setInfoDisplay('✓ Punto insertado.');
-        DxState.isInserting = false;
+        cancelEdit();
         saveJobsLocally();
         renderJob();
     } else if (DxState.isDeleting) {
@@ -126,7 +178,7 @@ function pressEnter() {
             }
             setInfoDisplay('✓ Punto eliminado.');
         }
-        DxState.isDeleting = false;
+        cancelEdit();
         saveJobsLocally();
         renderJob();
     } else if (DxState.isModifying) {
@@ -135,10 +187,10 @@ function pressEnter() {
             step.s = RobotState.angles.s; step.l = RobotState.angles.l; step.u = RobotState.angles.u;
             step.r = RobotState.angles.r; step.b = RobotState.angles.b; step.t = RobotState.angles.t;
             step.gripper = gripperAngle;
-            step.code = 'MOVJ VJ=' + RobotState.speed + '.00';
+            step.code = DxState.editingBuffer;
             setInfoDisplay('✓ Punto modificado.');
         }
-        DxState.isModifying = false;
+        cancelEdit();
         saveJobsLocally();
         renderJob();
     }
@@ -220,6 +272,9 @@ function stepProgram(direction) {
     }
     if (!RobotState.deadman) {
         setInfoDisplay('⚠️ Requiere Deadman (Pulse ESPACIO)'); return;
+    }
+    if (!DxState.isInterlockPressed) {
+        setInfoDisplay('⚠ Requiere INTERLOCK (Pulse el botón azul)'); return;
     }
     const currentProgram = robotJobs[DxState.currentJobId];
     if (!currentProgram || currentProgram.length === 0) return;

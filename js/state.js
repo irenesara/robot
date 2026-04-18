@@ -29,7 +29,14 @@ const DxState = {
     isInserting: false,
     isDeleting: false,
     isModifying: false,
-    clipboard: null
+    activeEditAction: null, // 'MODIFY', 'INSERT', 'DELETE'
+    editingBuffer: '',      // Current instruction in the buffer line
+    securityMode: 'EDITING', // Defaulting to EDITING for better UX in simulator
+    clipboard: null,
+    isUsageOn: false,
+    isInterlockPressed: false,
+    isServoOn: false,
+    isShiftPressed: false
 };
 
 let robotJobs = {
@@ -49,8 +56,6 @@ let robotJobs = {
 
 let wgravSelectedIdx = 0;
 let wgravCompleted = [false, false, false, false, false];
-let isShiftPressed = false;
-let isServoOn = false;
 let keyPosition = 0;
 const keyPositions = ['OFF', 'REMOTE', 'TEACH'];
 const keyRotations = [0, -120, 120];
@@ -80,6 +85,6 @@ function loadJobsLocally() {
 
 export {
     RobotState, DxState, robotJobs, wgravSelectedIdx, wgravCompleted,
-    isShiftPressed, isServoOn, keyPosition, keyPositions, keyRotations,
+    keyPosition, keyPositions, keyRotations,
     gripperAngle, gripper2Angle, saveJobsLocally, loadJobsLocally
 };

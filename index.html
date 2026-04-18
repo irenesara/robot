@@ -256,13 +256,15 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                 </div>
 
                 <div class="lcd-display">
-                    <div class="lcd-top-bar">
-                        <span>SIMULADOR ROBOT <small style="font-size: 5px; opacity: 0.7;">v2.4</small></span>
+                    <div class="lcd-top-bar" id="lcd-top-bar">
+                        <span id="alarm-badge" style="display:none; background:#ff0; color:#000; padding:0 3px; font-weight:bold; margin-right:5px;">ALM</span>
+                        <span id="top-bar-msg">SIMULADOR ROBOT <small style="font-size: 5px; opacity: 0.7;">v2.5</small></span>
                         <span>STATUS: <span id="lcd-status" style="color:#0f0;">READY</span></span>
                         <span>MODE: <span id="lcd-mode" style="color:#ff0;">TEACH</span></span>
                         <span>SPD: <span id="lcd-speed" style="color:#ff0;">50%</span></span>
                         <span>SEC: <span id="lcd-security" style="color:#f0f;">OPER</span></span>
                         <span>COORD: <span id="lcd-coord" style="color:#0ff;">JOINT</span><small id="lcd-tool-no" style="font-size:7px; color:#fff; display:none;">(00)</small></span>
+                        <span id="usage-indicator" style="background: #555; color: #fff; padding: 0 4px; font-weight: bold; border: 1px solid #777;">USAGE: <span id="usage-status" style="color:#aaa;">OFF</span></span>
                         <span>OG#1:<span id="og1-status" style="color:#666;">OFF</span></span>
                         <span>OG#2:<span id="og2-status" style="color:#666;">OFF</span></span>
                     </div>
@@ -339,6 +341,21 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                             <div class="lcd-sidebar-btn" id="btn-view-utility" onclick="setView('UTILITY')">EX.SISTEMA</div>
                         </div>
                         <div class="lcd-main">
+                            <!-- ALARM SCREEN (NEW) -->
+                            <div id="alarm-screen" style="display: none; flex-direction: column; background: #eaeff2; height: 100%;">
+                                <div style="background: #a00; color: white; padding: 4px 8px; font-size: 8px; font-weight: bold;">ALARM HISTORY</div>
+                                <div id="alarm-list-area" style="padding: 4px; font-family: 'Courier New', monospace; font-size: 7px; color: #000; overflow-y: auto; flex: 1;">
+                                    <table style="width: 100%; border-collapse: collapse;">
+                                        <thead><tr style="background:#ccc;"><th>CODE</th><th>MESSAGE</th><th>TIME</th></tr></thead>
+                                        <tbody id="alarm-history-body"></tbody>
+                                    </table>
+                                </div>
+                                <div style="display: flex; border-top: 2px solid #a00; background: #ccc; height: 18px;">
+                                    <div style="flex: 1; text-align: center; border-right: 1px solid #999; padding: 4px; font-size: 7px; cursor: pointer;" onclick="resetAlarms()">RESET</div>
+                                    <div style="flex: 1; text-align: center; padding: 4px; font-size: 7px; cursor: pointer;" onclick="setView('JOB')">CLOSE</div>
+                                </div>
+                            </div>
+                            
                             <div id="data-screen" style="display: none; flex-direction: column; background: #eaeff2; height: 100%;">
                                 <div style="background: #1a3a6a; color: white; padding: 4px 8px; font-size: 8px; font-weight: bold;" id="data-screen-title">DATA</div>
                                 <div style="padding: 12px; font-family: 'Courier New', monospace; font-size: 10px; color: #000; flex: 1;">
@@ -931,8 +948,8 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                         <div class="kb-bot-col">
                             <div class="kb-bot-btn blue-text" id="interlock-btn" onclick="toggleInterlock()">INTER<br>LOCK</div>
                             <div class="kb-bot-btn" onclick="toggleInformList()">INFORM<br>LIST</div>
-                            <div class="kb-bot-btn" onclick="showMsg('WELD ON/OFF')">WELD<br>ON/OFF</div>
-                            <div class="kb-bot-btn" onclick="showMsg('MOTION TYPE')">MOTION<br>TYPE</div>
+                            <div class="kb-bot-btn" onclick="toggleUsage()">USAGE</div>
+                            <div class="kb-bot-btn" onclick="cycleMotionType()">MOTION<br>TYPE</div>
                         </div>
                         
                         <div class="kb-numpad">
@@ -987,7 +1004,18 @@ const RobotState = {
     programRunning: false,
     programStep: 0,
     stepTimer: 0,
-    mode: 'TEACH'
+    mode: 'TEACH',
+    activeAlarms: [], // [{code: '0020', msg: 'EMERGENCY STOP'}]
+    alarmHistory: []
+};
+
+const ALARM_DB = {
+    '0020': { msg: 'EMERGENCY STOP', level: 'major' },
+    '4107': { msg: 'SERVO POWER OFF', level: 'minor' },
+    '4311': { msg: 'SAFETY LOGIC CIRCUIT ERROR', level: 'major' },
+    '1020': { msg: 'ROBOT HOMING REQUIRED', level: 'minor' },
+    '5000': { msg: 'MEMORY ERROR (TOOL FILE)', level: 'major' },
+    '4004': { msg: 'HOME POSITION FILE ERROR', level: 'major' }
 };
 
 const DxState = {
@@ -1038,7 +1066,7 @@ let robotJobs = {
 let wgravSelectedIdx = 0;
 let wgravCompleted = [false, false, false, false, false];
 let isShiftPressed = false;
-let isInterlockPressed = false;
+let isInterlockPressed = false; // Note: This will be shadowed by imported state in some places but kept for local script compatibility if needed
 let isServoOn = false;
 let keyPosition = 0;
 const keyPositions = ['OFF', 'REMOTE', 'TEACH'];
@@ -1792,31 +1820,23 @@ function confirmInstructionInsertion() {
 function toggleInterlock(active) {
     if (active !== undefined && isInterlockPressed === active) return;
     isInterlockPressed = (active !== undefined) ? active : !isInterlockPressed;
-    
     const btn = document.getElementById('interlock-btn');
     if (btn) {
         btn.style.background = isInterlockPressed ? '#2b4b9b' : '';
         btn.style.color = isInterlockPressed ? '#fff' : '';
         btn.style.boxShadow = isInterlockPressed ? '0 0 10px #3b5bdb' : '';
     }
-    
-    setInfoDisplay(isInterlockPressed ? '✓ INTERLOCK: ACTIVADO (Fuerce de Seguridad)' : '✓ INTERLOCK: DESACTIVADO');
 }
 
 function toggleShift(active) {
     if (active !== undefined && isShiftPressed === active) return;
     isShiftPressed = (active !== undefined) ? active : !isShiftPressed;
-    
     document.querySelectorAll('.kb-bot-btn').forEach(b => {
         if (b.textContent.trim() === 'SHIFT') {
             b.style.background = isShiftPressed ? '#3b5bdb' : '';
             b.style.color = isShiftPressed ? '#fff' : '';
-            b.style.boxShadow = isShiftPressed ? '0 0 10px #3b5bdb' : '';
         }
     });
-
-    // Pequeño indicador visual en el LCD (opcional, muy auténtico)
-    setInfoDisplay(isShiftPressed ? '✓ SHIFT: ACTIVADO (Segunda Función)' : '✓ SHIFT: DESACTIVADO');
 }
 
 function toggleDeadman() {
@@ -1825,9 +1845,8 @@ function toggleDeadman() {
     if (RobotState.deadman) {
         btn.textContent = '✓ ACTIVO';
         btn.classList.add('active');
-        setInfoDisplay('✓ Deadman ACTIVO (Listo para Servo)');
     } else {
-        btn.textContent = 'INACTIVO';
+        btn.textContent = 'OFF';
         btn.classList.remove('active');
         if (isServoOn) {
             isServoOn = false;
@@ -1837,9 +1856,6 @@ function toggleDeadman() {
                 sBtn.style.color = '#222';
                 sBtn.style.boxShadow = 'none';
             }
-            setInfoDisplay('⚠️ Deadman SUELTO: Servos DESCONECTADOS');
-        } else {
-            setInfoDisplay('⚠️ Deadman INACTIVO');
         }
     }
 }
@@ -1979,9 +1995,102 @@ function setInfoDisplay(msg) {
     if (el) el.textContent = msg;
 }
 
+/* ==========================================================================
+   ALARM SYSTEM (Industrial Fidelity)
+   ========================================================================== */
+
+function triggerAlarm(code) {
+    const alarm = ALARM_DB[code] || { msg: 'UNKNOWN ERROR', level: 'minor' };
+    
+    // Evitar duplicados activos
+    if (RobotState.activeAlarms.find(a => a.code === code)) return;
+    
+    const newAlarm = {
+        code: code,
+        msg: alarm.msg,
+        time: new Date().toLocaleTimeString(),
+        level: alarm.level
+    };
+    
+    RobotState.activeAlarms.unshift(newAlarm);
+    RobotState.alarmHistory.unshift(newAlarm);
+    if (RobotState.alarmHistory.length > 50) RobotState.alarmHistory.pop();
+    
+    updateAlarmUI();
+    
+    // Parar robot inmediatamente si es alarma mayor
+    if (alarm.level === 'major') {
+        RobotState.programRunning = false;
+        if (isServoOn) toggleServo(); // Apagar servos
+    }
+    
+    setInfoDisplay(`❌ ALARM ${code}: ${alarm.msg}`);
+}
+
+function updateAlarmUI() {
+    const topBar = document.getElementById('lcd-top-bar');
+    const badge = document.getElementById('alarm-badge');
+    const msg = document.getElementById('top-bar-msg');
+    
+    if (RobotState.activeAlarms.length > 0) {
+        const top = RobotState.activeAlarms[0];
+        topBar.style.background = top.level === 'major' ? '#a00' : '#d80';
+        badge.style.display = 'inline-block';
+        msg.textContent = `ALARM ${top.code}: ${top.msg}`;
+        msg.style.color = '#fff';
+        document.getElementById('lcd-status').textContent = 'ALARM';
+        document.getElementById('lcd-status').style.color = '#fff';
+    } else {
+        topBar.style.background = '#0a2a5a';
+        badge.style.display = 'none';
+        msg.textContent = 'SIMULADOR ROBOT v2.5';
+        msg.style.color = '';
+        document.getElementById('lcd-status').textContent = RobotState.programRunning ? 'RUNNING' : 'READY';
+        document.getElementById('lcd-status').style.color = '#0f0';
+    }
+    
+    renderAlarmHistory();
+}
+
+function resetAlarms() {
+    // Las alarmas mayores solo se resetean si las condiciones de hardware se cumplen
+    // (Por ahora permitimos reset de todas para jugabilidad, pero podemos ser estrictos)
+    if (isEmergencyStopped) {
+        setInfoDisplay('⚠ NO SE PUEDE RESETEAR: Emergencia pulsada');
+        return;
+    }
+    
+    RobotState.activeAlarms = [];
+    updateAlarmUI();
+    setInfoDisplay('✓ Alarmas reseteadas.');
+}
+
+function renderAlarmHistory() {
+    const body = document.getElementById('alarm-history-body');
+    if (!body) return;
+    
+    body.innerHTML = '';
+    RobotState.alarmHistory.forEach(a => {
+        const row = document.createElement('tr');
+        row.style.borderBottom = '1px solid #ccc';
+        row.innerHTML = `
+            <td style="color:#a00; font-weight:bold; padding:2px;">${a.code}</td>
+            <td style="padding:2px;">${a.msg}</td>
+            <td style="color:#666; padding:2px;">${a.time}</td>
+        `;
+        body.appendChild(row);
+    });
+}
+
 function moveAxis(axis, dir) {
     if (!checkTeachMode('Movimiento manual')) return;
     if (RobotState.programRunning) return;
+    
+    // BLOQUEO POR ALARMA
+    if (RobotState.activeAlarms.length > 0) {
+        setInfoDisplay('❌ BLOQUEO: Resetee alarmas primero');
+        return;
+    }
 
     if (axis === 'a') {
         const maxOpen = 0.030;
@@ -1997,6 +2106,10 @@ function moveAxis(axis, dir) {
     }
     
     // REQUISITOS DE MOVIMIENTO (Auténticos)
+    if (!isInterlockPressed) {
+        setInfoDisplay('⚠ Requiere INTERLOCK (Pulse el botón azul)');
+        return;
+    }
     if (!RobotState.deadman) {
         setInfoDisplay('⚠️ SEGURIDAD: Mantenga DEADMAN (ESPACIO) presionado');
         return;
@@ -2253,6 +2366,12 @@ function handleSimpleMenu() {
     }
 
     DxState.isSimpleMenu = !DxState.isSimpleMenu;
+    if (baseView === 'ALARM') {
+        const screen = document.getElementById('alarm-screen');
+        if (screen) screen.style.display = 'flex';
+        renderAlarmHistory();
+    }
+    
     updateSidebarUI();
     setInfoDisplay(DxState.isSimpleMenu ? '✓ SIMPLE MENU: Modo Operador Activado' : '✓ STANDARD MENU: Modo Programador Activado');
 }
@@ -3601,6 +3720,10 @@ function stepProgram(direction) {
         return;
     }
     
+    if (!isInterlockPressed) {
+        setInfoDisplay('⚠ Requiere INTERLOCK (Pulse el botón azul)');
+        return;
+    }
     if (!RobotState.deadman) {
         setInfoDisplay('⚠ Active DEADMAN (ESPACIO) para FWD/BWD'); 
         return;
@@ -3856,6 +3979,9 @@ window.changeInstruction = changeInstruction;
 window.updateJobDetail = updateJobDetail;
 window.renderJob = renderJob;
 window.handleToolKey = handleToolKey;
+window.triggerAlarm = triggerAlarm;
+window.resetAlarms = resetAlarms;
+window.renderAlarmHistory = renderAlarmHistory;
 </script>
 </body>
 </html>

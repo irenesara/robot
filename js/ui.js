@@ -2,9 +2,8 @@
  * DX-200 Robot Simulator - UI Handlers
  */
 
-import {
     RobotState, DxState, robotJobs, wgravSelectedIdx, wgravCompleted,
-    isShiftPressed, isServoOn, keyPosition, keyPositions, keyRotations,
+    isShiftPressed, isInterlockPressed, isServoOn, keyPosition, keyPositions, keyRotations,
     gripperAngle, gripper2Angle, saveJobsLocally
 } from './state.js';
 import { highlightJoint } from './robot3d.js';
@@ -61,6 +60,8 @@ function selectHomeAxis(element) {
 function setSecurityMode(modeName, element) {
     document.querySelectorAll('.sec-mode').forEach(el => el.classList.remove('selected'));
     element.classList.add('selected');
+    DxState.securityMode = modeName;
+    document.getElementById('lcd-security').textContent = modeName.substring(0, 4);
     setInfoDisplay('✓ Nivel de seguridad: ' + modeName + ' MODE');
 }
 
@@ -84,11 +85,11 @@ function selectWgravLine(idx) {
 }
 
 function toggleShift(active) {
-    if (active !== undefined && isShiftPressed === active) return;
-    isShiftPressed = (active !== undefined) ? active : !isShiftPressed;
-    setInfoDisplay(isShiftPressed ? '✓ SHIFT: BLOQUEADO (Activo)' : '✓ SHIFT: LIBERADO (Inactivo)');
+    if (active !== undefined && DxState.isShiftPressed === active) return;
+    DxState.isShiftPressed = (active !== undefined) ? active : !DxState.isShiftPressed;
+    setInfoDisplay(DxState.isShiftPressed ? '✓ SHIFT: BLOQUEADO (Activo)' : '✓ SHIFT: LIBERADO (Inactivo)');
     document.querySelectorAll('.kb-bot-btn').forEach(b => {
-        if (b.textContent.trim() === 'SHIFT') b.style.background = isShiftPressed ? '#a0a0a0' : '';
+        if (b.textContent.trim() === 'SHIFT') b.style.background = DxState.isShiftPressed ? '#a0a0a0' : '';
     });
 }
 
@@ -108,11 +109,11 @@ function toggleDeadman() {
 
 function toggleServo() {
     const btn = document.getElementById('servo-btn');
-    isServoOn = !isServoOn;
-    if (isServoOn) {
-        btn.style.background = '#d00000';
+    DxState.isServoOn = !DxState.isServoOn;
+    if (DxState.isServoOn) {
+        btn.style.background = '#0f0';
         btn.style.color = '#fff';
-        btn.style.boxShadow = '0 0 8px #ff0000';
+        btn.style.boxShadow = '0 0 10px #0f0';
         setInfoDisplay('✓ Servo activado (POWER ON)');
     } else {
         btn.style.background = '#ccc';
@@ -137,6 +138,99 @@ function rotateKeySwitch() {
     keyPosition = (keyPosition + 1) % 3;
     updateKeySwitchDisplay();
     setInfoDisplay(`Llave: ${keyPositions[keyPosition]}`);
+}
+
+function toggleUsage() {
+    DxState.isUsageOn = !DxState.isUsageOn;
+    const indicator = document.getElementById('usage-status');
+    const box = document.getElementById('usage-indicator');
+    
+    if (DxState.isUsageOn) {
+        if (indicator) {
+            indicator.textContent = 'ON';
+            indicator.style.color = '#0f0';
+            indicator.style.textShadow = '0 0 5px #0f0';
+        }
+        if (box) {
+            box.style.borderColor = '#0f0';
+            box.style.background = '#002200';
+        }
+        setInfoDisplay('✓ FUNCIÓN DE APLICACIÓN: ACTIVADA (USAGE ON)');
+    } else {
+        if (indicator) {
+            indicator.textContent = 'OFF';
+            indicator.style.color = '#aaa';
+            indicator.style.textShadow = 'none';
+        }
+        if (box) {
+            box.style.borderColor = '#777';
+            box.style.background = '#555';
+        }
+        setInfoDisplay('✓ FUNCIÓN DE APLICACIÓN: DESACTIVADA (USAGE OFF)');
+    }
+}
+
+function cycleMotionType() {
+    if (!DxState.isInserting && !DxState.isModifying) {
+        setInfoDisplay('⚠ Solo disponible en modo INSERT o MODIFY');
+        return;
+    }
+    
+    const types = ['MOVJ', 'MOVL', 'MOVC', 'IMOV'];
+    let currentType = 'MOVJ';
+    
+    // Detect current type from buffer
+    for (let t of types) {
+        if (DxState.editingBuffer.startsWith(t)) {
+            currentType = t;
+            break;
+        }
+    }
+    
+    let nextIdx = (types.indexOf(currentType) + 1) % types.length;
+    let nextType = types[nextIdx];
+    
+    // Logic to preserve speed parameters
+    if (nextType === 'MOVJ') {
+        DxState.editingBuffer = `MOVJ VJ=${RobotState.speed}.00`;
+    } else if (nextType === 'MOVL') {
+        DxState.editingBuffer = `MOVL V=${RobotState.speed * 20}.0`;
+    } else if (nextType === 'MOVC') {
+        DxState.editingBuffer = `MOVC V=${RobotState.speed * 10}.0`;
+    } else {
+        DxState.editingBuffer = `IMOV V=${RobotState.speed * 10}.0`;
+    }
+    
+    setInfoDisplay(`✓ Tipo de movimiento: ${nextType}`);
+    
+    // Add visual feedback to the LCD indicator
+    const methodInd = document.getElementById('job-method-indicator');
+    if (methodInd) {
+        methodInd.style.background = '#fff';
+        methodInd.style.color = '#000';
+        setTimeout(() => {
+            methodInd.style.background = '';
+            methodInd.style.color = '';
+        }, 150);
+    }
+    
+    renderJob();
+}
+
+function toggleInterlock() {
+    DxState.isInterlockPressed = !DxState.isInterlockPressed;
+    const btn = document.getElementById('interlock-btn');
+    if (DxState.isInterlockPressed) {
+        btn.style.background = '#2b4b9b';
+        btn.style.color = '#fff';
+        btn.style.boxShadow = 'inset 0 0 10px rgba(0,0,0,0.5), 0 0 5px #2b4b9b';
+        setInfoDisplay('✓ INTERLOCK: ACTIVADO');
+    } else {
+        btn.style.background = '';
+        btn.style.color = '';
+        btn.style.boxShadow = '';
+        setInfoDisplay('✓ INTERLOCK: LIBERADO');
+    }
 }
 
 function updateKeySwitchDisplay() {
@@ -205,6 +299,10 @@ function moveAxis(axis, dir) {
     }
     if (!RobotState.deadman) {
         setInfoDisplay('⚠️ Deadman (ESPACIO)');
+        return;
+    }
+    if (!DxState.isServoOn) {
+        setInfoDisplay('⚠️ Servo DESCONECTADO (Pulsa SERVO ON)');
         return;
     }
     const axisMap = { x: 's', y: 'l', z: 'u', r: 'r', b: 'b', t: 't' };
@@ -415,20 +513,72 @@ function pressModify() {
     }
     if (DxState.view !== 'JOB') { setInfoDisplay('⚠ MODIFY presionado'); return; }
     if (!checkTeachMode('MODIFY')) return;
-    setInfoDisplay('MODIFY presionado. Pulse ENTER para actualizar.');
-    DxState.isModifying = true; DxState.isInserting = false; DxState.isDeleting = false;
+    if (DxState.securityMode === 'OPERATION') { setInfoDisplay('❌ SECURITY ERROR: REQUIRE EDITING MODE'); return; }
+
+    const btn = document.getElementById('modify-btn');
+    if (DxState.activeEditAction === 'MODIFY') {
+        cancelEdit();
+    } else {
+        cancelEdit();
+        DxState.activeEditAction = 'MODIFY';
+        DxState.isModifying = true;
+        if (btn) btn.classList.add('blink-active');
+
+        // Populate buffer with current line
+        const currentProgram = robotJobs[DxState.currentJobId];
+        const step = currentProgram[DxState.selectedLineIndex];
+        DxState.editingBuffer = step.code || '';
+
+        setInfoDisplay('MODIFY activo. Mueva robot y pulse ENTER.');
+    }
+    renderJob();
 }
 
 function pressInsert() {
     if (!checkTeachMode('INSERT')) return;
-    setInfoDisplay('INSERT presionado. Pulse ENTER para confirmar.');
-    DxState.isInserting = true; DxState.isDeleting = false; DxState.isModifying = false;
+    if (DxState.securityMode === 'OPERATION') { setInfoDisplay('❌ SECURITY ERROR: REQUIRE EDITING MODE'); return; }
+
+    const btn = document.getElementById('insert-btn');
+    if (DxState.activeEditAction === 'INSERT') {
+        cancelEdit();
+    } else {
+        cancelEdit();
+        DxState.activeEditAction = 'INSERT';
+        DxState.isInserting = true;
+        if (btn) btn.classList.add('blink-active');
+
+        // Default instruction in buffer
+        DxState.editingBuffer = 'MOVJ VJ=' + RobotState.speed + '.00';
+        setInfoDisplay('INSERT activo. Elija instrucción y pulse ENTER.');
+    }
+    renderJob();
 }
 
 function pressDelete() {
     if (!checkTeachMode('DELETE')) return;
-    setInfoDisplay('DELETE presionado. Pulse ENTER para confirmar.');
-    DxState.isDeleting = true; DxState.isInserting = false; DxState.isModifying = false;
+    if (DxState.securityMode === 'OPERATION') { setInfoDisplay('❌ SECURITY ERROR: REQUIRE EDITING MODE'); return; }
+
+    const btn = document.getElementById('delete-btn');
+    if (DxState.activeEditAction === 'DELETE') {
+        cancelEdit();
+    } else {
+        cancelEdit();
+        DxState.activeEditAction = 'DELETE';
+        DxState.isDeleting = true;
+        if (btn) btn.classList.add('blink-active');
+
+        setInfoDisplay('DELETE activo. Pulse ENTER para confirmar borrado.');
+    }
+    renderJob();
+}
+
+function cancelEdit() {
+    DxState.activeEditAction = null;
+    DxState.isModifying = false;
+    DxState.isInserting = false;
+    DxState.isDeleting = false;
+    DxState.editingBuffer = '';
+    document.querySelectorAll('.blink-active').forEach(el => el.classList.remove('blink-active'));
 }
 
 function goToTop() {
@@ -466,5 +616,6 @@ export {
     updateKeySwitchDisplay, emergencyStop, handleFunc, showMsg, setInfoDisplay,
     moveAxis, updateDisplay, checkTeachMode, handleDir, handleEditAction,
     pressSelect, toggleDropdown, closeHomeConfirm, pressModify, pressInsert,
-    pressDelete, goToTop, resetToZero, keyPositions, keyPosition
+    pressDelete, goToTop, resetToZero, keyPositions, keyPosition, toggleUsage,
+    cycleMotionType, toggleInterlock
 };
