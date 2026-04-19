@@ -2098,16 +2098,40 @@ function checkTeachMode(actionName) {
 function handleDir(dir) {
     if (DxState.isInserting) {
         const types = ['MOVJ', 'MOVL', 'MOVC', 'IMOV'];
+        const dirs = ['X+', 'X-', 'Y+', 'Y-', 'Z+', 'Z-'];
         const speeds = [10, 25, 50, 75, 100];
+        
+        const insertType = DxState.insertType;
+        
+        if (insertType === 'IMOV') {
+            const txt = document.getElementById('job-mode-indicator').textContent;
+            let idx = 0;
+            for (let i = 0; i < dirs.length; i++) {
+                if (txt.includes(dirs[i])) { idx = i; break; }
+            }
+            if (dir === 'right') idx = (idx + 1) % 6;
+            else if (dir === 'left') idx = (idx + 5) % 6;
+            else if (dir === 'up') idx = (idx + 1) % 6;
+            else if (dir === 'down') idx = (idx + 5) % 6;
+            
+            document.getElementById('job-mode-indicator').textContent = 'INSERT: IMOV ' + dirs[idx];
+            setInfoDisplay('INSERT: IMOV ' + dirs[idx] + ' - ENTER');
+            return;
+        }
+        
         if (dir === 'up' || dir === 'down') {
-            const idx = types.indexOf(DxState.insertType);
+            const idx = types.indexOf(insertType);
             DxState.insertType = types[(idx + 1) % types.length];
         } else if (dir === 'left' || dir === 'right') {
             const idx = speeds.indexOf(DxState.insertSpeed);
             DxState.insertSpeed = speeds[(idx + 1) % speeds.length];
         }
-        document.getElementById('job-mode-indicator').textContent = 'INSERT: ' + DxState.insertType + ' VJ=' + DxState.insertSpeed;
-        setInfoDisplay('INSERT: ' + DxState.insertType + ' VJ=' + DxState.insertSpeed + '.00 - ENTER');
+        
+        let speedText = 'VJ=' + DxState.insertSpeed;
+        if (insertType === 'MOVL' || insertType === 'MOVC') speedText = 'V=' + (DxState.insertSpeed * 10);
+        
+        document.getElementById('job-mode-indicator').textContent = 'INSERT: ' + insertType + ' ' + speedText;
+        setInfoDisplay('INSERT: ' + insertType + ' ' + speedText + '.00 - ENTER');
         return;
     }
     
@@ -2488,16 +2512,20 @@ function pressSelect() {
     }
 }
 
+let openDropdownId = null;
+
 function toggleDropdown(id, element) {
     const dropdown = document.getElementById(id);
     if (!dropdown) return;
     if (dropdown.style.display === 'flex') {
         dropdown.style.display = 'none';
         document.querySelectorAll('.menu-tab').forEach(t => { t.style.background = ''; t.style.color = ''; });
+        openDropdownId = null;
     } else {
         document.querySelectorAll('.dropdown-menu').forEach(d => d.style.display = 'none');
         document.querySelectorAll('.menu-tab').forEach(t => { t.style.background = ''; t.style.color = ''; });
         dropdown.style.display = 'flex';
+        openDropdownId = id;
         if (element) {
             const barRect = element.parentElement.getBoundingClientRect();
             const elRect = element.getBoundingClientRect();
@@ -2507,6 +2535,15 @@ function toggleDropdown(id, element) {
         }
     }
 }
+
+document.addEventListener('click', function(e) {
+    if (openDropdownId && !e.target.closest('.dropdown-menu') && !e.target.closest('.menu-tab')) {
+        const dropdown = document.getElementById(openDropdownId);
+        if (dropdown) dropdown.style.display = 'none';
+        document.querySelectorAll('.menu-tab').forEach(t => { t.style.background = ''; t.style.color = ''; });
+        openDropdownId = null;
+    }
+});
 
 function closeHomeConfirm(accepted) {
     document.getElementById('home-confirm-dialog').style.display = 'none';
@@ -3621,21 +3658,97 @@ function stepProgram(direction) {
     DxState.selectedTokenIndex = 0;
     
     const target = currentProgram[targetIndex];
-    const startAngles = { ...RobotState.angles };
-    let p = 0;
-    const stepAnim = setInterval(() => {
-        p += 0.15;
-        if (p >= 1.0) { 
-            p = 1.0; 
-            clearInterval(stepAnim); 
+    const isMOVL = target.code && target.code.startsWith('MOVL');
+    const isMOVC = target.code && target.code.startsWith('MOVC');
+    const isIMOV = target.code && target.code.startsWith('IMOV');
+    
+    if (isIMOV) {
+        let moveX = 0, moveY = 0, moveZ = 0;
+        
+        if (target.code.includes('X+')) moveX = 10;
+        else if (target.code.includes('X-')) moveX = -10;
+        else if (target.code.includes('Y+')) moveY = 10;
+        else if (target.code.includes('Y-')) moveY = -10;
+        else if (target.code.includes('Z+')) moveZ = 10;
+        else if (target.code.includes('Z-')) moveZ = -10;
+        
+        const current = calculateFK(RobotState.angles);
+        const newAngles = solveWorldIK(RobotState.angles, current.x + moveX, current.y + moveY, current.z + moveZ);
+        if (newAngles) {
+            RobotState.angles = newAngles;
+            updateDisplay();
         }
-        RobotState.angles.s = startAngles.s + (target.s - startAngles.s) * p;
-        RobotState.angles.l = startAngles.l + (target.l - startAngles.l) * p;
-        RobotState.angles.u = startAngles.u + (target.u - startAngles.u) * p;
-        RobotState.angles.r = startAngles.r + (target.r - startAngles.r) * p;
-        RobotState.angles.b = startAngles.b + (target.b - startAngles.b) * p;
-        RobotState.angles.t = startAngles.t + (target.t - startAngles.t) * p;
-    }, 30);
+    } else if (isMOVL) {
+        const startPos = calculateFK(RobotState.angles);
+        const endPos = calculateFK({s: target.s, l: target.l, u: target.u, r: target.r, b: target.b, t: target.t});
+        
+        let p = 0;
+        const stepAnim = setInterval(() => {
+            p += 0.1;
+            if (p >= 1.0) { 
+                p = 1.0; 
+                clearInterval(stepAnim); 
+            }
+            
+            const curX = startPos.x + (endPos.x - startPos.x) * p;
+            const curY = startPos.y + (endPos.y - startPos.y) * p;
+            const curZ = startPos.z + (endPos.z - startPos.z) * p;
+            
+            const newAngles = solveWorldIK(RobotState.angles, curX, curY, curZ);
+            if (newAngles) {
+                RobotState.angles = newAngles;
+                updateDisplay();
+            }
+        }, 30);
+    } else if (isMOVC) {
+        const startAngles = { ...RobotState.angles };
+        const midProgram = currentProgram[targetIndex + 1];
+        const endAngles = { s: target.s, l: target.l, u: target.u, r: target.r, b: target.b, t: target.t };
+        
+        if (!midProgram || !midProgram.code.startsWith('MOVC')) {
+            setInfoDisplay('⚠ MOVC necesita punto medio');
+        } else {
+            const startPos = calculateFK(startAngles);
+            const midPos = calculateFK({s: midProgram.s, l: midProgram.l, u: midProgram.u, r: midProgram.r, b: midProgram.b, t: midProgram.t});
+            const endPos = calculateFK(endAngles);
+            
+            let p = 0;
+            const stepAnim = setInterval(() => {
+                p += 0.08;
+                if (p >= 1.0) { 
+                    p = 1.0; 
+                    clearInterval(stepAnim); 
+                }
+                
+                const t = p;
+                const curX = (1-t)*(1-t)*startPos.x + 2*(1-t)*t*midPos.x + t*t*endPos.x;
+                const curY = (1-t)*(1-t)*startPos.y + 2*(1-t)*t*midPos.y + t*t*endPos.y;
+                const curZ = (1-t)*(1-t)*startPos.z + 2*(1-t)*t*midPos.z + t*t*endPos.z;
+                
+                const newAngles = solveWorldIK(startAngles, curX, curY, curZ);
+                if (newAngles) {
+                    RobotState.angles = newAngles;
+                    updateDisplay();
+                }
+            }, 30);
+        }
+    } else {
+        const startAngles = { ...RobotState.angles };
+        let p = 0;
+        const stepAnim = setInterval(() => {
+            p += 0.15;
+            if (p >= 1.0) { 
+                p = 1.0; 
+                clearInterval(stepAnim); 
+            }
+            RobotState.angles.s = startAngles.s + (target.s - startAngles.s) * p;
+            RobotState.angles.l = startAngles.l + (target.l - startAngles.l) * p;
+            RobotState.angles.u = startAngles.u + (target.u - startAngles.u) * p;
+            RobotState.angles.r = startAngles.r + (target.r - startAngles.r) * p;
+            RobotState.angles.b = startAngles.b + (target.b - startAngles.b) * p;
+            RobotState.angles.t = startAngles.t + (target.t - startAngles.t) * p;
+        }, 30);
+    }
 
     if (DxState.view !== 'JOB') setView('JOB');
     else renderJob();
