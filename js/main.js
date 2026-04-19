@@ -9,8 +9,7 @@ import {
     emergencyStop, handleFunc, toggleDropdown, closeHomeConfirm, handleEditAction,
     pressSelect, pressModify, pressInsert, pressDelete, handleDir, moveAxis,
     showMsg, setSpeed, toggleServo, setMode, goToTop, resetToZero,
-    checkTeachMode, selectWgravLine, selectHomeAxis, setSecurityMode, toggleUsage,
-    cycleMotionType, toggleInterlock
+    checkTeachMode, selectWgravLine, selectHomeAxis, setSecurityMode
 } from './ui.js';
 import { renderJob, startProgram, stepProgram } from './jobManager.js';
 
@@ -21,10 +20,6 @@ window.addEventListener('load', () => {
     initRenderer(canvas);
     renderJob();
     updateKeySwitchDisplay();
-    // Initialize USAGE display state
-    const usageStatus = DxState.isUsageOn;
-    DxState.isUsageOn = !usageStatus; 
-    toggleUsage();
 
     function gameLoop() {
         requestAnimationFrame(gameLoop);
@@ -125,6 +120,3 @@ window.goToTop = goToTop;
 window.resetToZero = resetToZero;
 window.selectHomeAxis = selectHomeAxis;
 window.setSecurityMode = setSecurityMode;
-window.toggleUsage = toggleUsage;
-window.cycleMotionType = cycleMotionType;
-window.toggleInterlock = toggleInterlock;

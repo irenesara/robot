@@ -161,65 +161,14 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
 @keyframes cursor-blink-anim { 50% { opacity: 0; } }
 .blink-active { animation: blink-active-anim 0.8s ease-in-out infinite !important; background: #ffea00 !important; color: #000 !important; border: 2px solid #fff !important; box-shadow: 0 0 15px #ffea00 !important; z-index: 10; }
 @keyframes blink-active-anim { 0%, 100% { background: #ffea00 !important; color: #000 !important; } 50% { background: #000 !important; color: #ffea00 !important; } }
-    /* INFORM LIST SIDEBAR */
-.inform-sidebar {
-    width: 100px;
-    background: #1a3a6a;
-    border-left: 1px solid #fff;
-    display: none;
-    flex-direction: column;
-    z-index: 100;
-}
-.inform-sidebar.active {
-    display: flex;
-}
-.inform-header {
-    background: #000;
-    color: #fff;
-    font-size: 6px;
-    padding: 2px 4px;
-    text-align: center;
-    border-bottom: 1px solid #555;
-}
-.inform-item {
-    padding: 4px 6px;
-    font-size: 6px;
-    color: #fff;
-    border-bottom: 1px solid #444;
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-}
-.inform-item:hover {
-    background: #2b4b9b;
-}
-.inform-item span.arrow {
-    color: #0ff;
-}
-
-/* BUFFER LINE */
-#lcd-buffer-line {
-    background: #000;
-    color: #ff0;
-    font-family: 'Courier New', monospace;
-    font-size: 8px;
-    padding: 2px 6px;
-    border-top: 1px solid #ff0;
-    min-height: 16px;
-    display: flex;
-    align-items: center;
-    display: none;
-}
-#lcd-buffer-line.active {
-    display: flex;
-    animation: buffer-pulse 2s infinite;
-}
-@keyframes buffer-pulse {
-    0% { background: #000; }
-    50% { background: #110; }
-    100% { background: #000; }
-}
-</style>
+    @keyframes coord-flash {
+        0% { background-color: #0ffff0; color: #000; }
+        100% { background: transparent; }
+    }
+    .coord-flash {
+        animation: coord-flash 0.8s ease-out;
+    }
+    </style>
 </head>
 <body>
     <div class="main-container">
@@ -227,7 +176,7 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
             <canvas id="canvas"></canvas>
             <div class="robot-info">
                 <strong>SIMULADOR ROBOT | <span id="runtime">00:00</span></strong><br>
-                S: <span id="s">0°</span> L: <span id="l">0°</span> U: <span id="u">0°</span> | R: <span id="r">0°</span> B: <span id="b">0°</span> T: <span id="t">0°</span>
+                <span id="lbl-s-small">S:</span> <span id="s">0°</span> <span id="lbl-l-small">L:</span> <span id="l">0°</span> <span id="lbl-u-small">U:</span> <span id="u">0°</span> | <span id="lbl-r-small">R:</span> <span id="r">0°</span> <span id="lbl-b-small">B:</span> <span id="b">0°</span> <span id="lbl-t-small">T:</span> <span id="t">0°</span>
             </div>
         </div>
 
@@ -256,15 +205,13 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                 </div>
 
                 <div class="lcd-display">
-                    <div class="lcd-top-bar" id="lcd-top-bar">
-                        <span id="alarm-badge" style="display:none; background:#ff0; color:#000; padding:0 3px; font-weight:bold; margin-right:5px;">ALM</span>
-                        <span id="top-bar-msg">SIMULADOR ROBOT <small style="font-size: 5px; opacity: 0.7;">v2.5</small></span>
+                    <div class="lcd-top-bar">
+                        <span>SIMULADOR ROBOT <small style="font-size: 5px; opacity: 0.7;">v2.4</small></span>
                         <span>STATUS: <span id="lcd-status" style="color:#0f0;">READY</span></span>
                         <span>MODE: <span id="lcd-mode" style="color:#ff0;">TEACH</span></span>
                         <span>SPD: <span id="lcd-speed" style="color:#ff0;">50%</span></span>
                         <span>SEC: <span id="lcd-security" style="color:#f0f;">OPER</span></span>
                         <span>COORD: <span id="lcd-coord" style="color:#0ff;">JOINT</span><small id="lcd-tool-no" style="font-size:7px; color:#fff; display:none;">(00)</small></span>
-                        <span id="usage-indicator" style="background: #555; color: #fff; padding: 0 4px; font-weight: bold; border: 1px solid #777;">USAGE: <span id="usage-status" style="color:#aaa;">OFF</span></span>
                         <span>OG#1:<span id="og1-status" style="color:#666;">OFF</span></span>
                         <span>OG#2:<span id="og2-status" style="color:#666;">OFF</span></span>
                     </div>
@@ -341,21 +288,6 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                             <div class="lcd-sidebar-btn" id="btn-view-utility" onclick="setView('UTILITY')">EX.SISTEMA</div>
                         </div>
                         <div class="lcd-main">
-                            <!-- ALARM SCREEN (NEW) -->
-                            <div id="alarm-screen" style="display: none; flex-direction: column; background: #eaeff2; height: 100%;">
-                                <div style="background: #a00; color: white; padding: 4px 8px; font-size: 8px; font-weight: bold;">ALARM HISTORY</div>
-                                <div id="alarm-list-area" style="padding: 4px; font-family: 'Courier New', monospace; font-size: 7px; color: #000; overflow-y: auto; flex: 1;">
-                                    <table style="width: 100%; border-collapse: collapse;">
-                                        <thead><tr style="background:#ccc;"><th>CODE</th><th>MESSAGE</th><th>TIME</th></tr></thead>
-                                        <tbody id="alarm-history-body"></tbody>
-                                    </table>
-                                </div>
-                                <div style="display: flex; border-top: 2px solid #a00; background: #ccc; height: 18px;">
-                                    <div style="flex: 1; text-align: center; border-right: 1px solid #999; padding: 4px; font-size: 7px; cursor: pointer;" onclick="resetAlarms()">RESET</div>
-                                    <div style="flex: 1; text-align: center; padding: 4px; font-size: 7px; cursor: pointer;" onclick="setView('JOB')">CLOSE</div>
-                                </div>
-                            </div>
-                            
                             <div id="data-screen" style="display: none; flex-direction: column; background: #eaeff2; height: 100%;">
                                 <div style="background: #1a3a6a; color: white; padding: 4px 8px; font-size: 8px; font-weight: bold;" id="data-screen-title">DATA</div>
                                 <div style="padding: 12px; font-family: 'Courier New', monospace; font-size: 10px; color: #000; flex: 1;">
@@ -374,24 +306,10 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                                     <div><span style="color:#aaa;">VJ:</span> <span id="job-speed-indicator">50.00</span></div>
                                 </div>
 
-                                <div style="display: flex; flex: 1; overflow: hidden;">
-                                    <div id="job-content-area" style="flex: 1; overflow-y: auto; background: #000; padding: 2px; font-family: 'Courier New', monospace; font-size: 7px; color: #0f0;"></div>
-                                    
-                                    <!-- INFORM LIST SIDEBAR -->
-                                    <div id="inform-sidebar" class="inform-sidebar">
-                                        <div class="inform-header" id="inform-title">INFORM LIST</div>
-                                        <div id="inform-list-content"></div>
-                                    </div>
-                                </div>
+                                <div id="job-content-area" style="flex: 1; overflow-y: auto; background: #000; padding: 2px; font-family: 'Courier New', monospace; font-size: 7px; color: #0f0;"></div>
                                 
-                                <!-- INSTRUCTION BUFFER LINE -->
-                                <div id="lcd-buffer-line" onclick="clearBuffer()">
-                                    <span style="color:#666; margin-right:5px;">BUF:</span>
-                                    <span id="buffer-text"></span>
-                                </div>
-
                                 <div id="job-buffer-area" style="background: #1a1a2e; border-top: 1px solid #555; padding: 2px 6px; color: #fff; font-size: 7px; height: 14px; display: flex; align-items: center;">
-                                    <span id="job-bottom-status" style="color:#666;">READY</span>
+                                    <span style="color:#666;">READY</span>
                                 </div>
                             </div>
 
@@ -406,14 +324,14 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                                 </div>
                                 <!-- Panel derecho: posición actual -->
                                 <div id="ml-coord-window" style="width: 90px; display: flex; flex-direction: column; background: #111; border: 2px solid transparent;">
-                                    <div style="background: #1a3a6a; color: #fff; padding: 2px 4px; font-size: 5px; font-weight: bold; border-bottom: 1px solid #0a2a5a; text-align:center;">JOINT COORD</div>
+                                    <div id="ml-coord-title" style="background: #1a3a6a; color: #fff; padding: 2px 4px; font-size: 5px; font-weight: bold; border-bottom: 1px solid #0a2a5a; text-align:center;">JOINT COORD</div>
                                     <div style="flex:1; padding: 4px 3px; font-family: 'Courier New', monospace; font-size: 6px; color: #0f0; display: flex; flex-direction: column; gap: 3px;">
-                                        <div style="display:flex; justify-content:space-between;"><span style="color:#aaa;">S:</span><span id="ml-s">0.000°</span></div>
-                                        <div style="display:flex; justify-content:space-between;"><span style="color:#aaa;">L:</span><span id="ml-l">0.000°</span></div>
-                                        <div style="display:flex; justify-content:space-between;"><span style="color:#aaa;">U:</span><span id="ml-u">0.000°</span></div>
-                                        <div style="display:flex; justify-content:space-between;"><span style="color:#aaa;">R:</span><span id="ml-r">0.000°</span></div>
-                                        <div style="display:flex; justify-content:space-between;"><span style="color:#aaa;">B:</span><span id="ml-b">0.000°</span></div>
-                                        <div style="display:flex; justify-content:space-between;"><span style="color:#aaa;">T:</span><span id="ml-t">0.000°</span></div>
+                                        <div style="display:flex; justify-content:space-between;"><span style="color:#aaa;" id="ml-lbl-s">S:</span><span id="ml-s">0.000°</span></div>
+                                        <div style="display:flex; justify-content:space-between;"><span style="color:#aaa;" id="ml-lbl-l">L:</span><span id="ml-l">0.000°</span></div>
+                                        <div style="display:flex; justify-content:space-between;"><span style="color:#aaa;" id="ml-lbl-u">U:</span><span id="ml-u">0.000°</span></div>
+                                        <div style="display:flex; justify-content:space-between;"><span style="color:#aaa;" id="ml-lbl-r">R:</span><span id="ml-r">0.000°</span></div>
+                                        <div style="display:flex; justify-content:space-between;"><span style="color:#aaa;" id="ml-lbl-b">B:</span><span id="ml-b">0.000°</span></div>
+                                        <div style="display:flex; justify-content:space-between;"><span style="color:#aaa;" id="ml-lbl-t">T:</span><span id="ml-t">0.000°</span></div>
                                     </div>
                                     <div style="border-top: 1px solid #333; padding: 3px; font-family: 'Courier New', monospace; font-size: 5px; color: #0a0;">
                                         OG#1: <span id="ml-og1" style="color:#666;">OFF</span><br>
@@ -494,13 +412,13 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                                 </div>
                             </div>
                             <div id="robot-screen" class="robot-coords-screen">
-                                <div class="lcd-header" style="background:#222; color:#fff; border-bottom: 1px dashed #444; padding-bottom: 4px; margin-bottom: 4px;">CURRENT POSITION</div>
-                                <div class="coord-row"><span>S:</span> <span id="lcd-s">0.000 °</span></div>
-                                <div class="coord-row"><span>L:</span> <span id="lcd-l">0.000 °</span></div>
-                                <div class="coord-row"><span>U:</span> <span id="lcd-u">0.000 °</span></div>
-                                <div class="coord-row"><span>R:</span> <span id="lcd-r">0.000 °</span></div>
-                                <div class="coord-row"><span>B:</span> <span id="lcd-b">0.000 °</span></div>
-                                <div class="coord-row"><span>T:</span> <span id="lcd-t">0.000 °</span></div>
+                                <div id="lcd-coords-title" class="lcd-header" style="background:#222; color:#fff; border-bottom: 1px dashed #444; padding-bottom: 4px; margin-bottom: 4px;">JOINT CURRENT POSITION</div>
+                                <div class="coord-row"><span id="lbl-s">S :</span> <span id="lcd-s">0.000 °</span></div>
+                                <div class="coord-row"><span id="lbl-l">L :</span> <span id="lcd-l">0.000 °</span></div>
+                                <div class="coord-row"><span id="lbl-u">U :</span> <span id="lcd-u">0.000 °</span></div>
+                                <div class="coord-row"><span id="lbl-r">R :</span> <span id="lcd-r">0.000 °</span></div>
+                                <div class="coord-row"><span id="lbl-b">B :</span> <span id="lcd-b">0.000 °</span></div>
+                                <div class="coord-row"><span id="lbl-t">T :</span> <span id="lcd-t">0.000 °</span></div>
                             </div>
                             <div id="tool-screen" style="display: none; flex-direction: column; height: 100%; background: #eaeff2;">
                                 <div class="lcd-header" style="background: #1a3a6a; color: white; border-bottom: 2px solid #000; padding: 2px 8px; flex-direction: column; align-items: flex-start; gap: 2px;">
@@ -940,16 +858,16 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                     <div class="kb-row-bot">
                         <div class="kb-bot-col">
                             <div class="kb-bot-btn" onclick="toggleShift()">SHIFT</div>
-                            <div class="kb-bot-btn" id="btn-sel-robot" onclick="setView('ROBOT-CURRENT'); setInfoDisplay('✓ GRUPO SELECCIONADO: ROBOT 1');">ROBOT</div>
-                            <div class="kb-bot-btn" id="btn-sel-exaxis" onclick="setInfoDisplay('⚠ NO HAY EJES EXTERNOS CONFIGURADOS');">EX.AXIS</div>
-                            <div class="kb-bot-btn" id="btn-sel-aux" onclick="setInfoDisplay('⚠ NO HAY DISPOSITIVOS AUXILIARES');">AUX</div>
+                            <div class="kb-bot-btn" onclick="showMsg('ROBOT ACTIVADO')">ROBOT</div>
+                            <div class="kb-bot-btn" onclick="showMsg('EX.AXIS')">EX.AXIS</div>
+                            <div class="kb-bot-btn" onclick="showMsg('AUX')">AUX</div>
                         </div>
                         
                         <div class="kb-bot-col">
                             <div class="kb-bot-btn blue-text" id="interlock-btn" onclick="toggleInterlock()">INTER<br>LOCK</div>
-                            <div class="kb-bot-btn" onclick="toggleInformList()">INFORM<br>LIST</div>
-                            <div class="kb-bot-btn" onclick="toggleUsage()">USAGE</div>
-                            <div class="kb-bot-btn" onclick="cycleMotionType()">MOTION<br>TYPE</div>
+                            <div class="kb-bot-btn" onclick="showMsg('INFORM LIST')">INFORM<br>LIST</div>
+                            <div class="kb-bot-btn" onclick="showMsg('WELD ON/OFF')">WELD<br>ON/OFF</div>
+                            <div class="kb-bot-btn" onclick="showMsg('MOTION TYPE')">MOTION<br>TYPE</div>
                         </div>
                         
                         <div class="kb-numpad">
@@ -989,10 +907,11 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
     </div>
 
 <script>
-const RobotState = {
+// --- ESTADO GLOBAL UNIFICADO ---
+var RobotState = {
     deadman: false,
     speed: 50,
-    angles: { s: 0, l: 0, u: 0, r: 0, b: 0, t: 0 },
+    angles: { s: 0, l: -30, u: 60, r: 0, b: -45, t: 0 },
     limits: {
         s: { min: -170, max: 170 },
         l: { min: -120, max: 120 },
@@ -1004,35 +923,23 @@ const RobotState = {
     programRunning: false,
     programStep: 0,
     stepTimer: 0,
-    mode: 'TEACH',
-    activeAlarms: [], // [{code: '0020', msg: 'EMERGENCY STOP'}]
-    alarmHistory: []
+    mode: 'TEACH'
 };
 
-const ALARM_DB = {
-    '0020': { msg: 'EMERGENCY STOP', level: 'major' },
-    '4107': { msg: 'SERVO POWER OFF', level: 'minor' },
-    '4311': { msg: 'SAFETY LOGIC CIRCUIT ERROR', level: 'major' },
-    '1020': { msg: 'ROBOT HOMING REQUIRED', level: 'minor' },
-    '5000': { msg: 'MEMORY ERROR (TOOL FILE)', level: 'major' },
-    '4004': { msg: 'HOME POSITION FILE ERROR', level: 'major' }
-};
-
-const DxState = {
+var DxState = {
     view: 'JOB',
+    coordSystem: 'JOINT', 
     currentJobId: 'JOB_ALAMBRE',
-    isInformListOpen: false,
-    informMenuLevel: 'ROOT', // ROOT, MOTION, IO, CONTROL
-    instructionBuffer: '',
+    currentToolNo: 0,
     selectedLineIndex: 0,
     selectedListIndex: 0,
     selectedTokenIndex: 0,
     isInserting: false,
     isDeleting: false,
     isModifying: false,
-    activeEditAction: null, // 'MODIFY', 'INSERT', 'DELETE'
-    editingBuffer: '',      // Línea de comandos en preparación
-    securityMode: 'EDITING', // Por defecto en edición para facilitar pruebas
+    activeEditAction: null, 
+    editingBuffer: '',      
+    securityMode: 'EDITING', 
     clipboard: null,
     insertType: 'MOVJ',
     insertSpeed: 50,
@@ -1040,6 +947,15 @@ const DxState = {
     focusedWindowIndex: 0,
     isSimpleMenu: false
 };
+
+// Exponer a window para acceso externo/UI
+window.RobotState = RobotState;
+window.DxState = DxState;
+
+document.addEventListener('DOMContentLoaded', () => {
+    console.log("SIMULADOR: Iniciando sincronización de UI...");
+    if (typeof updateDisplay === 'function') updateDisplay();
+});
 
 let robotJobs = {
     "JOB_ALAMBRE": [
@@ -1066,7 +982,7 @@ let robotJobs = {
 let wgravSelectedIdx = 0;
 let wgravCompleted = [false, false, false, false, false];
 let isShiftPressed = false;
-let isInterlockPressed = false; // Note: This will be shadowed by imported state in some places but kept for local script compatibility if needed
+let isInterlockPressed = false;
 let isServoOn = false;
 let keyPosition = 0;
 const keyPositions = ['OFF', 'REMOTE', 'TEACH'];
@@ -1593,7 +1509,7 @@ function setView(viewName) {
     const screens = ['job-screen', 'robot-menu-screen', 'robot-screen', 'list-screen',
         'security-screen', 'home-position-screen', 'system-info-menu-screen',
         'tool-screen', 'wgrav-screen', 'variable-screen', 'inout-screen', 
-        'alarm-screen', 'utility-screen', 'amplitude-screen', 'general-screen', 'data-screen', 'calibration-screen', 'master-rezero-screen', 'parameter-screen', 'clock-screen', 'file-screen'];
+        'alarm-screen', 'utility-screen', 'amplitude-screen', 'general-screen', 'data-screen', 'calibration-screen', 'master-rezero-screen', 'parameter-screen', 'clock-screen', 'file-screen', 'multi-layout-screen'];
     screens.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
@@ -1615,14 +1531,15 @@ function setView(viewName) {
         'UTILITY': ['utility-screen', null],
         'AMPLITUDE': ['amplitude-screen', null],
         'GENERAL': ['general-screen', null],
-        'DATA': ['data-screen', null]
+        'DATA': ['data-screen', null],
+        'MULTI-LAYOUT': ['multi-layout-screen', updateMultiLayout]
     };
 
     const mapping = viewMap[viewName];
     if (mapping) {
         const el = document.getElementById(mapping[0]);
         if (el) {
-            el.style.display = 'flex';
+            el.style.display = (viewName === 'MULTI-LAYOUT') ? 'flex' : 'flex';
         }
         if (mapping[1]) mapping[1]();
     }
@@ -1671,172 +1588,36 @@ function selectWgravLine(idx) {
     }
 }
 
-/* ==========================================================================
-   INFORM LIST LOGIC (Industrial Fidelity)
-   ========================================================================== */
-
-const INFORM_MENU = {
-    'ROOT': [
-        { label: 'MOTION', type: 'cat', value: 'MOTION' },
-        { label: 'IN/OUT', type: 'cat', value: 'IO' },
-        { label: 'CONTROL', type: 'cat', value: 'CONTROL' },
-        { label: 'DEVICE', type: 'cat', value: 'DEVICE' },
-        { label: 'ARITH', type: 'cat', value: 'ARITH' }
-    ],
-    'MOTION': [
-        { label: 'MOVJ', type: 'inst', value: 'MOVJ VJ=50.00' },
-        { label: 'MOVL', type: 'inst', value: 'MOVL V=100.0' },
-        { label: 'MOVC', type: 'inst', value: 'MOVC V=100.0' },
-        { label: '◄ ATRÁS', type: 'cat', value: 'ROOT' }
-    ],
-    'IO': [
-        { label: 'DOUT', type: 'inst', value: 'DOUT OG#(1) ON' },
-        { label: 'DIN', type: 'inst', value: 'WAIT IN#(1)=ON' },
-        { label: 'PULSE', type: 'inst', value: 'PULSE OT#(1) T=1.0' },
-        { label: '◄ ATRÁS', type: 'cat', value: 'ROOT' }
-    ],
-    'CONTROL': [
-        { label: 'TIMER', type: 'inst', value: 'TIMER T=1.00' },
-        { label: 'WAIT', type: 'inst', value: 'WAIT T=1.00' },
-        { label: 'JUMP', type: 'inst', value: 'JUMP *LABEL' },
-        { label: 'CALL', type: 'inst', value: 'CALL JOB:JOB_NAME' },
-        { label: 'LABEL', type: 'inst', value: '*LABEL' },
-        { label: '◄ ATRÁS', type: 'cat', value: 'ROOT' }
-    ],
-    'DEVICE': [
-        { label: 'HAND', type: 'inst', value: 'HAND' },
-        { label: '◄ ATRÁS', type: 'cat', value: 'ROOT' }
-    ],
-    'ARITH': [
-        { label: 'SET', type: 'inst', value: 'SET D000 0' },
-        { label: 'ADD', type: 'inst', value: 'ADD D000 1' },
-        { label: '◄ ATRÁS', type: 'cat', value: 'ROOT' }
-    ]
-};
-
-function toggleInformList() {
-    if (DxState.view !== 'JOB') setView('JOB');
-    DxState.isInformListOpen = !DxState.isInformListOpen;
-    DxState.informMenuLevel = 'ROOT';
-    renderInformMenu();
-}
-
-function renderInformMenu() {
-    const sidebar = document.getElementById('inform-sidebar');
-    const content = document.getElementById('inform-list-content');
-    const title = document.getElementById('inform-title');
-    
-    if (!DxState.isInformListOpen) {
-        if (sidebar) sidebar.classList.remove('active');
-        return;
-    }
-    
-    if (sidebar) sidebar.classList.add('active');
-    if (title) title.textContent = `INFORM LIST (${DxState.informMenuLevel})`;
-    if (content) {
-        content.innerHTML = '';
-        const items = INFORM_MENU[DxState.informMenuLevel] || [];
-        items.forEach(item => {
-            const div = document.createElement('div');
-            div.className = 'inform-item';
-            div.innerHTML = `<span>${item.label}</span> ${item.type === 'cat' ? '<span class="arrow">▶</span>' : ''}`;
-            div.onclick = () => {
-                if (item.type === 'cat') {
-                    DxState.informMenuLevel = item.value;
-                    renderInformMenu();
-                } else {
-                    stageInstruction(item.value);
-                }
-            };
-            content.appendChild(div);
-        });
-    }
-}
-
-function stageInstruction(code) {
-    DxState.instructionBuffer = code;
-    DxState.isInformListOpen = false;
-    renderInformMenu();
-    updateBufferDisplay();
-}
-
-function updateBufferDisplay() {
-    const bufferLine = document.getElementById('lcd-buffer-line');
-    const bufferText = document.getElementById('buffer-text');
-    const bottomStatus = document.getElementById('job-bottom-status');
-
-    if (DxState.instructionBuffer) {
-        if (bufferLine) bufferLine.classList.add('active');
-        if (bufferText) bufferText.textContent = DxState.instructionBuffer;
-        if (bottomStatus) {
-            bottomStatus.textContent = 'CONFIRME CON [ENTER]';
-            bottomStatus.style.color = '#ff0';
-        }
-    } else {
-        if (bufferLine) bufferLine.classList.remove('active');
-        if (bottomStatus) {
-            bottomStatus.textContent = 'READY';
-            bottomStatus.style.color = '#666';
-        }
-    }
-}
-
-function clearBuffer() {
-    DxState.instructionBuffer = '';
-    updateBufferDisplay();
-}
-
-function confirmInstructionInsertion() {
-    const currentJob = robotJobs[DxState.currentJobId];
-    if (!currentJob) return;
-
-    // Si la línea seleccionada es 'END', no insertamos después
-    if (DxState.selectedLineIndex >= currentJob.length) {
-        setInfoDisplay('❌ No se puede insertar después de END');
-        return;
-    }
-
-    const newInst = JSON.parse(JSON.stringify(currentJob[0])); // Clonar estructura básica
-    newInst.code = DxState.instructionBuffer;
-    
-    // Si es un movimiento, capturar posición actual
-    if (newInst.code.startsWith('MOV')) {
-        Object.assign(newInst, RobotState.angles);
-    }
-    
-    if (isInserting) {
-        currentJob.splice(DxState.selectedLineIndex, 0, newInst);
-        setInfoDisplay('✓ INSTRUCCIÓN INSERTADA');
-    } else {
-        currentJob[DxState.selectedLineIndex] = newInst;
-        setInfoDisplay('✓ INSTRUCCIÓN MODIFICADA');
-    }
-    
-    DxState.instructionBuffer = '';
-    updateBufferDisplay();
-    renderJob();
-}
-
 function toggleInterlock(active) {
     if (active !== undefined && isInterlockPressed === active) return;
     isInterlockPressed = (active !== undefined) ? active : !isInterlockPressed;
+    
     const btn = document.getElementById('interlock-btn');
     if (btn) {
+        // Estética Industrial: Azul Yaskawa cuando está activo
         btn.style.background = isInterlockPressed ? '#2b4b9b' : '';
         btn.style.color = isInterlockPressed ? '#fff' : '';
-        btn.style.boxShadow = isInterlockPressed ? '0 0 10px #3b5bdb' : '';
+        btn.style.boxShadow = isInterlockPressed ? '0 0 15px rgba(43, 75, 155, 0.8)' : '';
+        btn.style.borderColor = isInterlockPressed ? '#fff' : '';
     }
+    
+    setInfoDisplay(isInterlockPressed ? '✓ INTERLOCK: ACTIVADO (Seguridad Operativa)' : '✓ INTERLOCK: DESACTIVADO');
 }
 
 function toggleShift(active) {
     if (active !== undefined && isShiftPressed === active) return;
     isShiftPressed = (active !== undefined) ? active : !isShiftPressed;
+    
     document.querySelectorAll('.kb-bot-btn').forEach(b => {
         if (b.textContent.trim() === 'SHIFT') {
             b.style.background = isShiftPressed ? '#3b5bdb' : '';
             b.style.color = isShiftPressed ? '#fff' : '';
+            b.style.boxShadow = isShiftPressed ? '0 0 10px #3b5bdb' : '';
         }
     });
+
+    // Pequeño indicador visual en el LCD (opcional, muy auténtico)
+    setInfoDisplay(isShiftPressed ? '✓ SHIFT: ACTIVADO (Segunda Función)' : '✓ SHIFT: DESACTIVADO');
 }
 
 function toggleDeadman() {
@@ -1845,8 +1626,9 @@ function toggleDeadman() {
     if (RobotState.deadman) {
         btn.textContent = '✓ ACTIVO';
         btn.classList.add('active');
+        setInfoDisplay('✓ Deadman ACTIVO (Listo para Servo)');
     } else {
-        btn.textContent = 'OFF';
+        btn.textContent = 'INACTIVO';
         btn.classList.remove('active');
         if (isServoOn) {
             isServoOn = false;
@@ -1856,6 +1638,9 @@ function toggleDeadman() {
                 sBtn.style.color = '#222';
                 sBtn.style.boxShadow = 'none';
             }
+            setInfoDisplay('⚠️ Deadman SUELTO: Servos DESCONECTADOS');
+        } else {
+            setInfoDisplay('⚠️ Deadman INACTIVO');
         }
     }
 }
@@ -1986,193 +1771,320 @@ function pressCancel() {
     }
 }
 
-function showMsg(msg) {
-    setInfoDisplay('ℹ️ ' + msg);
-}
+function calculateFK(angles) {
+    const d1 = 0.30; const a2 = 0.38; const a3 = 0.35; const d6 = 0.05;
+    const s = angles.s * Math.PI / 180;
+    const l = angles.l * Math.PI / 180;
+    const u = angles.u * Math.PI / 180;
+    const r = angles.r * Math.PI / 180;
+    const b = angles.b * Math.PI / 180;
+    const t = angles.t * Math.PI / 180;
 
-function setInfoDisplay(msg) {
-    const el = document.getElementById('infoDisplay');
-    if (el) el.textContent = msg;
-}
+    let m = new THREE.Matrix4();
+    m.multiply(new THREE.Matrix4().makeRotationZ(s));
+    m.multiply(new THREE.Matrix4().makeTranslation(0, 0, d1));
+    m.multiply(new THREE.Matrix4().makeRotationX(l));
+    m.multiply(new THREE.Matrix4().makeTranslation(0, a2, 0));
+    m.multiply(new THREE.Matrix4().makeRotationX(u));
+    m.multiply(new THREE.Matrix4().makeTranslation(0, a3, 0));
+    m.multiply(new THREE.Matrix4().makeRotationZ(r));
+    m.multiply(new THREE.Matrix4().makeRotationX(b));
+    m.multiply(new THREE.Matrix4().makeTranslation(0, 0, d6));
+    m.multiply(new THREE.Matrix4().makeRotationZ(t));
 
-/* ==========================================================================
-   ALARM SYSTEM (Industrial Fidelity)
-   ========================================================================== */
+    const pos = new THREE.Vector3();
+    const quat = new THREE.Quaternion();
+    const scale = new THREE.Vector3();
+    m.decompose(pos, quat, scale);
+    const rot = new THREE.Euler().setFromQuaternion(quat, 'XYZ');
 
-function triggerAlarm(code) {
-    const alarm = ALARM_DB[code] || { msg: 'UNKNOWN ERROR', level: 'minor' };
-    
-    // Evitar duplicados activos
-    if (RobotState.activeAlarms.find(a => a.code === code)) return;
-    
-    const newAlarm = {
-        code: code,
-        msg: alarm.msg,
-        time: new Date().toLocaleTimeString(),
-        level: alarm.level
+    return {
+        x: pos.x, y: pos.y, z: pos.z,
+        rx: rot.x * 180 / Math.PI, ry: rot.y * 180 / Math.PI, rz: rot.z * 180 / Math.PI
     };
-    
-    RobotState.activeAlarms.unshift(newAlarm);
-    RobotState.alarmHistory.unshift(newAlarm);
-    if (RobotState.alarmHistory.length > 50) RobotState.alarmHistory.pop();
-    
-    updateAlarmUI();
-    
-    // Parar robot inmediatamente si es alarma mayor
-    if (alarm.level === 'major') {
-        RobotState.programRunning = false;
-        if (isServoOn) toggleServo(); // Apagar servos
-    }
-    
-    setInfoDisplay(`❌ ALARM ${code}: ${alarm.msg}`);
 }
 
-function updateAlarmUI() {
-    const topBar = document.getElementById('lcd-top-bar');
-    const badge = document.getElementById('alarm-badge');
-    const msg = document.getElementById('top-bar-msg');
-    
-    if (RobotState.activeAlarms.length > 0) {
-        const top = RobotState.activeAlarms[0];
-        topBar.style.background = top.level === 'major' ? '#a00' : '#d80';
-        badge.style.display = 'inline-block';
-        msg.textContent = `ALARM ${top.code}: ${top.msg}`;
-        msg.style.color = '#fff';
-        document.getElementById('lcd-status').textContent = 'ALARM';
-        document.getElementById('lcd-status').style.color = '#fff';
-    } else {
-        topBar.style.background = '#0a2a5a';
-        badge.style.display = 'none';
-        msg.textContent = 'SIMULADOR ROBOT v2.5';
-        msg.style.color = '';
-        document.getElementById('lcd-status').textContent = RobotState.programRunning ? 'RUNNING' : 'READY';
-        document.getElementById('lcd-status').style.color = '#0f0';
+function solveLinearSystem6x6(A, b) {
+    let n = 6;
+    for (let i = 0; i < n; i++) {
+        let max = i;
+        for (let j = i + 1; j < n; j++) {
+            if (Math.abs(A[j][i]) > Math.abs(A[max][i])) max = j;
+        }
+        let tempA = A[i]; A[i] = A[max]; A[max] = tempA;
+        let tempB = b[i]; b[i] = b[max]; b[max] = tempB;
+        if (Math.abs(A[i][i]) < 1e-12) return null;
+        for (let j = i + 1; j < n; j++) {
+            let f = A[j][i] / A[i][i];
+            b[j] -= f * b[i];
+            for (let k = i; k < n; k++) A[j][k] -= f * A[i][k];
+        }
     }
-    
-    renderAlarmHistory();
+    let x = new Array(n).fill(0);
+    for (let i = n - 1; i >= 0; i--) {
+        let s = 0;
+        for (let j = i + 1; j < n; j++) s += A[i][j] * x[j];
+        x[i] = (b[i] - s) / A[i][i];
+    }
+    return x;
 }
 
-function resetAlarms() {
-    // Las alarmas mayores solo se resetean si las condiciones de hardware se cumplen
-    // (Por ahora permitimos reset de todas para jugabilidad, pero podemos ser estrictos)
-    if (isEmergencyStopped) {
-        setInfoDisplay('⚠ NO SE PUEDE RESETEAR: Emergencia pulsada');
-        return;
-    }
+function solveCartesianStep(currentAngles, delta) {
+    const damping = 0.01;
+    const jointKeys = ['s', 'l', 'u', 'r', 'b', 't'];
+    const epsilon = 0.0001;
+    const currentTCP = calculateFK(currentAngles);
     
-    RobotState.activeAlarms = [];
-    updateAlarmUI();
-    setInfoDisplay('✓ Alarmas reseteadas.');
+    let jacobian = []; // 6 rows (x,y,z,rx,ry,rz) x 6 columns (s,l,u,r,b,t)
+    for (let i = 0; i < 6; i++) jacobian[i] = new Array(6).fill(0);
+
+    for (let j = 0; j < 6; j++) {
+        const tempAngles = { ...currentAngles };
+        tempAngles[jointKeys[j]] += epsilon;
+        const nextTCP = calculateFK(tempAngles);
+        
+        jacobian[0][j] = (nextTCP.x - currentTCP.x) / epsilon;
+        jacobian[1][j] = (nextTCP.y - currentTCP.y) / epsilon;
+        jacobian[2][j] = (nextTCP.z - currentTCP.z) / epsilon;
+        
+        let drx = nextTCP.rx - currentTCP.rx;
+        let dry = nextTCP.ry - currentTCP.ry;
+        let drz = nextTCP.rz - currentTCP.rz;
+        if (drx > 180) drx -= 360; if (drx < -180) drx += 360;
+        if (dry > 180) dry -= 360; if (dry < -180) dry += 360;
+        if (drz > 180) drz -= 360; if (drz < -180) drz += 360;
+
+        jacobian[3][j] = (drx * Math.PI / 180) / epsilon;
+        jacobian[4][j] = (dry * Math.PI / 180) / epsilon;
+        jacobian[5][j] = (drz * Math.PI / 180) / epsilon;
+    }
+
+    let JTJ = [];
+    for (let i = 0; i < 6; i++) {
+        JTJ[i] = new Array(6).fill(0);
+        for (let j = 0; j < 6; j++) {
+            for (let k = 0; k < 6; k++) JTJ[i][j] += jacobian[k][i] * jacobian[k][j];
+            if (i === j) JTJ[i][j] += damping * damping;
+        }
+    }
+
+    let JTy = new Array(6).fill(0);
+    for (let i = 0; i < 6; i++) {
+        for (let j = 0; j < 6; j++) JTy[i] += jacobian[j][i] * delta[j];
+    }
+
+    let dQ = solveLinearSystem6x6(JTJ, JTy);
+    if (!dQ) return null;
+
+    const newAngles = { ...currentAngles };
+    for (let i = 0; i < 6; i++) {
+        newAngles[jointKeys[i]] += dQ[i] * (180 / Math.PI);
+        if (isNaN(newAngles[jointKeys[i]])) return null;
+    }
+    return newAngles;
 }
 
-function renderAlarmHistory() {
-    const body = document.getElementById('alarm-history-body');
-    if (!body) return;
-    
-    body.innerHTML = '';
-    RobotState.alarmHistory.forEach(a => {
-        const row = document.createElement('tr');
-        row.style.borderBottom = '1px solid #ccc';
-        row.innerHTML = `
-            <td style="color:#a00; font-weight:bold; padding:2px;">${a.code}</td>
-            <td style="padding:2px;">${a.msg}</td>
-            <td style="color:#666; padding:2px;">${a.time}</td>
-        `;
-        body.appendChild(row);
-    });
-}
-
-function moveAxis(axis, dir) {
-    if (!checkTeachMode('Movimiento manual')) return;
-    if (RobotState.programRunning) return;
-    
-    // BLOQUEO POR ALARMA
-    if (RobotState.activeAlarms.length > 0) {
-        setInfoDisplay('❌ BLOQUEO: Resetee alarmas primero');
-        return;
-    }
-
-    if (axis === 'a') {
-        const maxOpen = 0.030;
-        gripperAngle = Math.max(0, Math.min(maxOpen, gripperAngle + (0.01 * dir)));
-        setInfoDisplay(`✓ PINZA 1: ${Math.round((gripperAngle / maxOpen) * 100)}%`);
-        return;
-    }
-    if (axis === 'e') {
-        const maxOpen = 0.030;
-        gripper2Angle = Math.max(0, Math.min(maxOpen, gripper2Angle + (0.01 * dir)));
-        setInfoDisplay(`✓ PINZA 2: ${Math.round((gripper2Angle / maxOpen) * 100)}%`);
-        return;
-    }
-    
-    // REQUISITOS DE MOVIMIENTO (Auténticos)
-    if (!isInterlockPressed) {
-        setInfoDisplay('⚠ Requiere INTERLOCK (Pulse el botón azul)');
+function toggleCoordSystem() {
+    if (RobotState.mode !== 'TEACH' && keyPositions[keyPosition] !== 'TEACH') {
+        setInfoDisplay('⚠ Modo TEACH requerido para COORD');
         return;
     }
     if (!RobotState.deadman) {
-        setInfoDisplay('⚠️ SEGURIDAD: Mantenga DEADMAN (ESPACIO) presionado');
+        setInfoDisplay('⚠ Active DEADMAN (ESPACIO)');
         return;
     }
     if (!isServoOn) {
-        setInfoDisplay('⚠️ POTENCIA: Pulse [SERVO ON READY] (Luz verde)');
-        const sBtn = document.getElementById('servo-btn');
-        if (sBtn) {
-            sBtn.style.background = '#a00';
-            setTimeout(() => sBtn.style.background = isServoOn ? '#0f0' : '#ccc', 200);
+        setInfoDisplay('⚠ Active SERVO ON');
+        return;
+    }
+    if (typeof isShiftPressed !== 'undefined' && isShiftPressed) {
+        DxState.currentToolNo = (DxState.currentToolNo === 0 || !DxState.currentToolNo) ? 1 : 0;
+        setInfoDisplay('✓ TOOL SELECT: Herramienta #' + DxState.currentToolNo);
+        updateDisplay();
+        return;
+    }
+    const systems = ['JOINT', 'WORLD', 'TOOL'];
+    let idx = systems.indexOf(DxState.coordSystem);
+    DxState.coordSystem = systems[(idx + 1) % systems.length];
+    const lcdEl = document.getElementById('lcd-coord');
+    if (lcdEl) lcdEl.textContent = DxState.coordSystem;
+    setInfoDisplay('✓ COORD: ' + DxState.coordSystem);
+    updateDisplay();
+    renderJob();
+}
+
+function solveWorldIK(current, tx, ty, tz) {
+    const keys = ['s', 'l', 'u', 'r', 'b', 't'];
+    let q = { s: current.s, l: current.l, u: current.u, r: current.r, b: current.b, t: current.t };
+    const maxIter = 100;
+    const tol = 0.001;
+    const alpha = 0.25;
+    
+    for (let iter = 0; iter < maxIter; iter++) {
+        const cur = calculateFK(q);
+        let ex = tx - cur.x;
+        let ey = ty - cur.y;
+        let ez = tz - cur.z;
+        
+        if (Math.abs(ex) < tol && Math.abs(ey) < tol && Math.abs(ez) < tol) return q;
+        
+        let J = [[0,0,0,0,0,0], [0,0,0,0,0,0], [0,0,0,0,0,0]];
+        const de = 0.1;
+        
+        for (let j = 0; j < 6; j++) {
+            const t = { s: q.s, l: q.l, u: q.u, r: q.r, b: q.b, t: q.t };
+            t[keys[j]] += de;
+            const n = calculateFK(t);
+            J[0][j] = (n.x - cur.x) / de;
+            J[1][j] = (n.y - cur.y) / de;
+            J[2][j] = (n.z - cur.z) / de;
         }
+        
+        let dq = [0,0,0,0,0,0];
+        for (let i = 0; i < 6; i++) {
+            dq[i] = alpha * (J[0][i] * ex + J[1][i] * ey + J[2][i] * ez);
+        }
+        
+        for (let j = 0; j < 6; j++) {
+            q[keys[j]] += dq[j];
+        }
+    }
+    return q;
+}
+
+function moveAxis(axis, dir) {
+    if (RobotState.mode !== 'TEACH') { setInfoDisplay('⚠️ CAMBIE A MODO TEACH'); return; }
+    if (RobotState.programRunning) return;
+
+    if (axis === 'a' || axis === 'e') {
+        const isPinza2 = (axis === 'e');
+        const maxOpen = 0.030;
+        let angle = isPinza2 ? gripper2Angle : gripperAngle;
+        angle = Math.max(0, Math.min(maxOpen, angle + (0.01 * dir)));
+        if (isPinza2) gripper2Angle = angle; else gripperAngle = angle;
+        setInfoDisplay(`✓ PINZA ${isPinza2 ? '2' : '1'}: ${Math.round((angle/maxOpen)*100)}%`);
         return;
     }
 
-    const axisMap = { x: 's', y: 'l', z: 'u', r: 'r', b: 'b', t: 't' };
-    const sAxis = axisMap[axis];
-    if (sAxis && RobotState.angles[sAxis] !== undefined) {
-        const inc = (RobotState.speed * 0.15) * dir;
-        RobotState.angles[sAxis] = Math.max(
-            RobotState.limits[sAxis].min,
-            Math.min(RobotState.limits[sAxis].max, RobotState.angles[sAxis] + inc)
-        );
-        const axisToJoint = { s: 0, l: 1, u: 2, r: 3, b: 4, t: 5 };
-        highlightJoint(axisToJoint[sAxis]);
-        updateDisplay();
-        setInfoDisplay(`✓ MOVIENDO ${sAxis.toUpperCase()} ${dir > 0 ? '+' : '−'}`);
+    if (!RobotState.deadman) { setInfoDisplay('⚠️ DEADMAN (ESPACIO)'); return; }
+    if (!isServoOn) { setInfoDisplay('⚠️ SERVO DESCONECTADO'); return; }
+    
+    // REQUISITO INDUSTRIAL: INTERLOCK + EJE
+    if (!isInterlockPressed) {
+        setInfoDisplay('⚠️ Mantenga [INTERLOCK] + Eje');
+        return;
+    }
+
+    if (DxState.coordSystem === 'JOINT') {
+        const axisMap = { x: 's', y: 'l', z: 'u', r: 'r', b: 'b', t: 't' };
+        const sAxis = axisMap[axis];
+        if (sAxis) {
+            const inc = RobotState.speed * 0.18 * dir;
+            RobotState.angles[sAxis] = Math.max(RobotState.limits[sAxis].min, Math.min(RobotState.limits[sAxis].max, RobotState.angles[sAxis] + inc));
+            highlightJoint({ s: 0, l: 1, u: 2, r: 3, b: 4, t: 5 }[sAxis]);
+            updateDisplay();
+            setInfoDisplay(`✓ ${sAxis.toUpperCase()} ${dir > 0 ? '+' : '−'}`);
+        }
+    } else {
+        const current = calculateFK(RobotState.angles);
+        const step = (RobotState.speed * 1.5) * dir;
+        
+        let targetX = current.x;
+        let targetY = current.y;
+        let targetZ = current.z;
+        
+        if (axis === 'x') targetX += step;
+        else if (axis === 'y') targetY += step;
+        else if (axis === 'z') targetZ += step;
+        else {
+            const joints = { x: 's', y: 'l', z: 'u', r: 'r', b: 'b', t: 't' };
+            const key = joints[axis];
+            if (key) RobotState.angles[key] += RobotState.speed * 0.15 * dir;
+            updateDisplay();
+            setInfoDisplay(`✓ ${axis.toUpperCase()} ${dir > 0 ? '+' : '−'}`);
+            return;
+        }
+        
+        const newAngles = solveWorldIK(RobotState.angles, targetX, targetY, targetZ);
+        if (newAngles) {
+            RobotState.angles = newAngles;
+            updateDisplay();
+            setInfoDisplay(`✓ ${axis.toUpperCase()} ${dir > 0 ? '+' : '−'}`);
+        } else {
+            const joints = { x: 's', y: 'l', z: 'u' };
+            const key = joints[axis];
+            if (key) {
+                RobotState.angles[key] += RobotState.speed * 0.15 * dir;
+                updateDisplay();
+                setInfoDisplay(`✓ ${axis.toUpperCase()} ${dir > 0 ? '+' : '−'}`);
+            }
+        }
     }
 }
 
 function updateDisplay() {
-    // 1. Actualizar barra superior de info
-    document.getElementById('s').textContent = RobotState.angles.s.toFixed(1) + '°';
-    document.getElementById('l').textContent = RobotState.angles.l.toFixed(1) + '°';
-    document.getElementById('u').textContent = RobotState.angles.u.toFixed(1) + '°';
-    document.getElementById('r').textContent = RobotState.angles.r.toFixed(1) + '°';
-    document.getElementById('b').textContent = RobotState.angles.b.toFixed(1) + '°';
-    document.getElementById('t').textContent = RobotState.angles.t.toFixed(1) + '°';
+    if (!RobotState.angles) return;
+    const angles = RobotState.angles;
+    const mode = DxState.coordSystem || 'JOINT';
+    const coords = typeof calculateFK === 'function' ? calculateFK(angles) : {x:0,y:0,z:0,rx:0,ry:0,rz:0};
 
-    // 2. Actualizar paneles del LCD (ROBOT POSITION)
-    const lcdS = document.getElementById('lcd-s');
-    if (lcdS) {
-        lcdS.textContent = RobotState.angles.s.toFixed(3) + ' °';
-        document.getElementById('lcd-l').textContent = RobotState.angles.l.toFixed(3) + ' °';
-        document.getElementById('lcd-u').textContent = RobotState.angles.u.toFixed(3) + ' °';
-        document.getElementById('lcd-r').textContent = RobotState.angles.r.toFixed(3) + ' °';
-        document.getElementById('lcd-b').textContent = RobotState.angles.b.toFixed(3) + ' °';
-        document.getElementById('lcd-t').textContent = RobotState.angles.t.toFixed(3) + ' °';
+    const labels = ['s', 'l', 'u', 'r', 'b', 't'];
+    const cartLabels = ['X', 'Y', 'Z', 'Rx', 'Ry', 'Rz'];
+    const currentLabels = (mode === 'JOINT') ? labels : cartLabels;
+    
+    // 1. Labels
+    labels.forEach((id, i) => {
+        const text = currentLabels[i].toUpperCase();
+        const elLbl = document.getElementById('lbl-' + id);
+        if (elLbl) elLbl.textContent = text + (text.length === 1 ? " :" : ":");
+        const elSmall = document.getElementById('lbl-' + id + '-small');
+        if (elSmall) elSmall.textContent = text + ":";
+        const elMl = document.getElementById('ml-lbl-' + id);
+        if (elMl) elMl.textContent = text + ":";
+    });
+
+    // 2. Values
+    const isCart = (mode !== 'JOINT');
+    const vals = isCart ? [coords.x * 1000, coords.y * 1000, coords.z * 1000, coords.rx, coords.ry, coords.rz] : [angles.s, angles.l, angles.u, angles.r, angles.b, angles.t];
+
+    labels.forEach((id, i) => {
+        const isPos = (isCart && i < 3);
+        const unit = isPos ? ' mm' : '°';
+        const elVal = document.getElementById(id);
+        if (elVal) elVal.textContent = vals[i].toFixed(1) + unit;
+        const elLcd = document.getElementById('lcd-' + id);
+        if (elLcd) elLcd.textContent = vals[i].toFixed(3) + (isPos ? ' mm' : ' °');
+        const elMlVal = document.getElementById('ml-' + id);
+        if (elMlVal) elMlVal.textContent = vals[i].toFixed(isPos ? 3 : 1) + (isPos ? ' mm' : '°');
+    });
+
+    // 3. Status Indicators & Colors
+    const statusEl = document.getElementById('lcd-coord');
+    if (statusEl) {
+        if (statusEl.textContent !== mode) {
+            statusEl.classList.remove('coord-flash');
+            void statusEl.offsetWidth; 
+            statusEl.classList.add('coord-flash');
+        }
+        statusEl.textContent = mode;
+        if (mode === 'JOINT') statusEl.style.color = '#0ff';
+        else if (mode === 'WORLD') statusEl.style.color = '#0f0';
+        else if (mode === 'TOOL') statusEl.style.color = '#ff0';
+    }
+    
+    const mlTitleEl = document.getElementById('ml-coord-title');
+    if (mlTitleEl) mlTitleEl.textContent = mode + " COORD";
+    
+    const robotTitleEl = document.getElementById('lcd-coords-title');
+    if (robotTitleEl) robotTitleEl.textContent = mode + " CURRENT POSITION";
+
+    const toolNoEl = document.getElementById('lcd-tool-no');
+    if (toolNoEl) {
+        toolNoEl.textContent = '(' + String(DxState.currentToolNo || 0).padStart(2, '0') + ')';
+        toolNoEl.style.display = (mode === 'TOOL') ? 'inline' : 'none';
     }
 
-    // 3. Sync model 3D
-    updateRobotDisplay();
-
-    // 4. Refrescar otras pantallas
-    const og1 = document.getElementById('og1-status');
-    const og2 = document.getElementById('og2-status');
-    if (og1) { og1.textContent = digitalOutputs[1] ? 'ON' : 'OFF'; og1.style.color = digitalOutputs[1] ? '#0f0' : '#666'; }
-    if (og2) { og2.textContent = digitalOutputs[2] ? 'ON' : 'OFF'; og2.style.color = digitalOutputs[2] ? '#0f0' : '#666'; }
-
-    renderInout();
-    renderVariable();
-    updateGeneralScreen();
-    updateCalibrationScreen();
-    if (isMultiLayout) updateMultiLayout();
+    if (DxState.view === 'JOB' && typeof renderJob === 'function') renderJob();
 }
 
 function checkTeachMode(actionName) {
@@ -2366,12 +2278,6 @@ function handleSimpleMenu() {
     }
 
     DxState.isSimpleMenu = !DxState.isSimpleMenu;
-    if (baseView === 'ALARM') {
-        const screen = document.getElementById('alarm-screen');
-        if (screen) screen.style.display = 'flex';
-        renderAlarmHistory();
-    }
-    
     updateSidebarUI();
     setInfoDisplay(DxState.isSimpleMenu ? '✓ SIMPLE MENU: Modo Operador Activado' : '✓ STANDARD MENU: Modo Programador Activado');
 }
@@ -2630,7 +2536,6 @@ function pressModify() {
     }
     if (DxState.view !== 'JOB') { setInfoDisplay('⚠ MODIFY: Cambie a JOB'); return; }
     if (!checkTeachMode('MODIFY')) return;
-    if (DxState.securityMode === 'OPERATION') { setInfoDisplay('❌ SECURITY ERROR: REQUIRE EDITING MODE'); return; }
     
     const btn = document.getElementById('modify-btn');
     if (DxState.activeEditAction === 'MODIFY') {
@@ -2654,7 +2559,6 @@ function pressModify() {
 function pressInsert() {
     if (DxState.view !== 'JOB') { setInfoDisplay('⚠ Cambie a JOB'); return; }
     if (!checkTeachMode('INSERT')) return;
-    if (DxState.securityMode === 'OPERATION') { setInfoDisplay('❌ SECURITY ERROR: REQUIRE EDITING MODE'); return; }
 
     const btn = document.getElementById('insert-btn');
     if (DxState.activeEditAction === 'INSERT') {
@@ -2698,28 +2602,7 @@ function goToTop() {
     setInfoDisplay('↑ CURSOR EN INICIO DEL PROGRAMA');
 }
 
-function toggleCoordSystem() {
-    if (isShiftPressed) {
-        // SHIFT + COORD: Cambiar número de herramienta (Tool No)
-        DxState.currentToolNo = (DxState.currentToolNo === 0) ? 1 : 0;
-        setInfoDisplay('✓ TOOL SELECT: Herramienta #' + DxState.currentToolNo);
-        const el = document.getElementById('lcd-tool-no');
-        if (el) el.textContent = '(' + String(DxState.currentToolNo).padStart(2, '0') + ')';
-        return;
-    }
-
-    const systems = ['JOINT', 'ROBOT', 'TOOL', 'USER'];
-    const idx = systems.indexOf(DxState.coordSystem);
-    DxState.coordSystem = systems[(idx + 1) % systems.length];
-    
-    const coordEl = document.getElementById('lcd-coord');
-    const toolEl = document.getElementById('lcd-tool-no');
-    if (coordEl) coordEl.textContent = DxState.coordSystem;
-    if (toolEl) toolEl.style.display = (DxState.coordSystem === 'TOOL' || DxState.coordSystem === 'USER') ? 'inline' : 'none';
-    
-    setInfoDisplay('Coordenadas: ' + DxState.coordSystem);
-    updateKeyIcons();
-}
+// toggleCoordSystem consolidated above
 
 function resetToZero() {
     if (!RobotState.deadman) { showMsg('⚠️ Requiere Deadman (Pulse ESPACIO)'); return; }
@@ -3523,13 +3406,6 @@ function createNewJob() {
 }
 
 function pressEnter() {
-    // 1. Si hay una instrucción en el búfer (INFORM LIST), la insertamos/modificamos
-    if (DxState.instructionBuffer) {
-        confirmInstructionInsertion();
-        return;
-    }
-
-    // 2. Lógica existente para WGRAV
     if (DxState.view === 'WGRAV') {
         const wInput = document.getElementById('wgrav-val-w');
         if (wInput && wInput.textContent !== '*.*** kg') {
@@ -3720,10 +3596,6 @@ function stepProgram(direction) {
         return;
     }
     
-    if (!isInterlockPressed) {
-        setInfoDisplay('⚠ Requiere INTERLOCK (Pulse el botón azul)');
-        return;
-    }
     if (!RobotState.deadman) {
         setInfoDisplay('⚠ Active DEADMAN (ESPACIO) para FWD/BWD'); 
         return;
@@ -3763,9 +3635,6 @@ function stepProgram(direction) {
         RobotState.angles.r = startAngles.r + (target.r - startAngles.r) * p;
         RobotState.angles.b = startAngles.b + (target.b - startAngles.b) * p;
         RobotState.angles.t = startAngles.t + (target.t - startAngles.t) * p;
-        
-        // REFRESCAR TODO (LCD + 3D)
-        updateDisplay();
     }, 30);
 
     if (DxState.view !== 'JOB') setView('JOB');
@@ -3782,6 +3651,7 @@ window.addEventListener('load', () => {
     initRenderer(canvas);
     renderJob();
     updateKeySwitchDisplay();
+    updateDisplay();
 
     function gameLoop() {
         requestAnimationFrame(gameLoop);
@@ -3891,8 +3761,7 @@ window.addEventListener('load', () => {
             }
         }
 
-        // Actualizar TODO el simulador (LCD Angulos + 3D Model)
-        updateDisplay();
+        updateRobotDisplay();
     }
 
     gameLoop();
@@ -3979,9 +3848,6 @@ window.changeInstruction = changeInstruction;
 window.updateJobDetail = updateJobDetail;
 window.renderJob = renderJob;
 window.handleToolKey = handleToolKey;
-window.triggerAlarm = triggerAlarm;
-window.resetAlarms = resetAlarms;
-window.renderAlarmHistory = renderAlarmHistory;
 </script>
 </body>
 </html>

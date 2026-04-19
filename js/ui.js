@@ -2,8 +2,9 @@
  * DX-200 Robot Simulator - UI Handlers
  */
 
+import {
     RobotState, DxState, robotJobs, wgravSelectedIdx, wgravCompleted,
-    isShiftPressed, isInterlockPressed, isServoOn, keyPosition, keyPositions, keyRotations,
+    isShiftPressed, isServoOn, keyPosition, keyPositions, keyRotations,
     gripperAngle, gripper2Angle, saveJobsLocally
 } from './state.js';
 import { highlightJoint } from './robot3d.js';
@@ -85,11 +86,11 @@ function selectWgravLine(idx) {
 }
 
 function toggleShift(active) {
-    if (active !== undefined && DxState.isShiftPressed === active) return;
-    DxState.isShiftPressed = (active !== undefined) ? active : !DxState.isShiftPressed;
-    setInfoDisplay(DxState.isShiftPressed ? '✓ SHIFT: BLOQUEADO (Activo)' : '✓ SHIFT: LIBERADO (Inactivo)');
+    if (active !== undefined && isShiftPressed === active) return;
+    isShiftPressed = (active !== undefined) ? active : !isShiftPressed;
+    setInfoDisplay(isShiftPressed ? '✓ SHIFT: BLOQUEADO (Activo)' : '✓ SHIFT: LIBERADO (Inactivo)');
     document.querySelectorAll('.kb-bot-btn').forEach(b => {
-        if (b.textContent.trim() === 'SHIFT') b.style.background = DxState.isShiftPressed ? '#a0a0a0' : '';
+        if (b.textContent.trim() === 'SHIFT') b.style.background = isShiftPressed ? '#a0a0a0' : '';
     });
 }
 
@@ -109,11 +110,11 @@ function toggleDeadman() {
 
 function toggleServo() {
     const btn = document.getElementById('servo-btn');
-    DxState.isServoOn = !DxState.isServoOn;
-    if (DxState.isServoOn) {
-        btn.style.background = '#0f0';
+    isServoOn = !isServoOn;
+    if (isServoOn) {
+        btn.style.background = '#d00000';
         btn.style.color = '#fff';
-        btn.style.boxShadow = '0 0 10px #0f0';
+        btn.style.boxShadow = '0 0 8px #ff0000';
         setInfoDisplay('✓ Servo activado (POWER ON)');
     } else {
         btn.style.background = '#ccc';
@@ -138,99 +139,6 @@ function rotateKeySwitch() {
     keyPosition = (keyPosition + 1) % 3;
     updateKeySwitchDisplay();
     setInfoDisplay(`Llave: ${keyPositions[keyPosition]}`);
-}
-
-function toggleUsage() {
-    DxState.isUsageOn = !DxState.isUsageOn;
-    const indicator = document.getElementById('usage-status');
-    const box = document.getElementById('usage-indicator');
-    
-    if (DxState.isUsageOn) {
-        if (indicator) {
-            indicator.textContent = 'ON';
-            indicator.style.color = '#0f0';
-            indicator.style.textShadow = '0 0 5px #0f0';
-        }
-        if (box) {
-            box.style.borderColor = '#0f0';
-            box.style.background = '#002200';
-        }
-        setInfoDisplay('✓ FUNCIÓN DE APLICACIÓN: ACTIVADA (USAGE ON)');
-    } else {
-        if (indicator) {
-            indicator.textContent = 'OFF';
-            indicator.style.color = '#aaa';
-            indicator.style.textShadow = 'none';
-        }
-        if (box) {
-            box.style.borderColor = '#777';
-            box.style.background = '#555';
-        }
-        setInfoDisplay('✓ FUNCIÓN DE APLICACIÓN: DESACTIVADA (USAGE OFF)');
-    }
-}
-
-function cycleMotionType() {
-    if (!DxState.isInserting && !DxState.isModifying) {
-        setInfoDisplay('⚠ Solo disponible en modo INSERT o MODIFY');
-        return;
-    }
-    
-    const types = ['MOVJ', 'MOVL', 'MOVC', 'IMOV'];
-    let currentType = 'MOVJ';
-    
-    // Detect current type from buffer
-    for (let t of types) {
-        if (DxState.editingBuffer.startsWith(t)) {
-            currentType = t;
-            break;
-        }
-    }
-    
-    let nextIdx = (types.indexOf(currentType) + 1) % types.length;
-    let nextType = types[nextIdx];
-    
-    // Logic to preserve speed parameters
-    if (nextType === 'MOVJ') {
-        DxState.editingBuffer = `MOVJ VJ=${RobotState.speed}.00`;
-    } else if (nextType === 'MOVL') {
-        DxState.editingBuffer = `MOVL V=${RobotState.speed * 20}.0`;
-    } else if (nextType === 'MOVC') {
-        DxState.editingBuffer = `MOVC V=${RobotState.speed * 10}.0`;
-    } else {
-        DxState.editingBuffer = `IMOV V=${RobotState.speed * 10}.0`;
-    }
-    
-    setInfoDisplay(`✓ Tipo de movimiento: ${nextType}`);
-    
-    // Add visual feedback to the LCD indicator
-    const methodInd = document.getElementById('job-method-indicator');
-    if (methodInd) {
-        methodInd.style.background = '#fff';
-        methodInd.style.color = '#000';
-        setTimeout(() => {
-            methodInd.style.background = '';
-            methodInd.style.color = '';
-        }, 150);
-    }
-    
-    renderJob();
-}
-
-function toggleInterlock() {
-    DxState.isInterlockPressed = !DxState.isInterlockPressed;
-    const btn = document.getElementById('interlock-btn');
-    if (DxState.isInterlockPressed) {
-        btn.style.background = '#2b4b9b';
-        btn.style.color = '#fff';
-        btn.style.boxShadow = 'inset 0 0 10px rgba(0,0,0,0.5), 0 0 5px #2b4b9b';
-        setInfoDisplay('✓ INTERLOCK: ACTIVADO');
-    } else {
-        btn.style.background = '';
-        btn.style.color = '';
-        btn.style.boxShadow = '';
-        setInfoDisplay('✓ INTERLOCK: LIBERADO');
-    }
 }
 
 function updateKeySwitchDisplay() {
@@ -280,63 +188,169 @@ function moveAxis(axis, dir) {
     if (!checkTeachMode('Movimiento manual')) return;
     if (RobotState.programRunning) return;
 
-    if (axis === 'a') {
+    if (axis === 'a' || axis === 'e') {
+        const isPinza2 = (axis === 'e');
         const maxOpen = 0.030;
-        gripperAngle = Math.max(0, Math.min(maxOpen, gripperAngle + (0.03 * dir)));
-        const pct = Math.round((gripperAngle / maxOpen) * 100);
-        if (gripperAngle <= 0.001) setInfoDisplay('✓ PINZA 1 CERRADA');
-        else if (gripperAngle >= maxOpen - 0.001) setInfoDisplay('✓ PINZA 1 ABIERTA');
-        else setInfoDisplay(`✓ PINZA 1: ${pct}%`);
+        let angle = isPinza2 ? gripper2Angle : gripperAngle;
+        angle = Math.max(0, Math.min(maxOpen, angle + (0.01 * dir)));
+        if (isPinza2) gripper2Angle = angle; else gripperAngle = angle;
+        
+        const pct = Math.round((angle / maxOpen) * 100);
+        setInfoDisplay(`✓ PINZA ${isPinza2 ? '2' : '1'}: ${pct}%`);
         return;
     }
-    if (axis === 'e') {
-        const maxOpen = 0.030;
-        gripper2Angle = Math.max(0, Math.min(maxOpen, gripper2Angle + (0.03 * dir)));
-        if (gripper2Angle <= 0.001) setInfoDisplay('✓ PINZA 2 CERRADA');
-        else if (gripper2Angle >= maxOpen - 0.001) setInfoDisplay('✓ PINZA 2 ABIERTA');
-        else setInfoDisplay(`✓ PINZA 2: ${Math.round((gripper2Angle / maxOpen) * 100)}%`);
-        return;
-    }
-    if (!RobotState.deadman) {
-        setInfoDisplay('⚠️ Deadman (ESPACIO)');
-        return;
-    }
-    if (!DxState.isServoOn) {
-        setInfoDisplay('⚠️ Servo DESCONECTADO (Pulsa SERVO ON)');
-        return;
-    }
-    const axisMap = { x: 's', y: 'l', z: 'u', r: 'r', b: 'b', t: 't' };
-    const sAxis = axisMap[axis];
-    if (sAxis && RobotState.angles[sAxis] !== undefined) {
-        const inc = RobotState.speed * 0.18 * dir;
-        RobotState.angles[sAxis] = Math.max(
-            RobotState.limits[sAxis].min,
-            Math.min(RobotState.limits[sAxis].max, RobotState.angles[sAxis] + inc)
-        );
-        const axisToJoint = { s: 0, l: 1, u: 2, r: 3, b: 4, t: 5 };
-        highlightJoint(axisToJoint[sAxis]);
-        updateDisplay();
-        setInfoDisplay(`✓ ${sAxis.toUpperCase()} ${dir > 0 ? '+' : '−'}`);
+
+    if (!RobotState.deadman) { setInfoDisplay('⚠️ Deadman (ESPACIO)'); return; }
+    if (!isServoOn) { setInfoDisplay('⚠️ Servo DESCONECTADO (Pulsa SERVO ON)'); return; }
+
+    if (DxState.coordSystem === 'JOINT') {
+        const axisMap = { x: 's', y: 'l', z: 'u', r: 'r', b: 'b', t: 't' };
+        const sAxis = axisMap[axis];
+        if (sAxis) {
+            const inc = RobotState.speed * 0.18 * dir;
+            RobotState.angles[sAxis] = Math.max(
+                RobotState.limits[sAxis].min,
+                Math.min(RobotState.limits[sAxis].max, RobotState.angles[sAxis] + inc)
+            );
+            highlightJoint({ s: 0, l: 1, u: 2, r: 3, b: 4, t: 5 }[sAxis]);
+            updateDisplay();
+            setInfoDisplay(`✓ ${sAxis.toUpperCase()} ${dir > 0 ? '+' : '−'}`);
+        }
+    } else {
+        // 6-DOF CARTESIAN (WORLD / TOOL)
+        const isWorld = (DxState.coordSystem === 'WORLD');
+        const stepPos = (RobotState.speed * 0.0008) * dir;
+        const stepRot = (RobotState.speed * 0.005) * dir; // Radians for IK
+        
+        let delta = [0, 0, 0, 0, 0, 0]; // dx, dy, dz, drx, dry, drz
+        const axisIdx = { x: 0, y: 1, z: 2, r: 3, b: 4, t: 5 }[axis];
+        delta[axisIdx] = (axisIdx < 3) ? stepPos : stepRot;
+
+        if (!isWorld) {
+            // TOOL MODE: Rotate delta by current TCP orientation
+            const current = calculateFK(RobotState.angles);
+            const rot = new THREE.Euler(
+                THREE.MathUtils.degToRad(current.rx),
+                THREE.MathUtils.degToRad(current.ry),
+                THREE.MathUtils.degToRad(current.rz)
+            );
+            const quat = new THREE.Quaternion().setFromEuler(rot);
+            
+            // Rotate translation
+            const vecPos = new THREE.Vector3(delta[0], delta[1], delta[2]).applyQuaternion(quat);
+            // Rotate orientation (Simplified: Tool-relative rotation)
+            const vecRot = new THREE.Vector3(delta[3], delta[4], delta[5]).applyQuaternion(quat);
+            
+            delta = [vecPos.x, vecPos.y, vecPos.z, vecRot.x, vecRot.y, vecRot.z];
+        }
+
+        const newAngles = solveCartesianStep(RobotState.angles, delta);
+        if (newAngles) {
+            let withinLimits = true;
+            for (let k in newAngles) {
+                if (newAngles[k] < RobotState.limits[k].min - 0.1 || newAngles[k] > RobotState.limits[k].max + 0.1) {
+                    withinLimits = false; break;
+                }
+            }
+            if (withinLimits) {
+                for (let k in newAngles) RobotState.angles[k] = newAngles[k];
+                updateDisplay();
+                setInfoDisplay(`✓ ${DxState.coordSystem}: ${axis.toUpperCase()} ${dir > 0 ? '+' : '−'}`);
+            } else {
+                setInfoDisplay('⚠ LÍMITE DE EJE ALCANZADO');
+            }
+        } else {
+            setInfoDisplay('⚠ SINGULARIDAD / FUERA DE RANGO');
+        }
     }
 }
 
 function updateDisplay() {
-    document.getElementById('s').textContent = RobotState.angles.s.toFixed(1) + '°';
-    document.getElementById('l').textContent = RobotState.angles.l.toFixed(1) + '°';
-    document.getElementById('u').textContent = RobotState.angles.u.toFixed(1) + '°';
-    document.getElementById('r').textContent = RobotState.angles.r.toFixed(1) + '°';
-    document.getElementById('b').textContent = RobotState.angles.b.toFixed(1) + '°';
-    document.getElementById('t').textContent = RobotState.angles.t.toFixed(1) + '°';
+    const state = window.DxState;
+    const robot = window.RobotState;
+    if (!robot || !robot.angles) return;
+    
+    const angles = robot.angles;
+    const mode = state.coordSystem || 'JOINT';
+    const coords = (typeof calculateFK === 'function') ? calculateFK(angles) : {x:0,y:0,z:0,rx:0,ry:0,rz:0};
 
-    const lcdS = document.getElementById('lcd-s');
-    if (lcdS) {
-        lcdS.textContent = RobotState.angles.s.toFixed(3) + ' °';
-        document.getElementById('lcd-l').textContent = RobotState.angles.l.toFixed(3) + ' °';
-        document.getElementById('lcd-u').textContent = RobotState.angles.u.toFixed(3) + ' °';
-        document.getElementById('lcd-r').textContent = RobotState.angles.r.toFixed(3) + ' °';
-        document.getElementById('lcd-b').textContent = RobotState.angles.b.toFixed(3) + ' °';
-        document.getElementById('lcd-t').textContent = RobotState.angles.t.toFixed(3) + ' °';
+    const labels = ['s', 'l', 'u', 'r', 'b', 't'];
+    const cartLabels = ['X', 'Y', 'Z', 'Rx', 'Ry', 'Rz'];
+    const currentLabels = (mode === 'JOINT') ? labels : cartLabels;
+    
+    // 1. Update Labels
+    labels.forEach((id, i) => {
+        const text = currentLabels[i].toUpperCase();
+        const elLbl = document.getElementById('lbl-' + id);
+        if (elLbl) elLbl.textContent = text + (text.length === 1 ? " :" : ":");
+        const elSmall = document.getElementById('lbl-' + id + '-small');
+        if (elSmall) elSmall.textContent = text + ":";
+        const elMl = document.getElementById('ml-lbl-' + id);
+        if (elMl) elMl.textContent = text + ":";
+    });
+
+    // 2. Update Values
+    const isCart = (mode !== 'JOINT');
+    const vals = isCart
+        ? [coords.x * 1000, coords.y * 1000, coords.z * 1000, coords.rx, coords.ry, coords.rz]
+        : [angles.s, angles.l, angles.u, angles.r, angles.b, angles.t];
+
+    labels.forEach((id, i) => {
+        const isPosValue = (isCart && i < 3);
+        const unit = isPosValue ? ' mm' : '°';
+        const elVal = document.getElementById(id);
+        if (elVal) elVal.textContent = vals[i].toFixed(1) + unit;
+        const elLcd = document.getElementById('lcd-' + id);
+        if (elLcd) elLcd.textContent = vals[i].toFixed(3) + (isPosValue ? ' mm' : ' °');
+        const elMlVal = document.getElementById('ml-' + id);
+        if (elMlVal) elMlVal.textContent = vals[i].toFixed(isPosValue ? 3 : 1) + (isPosValue ? ' mm' : '°');
+    });
+
+    // 3. Status Indicators & Labels
+    const statusEl = document.getElementById('lcd-coord');
+    if (statusEl) {
+        if (statusEl.textContent !== mode) {
+            statusEl.classList.remove('coord-flash');
+            void statusEl.offsetWidth; 
+            statusEl.classList.add('coord-flash');
+        }
+        statusEl.textContent = mode;
+        if (mode === 'JOINT') statusEl.style.color = '#0ff';
+        else if (mode === 'WORLD') statusEl.style.color = '#0f0';
+        else if (mode === 'TOOL') statusEl.style.color = '#ff0';
     }
+    
+    const mlTitleEl = document.getElementById('ml-coord-title');
+    if (mlTitleEl) mlTitleEl.textContent = mode + " COORD";
+    
+    const robotTitleEl = document.getElementById('lcd-coords-title');
+    if (robotTitleEl) robotTitleEl.textContent = mode + " CURRENT POSITION";
+
+    const toolNoEl = document.getElementById('lcd-tool-no');
+    if (toolNoEl) {
+        toolNoEl.textContent = '(' + String(state.currentToolNo || 0).padStart(2, '0') + ')';
+        toolNoEl.style.display = (mode === 'TOOL') ? 'inline' : 'none';
+    }
+
+    if (state.view === 'JOB' && typeof renderJob === 'function') renderJob();
+}
+
+
+function toggleCoordSystem() {
+    const state = window.DxState;
+    if (typeof isShiftPressed !== 'undefined' && isShiftPressed) {
+        // Alt-logic: Tool Selection
+        state.currentToolNo = (state.currentToolNo === 0) ? 1 : 0;
+        setInfoDisplay('✓ TOOL SELECT: Herramienta #' + state.currentToolNo);
+        updateDisplay();
+        return;
+    }
+
+    const systems = ['JOINT', 'WORLD', 'TOOL'];
+    let idx = systems.indexOf(state.coordSystem);
+    state.coordSystem = systems[(idx + 1) % systems.length];
+    setInfoDisplay('✓ SISTEMA COORD: ' + state.coordSystem);
+    updateDisplay();
 }
 
 function checkTeachMode(actionName) {
@@ -616,6 +630,9 @@ export {
     updateKeySwitchDisplay, emergencyStop, handleFunc, showMsg, setInfoDisplay,
     moveAxis, updateDisplay, checkTeachMode, handleDir, handleEditAction,
     pressSelect, toggleDropdown, closeHomeConfirm, pressModify, pressInsert,
-    pressDelete, goToTop, resetToZero, keyPositions, keyPosition, toggleUsage,
-    cycleMotionType, toggleInterlock
+    pressDelete, goToTop, resetToZero, toggleCoordSystem, keyPositions, keyPosition
 };
+
+window.updateDisplay = updateDisplay;
+window.moveAxis = moveAxis;
+window.toggleCoordSystem = toggleCoordSystem;

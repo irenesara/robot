@@ -2,7 +2,7 @@
  * DX-200 Robot Simulator - Job Manager
  */
 
-import { DxState, robotJobs, saveJobsLocally, gripperAngle, isInterlockPressed } from './state.js';
+import { DxState, robotJobs, saveJobsLocally, gripperAngle } from './state.js';
 import { RobotState } from './state.js';
 import { setInfoDisplay, setView, checkTeachMode, cancelEdit } from './ui.js';
 
@@ -13,35 +13,7 @@ function renderJob() {
 
     const currentProgram = robotJobs[DxState.currentJobId];
     document.getElementById('current-job-name').textContent = DxState.currentJobId;
-    
-    // Fix: The ID in index.html is job-step-indicator, not job-line-indicator
-    const stepInd = document.getElementById('job-step-indicator');
-    if (stepInd) stepInd.textContent = String(DxState.selectedLineIndex).padStart(4, '0');
-
-    // Update Header Indicators (METHOD and SPEED)
-    const methodInd = document.getElementById('job-method-indicator');
-    const speedInd = document.getElementById('job-speed-indicator');
-    
-    let currentMethod = '---';
-    let currentSpeed = '---';
-
-    // If we are editing, take info from buffer
-    if (DxState.activeEditAction && DxState.editingBuffer) {
-        const parts = DxState.editingBuffer.split(' ');
-        currentMethod = parts[0];
-        const spdPart = parts.find(p => p.includes('='));
-        if (spdPart) currentSpeed = spdPart.split('=')[1];
-    } else if (currentProgram && currentProgram[DxState.selectedLineIndex]) {
-        // Otherwise take from the selected line
-        const code = currentProgram[DxState.selectedLineIndex].code || '';
-        const parts = code.split(' ');
-        currentMethod = parts[0];
-        const spdPart = parts.find(p => p.includes('='));
-        if (spdPart) currentSpeed = spdPart.split('=')[1];
-    }
-
-    if (methodInd) methodInd.textContent = currentMethod;
-    if (speedInd) speedInd.textContent = currentSpeed;
+    document.getElementById('job-line-indicator').textContent = String(DxState.selectedLineIndex).padStart(4, '0');
 
     currentProgram.forEach((step, index) => {
         const line = document.createElement('div');
@@ -73,7 +45,7 @@ function renderJob() {
         container.appendChild(line);
     });
 
-    // RENDER BUFFER LINE
+    // RENDER BUFFER LINE (The area where the instruction appears before ENTER)
     let bufferContainer = document.getElementById('job-buffer-area');
     if (!bufferContainer) {
         bufferContainer = document.createElement('div');
@@ -272,9 +244,6 @@ function stepProgram(direction) {
     }
     if (!RobotState.deadman) {
         setInfoDisplay('⚠️ Requiere Deadman (Pulse ESPACIO)'); return;
-    }
-    if (!DxState.isInterlockPressed) {
-        setInfoDisplay('⚠ Requiere INTERLOCK (Pulse el botón azul)'); return;
     }
     const currentProgram = robotJobs[DxState.currentJobId];
     if (!currentProgram || currentProgram.length === 0) return;

@@ -1,8 +1,10 @@
 /**
  * DX-200 Robot Simulator - Application State
+ * Unificado para compatibilidad entre index.html y módulos JS
  */
 
-const RobotState = {
+// Intentar recuperar el estado global si ya existe (de index.html), si no, crearlo
+window.RobotState = window.RobotState || {
     deadman: false,
     speed: 50,
     angles: { s: 0, l: 0, u: 0, r: 0, b: 0, t: 0 },
@@ -20,8 +22,10 @@ const RobotState = {
     mode: 'TEACH'
 };
 
-const DxState = {
+window.DxState = window.DxState || {
     view: 'JOB',
+    coordSystem: 'JOINT', // MANTENER: JOINT, WORLD, TOOL
+    currentToolNo: 0,
     currentJobId: 'JOB_ALAMBRE',
     selectedLineIndex: 0,
     selectedListIndex: 0,
@@ -29,15 +33,15 @@ const DxState = {
     isInserting: false,
     isDeleting: false,
     isModifying: false,
-    activeEditAction: null, // 'MODIFY', 'INSERT', 'DELETE'
-    editingBuffer: '',      // Current instruction in the buffer line
-    securityMode: 'EDITING', // Defaulting to EDITING for better UX in simulator
-    clipboard: null,
-    isUsageOn: false,
-    isInterlockPressed: false,
-    isServoOn: false,
-    isShiftPressed: false
+    activeEditAction: null,
+    editingBuffer: '',
+    securityMode: 'EDITING',
+    clipboard: null
 };
+
+// Referencias locales para mantener compatibilidad con los imports de otros módulos
+const RobotState = window.RobotState;
+const DxState = window.DxState;
 
 let robotJobs = {
     "JOB_ALAMBRE": [
@@ -56,6 +60,8 @@ let robotJobs = {
 
 let wgravSelectedIdx = 0;
 let wgravCompleted = [false, false, false, false, false];
+let isShiftPressed = false;
+let isServoOn = false;
 let keyPosition = 0;
 const keyPositions = ['OFF', 'REMOTE', 'TEACH'];
 const keyRotations = [0, -120, 120];
@@ -76,15 +82,11 @@ function loadJobsLocally() {
             if (!parsed['JOB_ALAMBRE']) parsed['JOB_ALAMBRE'] = robotJobs['JOB_ALAMBRE'];
             robotJobs = parsed;
         }
-        if (!robotJobs[DxState.currentJobId]) {
-            const keys = Object.keys(robotJobs);
-            DxState.currentJobId = keys.length > 0 ? keys[0] : 'JOB_ALAMBRE';
-        }
     } catch (e) { console.error("Error al cargar trabajos", e); }
 }
 
 export {
     RobotState, DxState, robotJobs, wgravSelectedIdx, wgravCompleted,
-    keyPosition, keyPositions, keyRotations,
+    isShiftPressed, isServoOn, keyPosition, keyPositions, keyRotations,
     gripperAngle, gripper2Angle, saveJobsLocally, loadJobsLocally
 };
