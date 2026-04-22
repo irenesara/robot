@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador Robótico Industrial</title>
+<title>Simulador Robótico Industrial</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -38,9 +38,9 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
 .key-indicator { width: 4px; height: 22px; background: #333; border-radius: 2px; position: absolute; top: 3px; box-shadow: 0 0 4px rgba(0,0,0,0.5); }
 .key-indicator::after { content: ''; position: absolute; top: -6px; left: -3px; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 8px solid #ff6600; filter: drop-shadow(0 0 5px #ff6600); }
 .key-switch-label { position: absolute; font-size: 6px; font-weight: bold; color: #000; transition: all 0.2s; white-space: nowrap; pointer-events: none; }
-.key-label-remote { top: 40px; left: -10px; transform: rotate(-120deg); }
-.key-label-teach { top: 40px; right: -10px; transform: rotate(120deg); }
-.key-label-off { top: -14px; left: 50%; transform: translateX(-50%); }
+.key-label-remote { top: 45px; left: -15px; transform: rotate(-120deg); }
+.key-label-teach { top: 45px; right: -15px; transform: rotate(120deg); }
+.key-label-play { top: -12px; left: 50%; transform: translateX(-50%); font-size: 6px; }
 .key-label-active { color: #00ff00 !important; text-shadow: 0 0 10px #00ff00; }
 .key-current-position { display: none; }
 
@@ -56,6 +56,7 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
 .job-line { padding: 1px 2px; display: flex; gap: 4px; cursor: pointer; border-bottom: 1px solid #f0f0f0; }
 .job-line:hover { background: #f0f8ff; }
 .job-line.selected { background: #ffff00; color: #000; font-weight: bold; }
+.job-line.multi-selected { background: #dda0dd; color: #000; }
 @keyframes blink { 0%,100% { background: #1a3a6a; color: #fff; } 50% { background: #0a2050; color: #ff0; } }
 .job-line-num { width: 25px; color: #666; text-align: right; user-select: none; }
 .job-cmd-btn { background: #444; color: #0f0; border: 1px solid #666; padding: 2px 5px; font-size: 6px; cursor: pointer; font-family: 'Courier New', monospace; font-weight: bold; flex: 1; min-width: 30px; text-align: center; }
@@ -113,7 +114,10 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
 .kb-dpad-btn:active { background: #ccc; box-shadow: none; transform: scale(0.95); }
 
 .kb-top-center { display: grid; grid-template-columns: repeat(5, 32px); grid-template-rows: repeat(2, 20px); gap: 3px; }
-.kb-btn-sq { border-radius: 3px; background: #e0e0e0; border: 1px solid #666; font-size: 4px; font-weight: bold; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; line-height: 1.1; box-shadow: inset 1px 1px 2px #fff, 0 1px 2px rgba(0,0,0,0.4); color: #222; }
+.kb-btn-sq { border-radius: 3px; background: #e0e0e0; border: 1px solid #666; font-size: 4px; font-weight: bold; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; line-height: 1.1; box-shadow: inset 1px 1px 2px #fff, 0 1px 2px rgba(0,0,0,0.4); color: #222; position: relative; }
+.kb-btn-sq.double-func::before { content: ''; position: absolute; top: -1px; left: 10%; width: 80%; height: 3px; background: #6b9beb; border-radius: 2px 2px 0 0; }
+.btn-label-top { background: #6b9beb; color: #fff; padding: 0 2px; border-radius: 2px; display: inline-block; font-size: 4px !important; }
+.btn-label-pink { background: #fbb; color: #000; padding: 0 2px; border-radius: 2px; display: inline-block; font-size: 4px !important; }
 .kb-btn-sq:active { background: #d0d0d0; box-shadow: inset 1px 1px 3px rgba(0,0,0,0.3); }
 .kb-btn-blue { color: #1a3a6a; }
 
@@ -135,11 +139,13 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
 .kb-row-bot { display: grid; grid-template-columns: 36px 36px auto 36px 36px; gap: 4px; justify-content: center; }
 .kb-bot-col { display: flex; flex-direction: column; gap: 4px; }
 .kb-numpad { display: grid; grid-template-columns: repeat(3, 36px); grid-template-rows: repeat(4, 26px); gap: 3px; background: #e6f0fa; padding: 4px; border-radius: 4px; border: 2px solid #1a3a6a; }
-.kb-bot-btn { background: #e0e0e0; border: 1px solid #888; border-radius: 3px; font-size: 5px; font-weight: bold; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; box-shadow: inset 1px 1px 2px #fff, 0 2px 2px rgba(0,0,0,0.3); height: 26px; line-height: 1.1; color: #222; }
-.kb-bot-btn { background: #e0e0e0; border: 1px solid #888; border-radius: 3px; font-size: 5px; font-weight: bold; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; height: 26px; line-height: 1.1; color: #222; }
+.kb-bot-btn { background: #e0e0e0; border: 1px solid #888; border-radius: 3px; font-size: 5px; font-weight: bold; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; box-shadow: inset 1px 1px 2px #fff, 0 2px 2px rgba(0,0,0,0.3); height: 26px; line-height: 1.1; color: #222; position: relative; }
+.kb-bot-btn.double-func::before { content: ''; position: absolute; top: -1px; left: 10%; width: 80%; height: 3px; background: #6b9beb; border-radius: 2px 2px 0 0; }
+.kb-bot-btn { background: #e0e0e0; border: 1px solid #888; border-radius: 3px; font-size: 5px; font-weight: bold; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; height: 26px; line-height: 1.1; color: #222; position: relative; }
 .kb-bot-btn.blue-text { color: #1a3a6a; }
 .kb-bot-btn.purple-text { color: #60c; }
-.kb-bot-btn.numpad-key { font-size: 10px; background: #fff; border: 1px solid #999; }
+.kb-bot-btn.numpad-key { font-size: 10px; background: #fff; border: 1px solid #999; position: relative; }
+.kb-bot-btn.numpad-key.double-func::before { content: ''; position: absolute; top: -1px; left: 10%; width: 80%; height: 3px; background: #6b9beb; border-radius: 2px 2px 0 0; }
 .kb-bot-btn:active { transform: translateY(1px); }
 
 .info-display { background: #000; color: #0f0; border: 2px solid #0f0; padding: 4px; font-size: 8px; font-weight: bold; min-height: 20px; margin-top: 5px; overflow: visible; display: block; }
@@ -190,6 +196,7 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                     <div class="back-controls-box">
                         <div class="key-switch-container" title="Key Switch (Click para cambiar modo)" onclick="rotateKeySwitch()">
                             <div class="key-switch-label key-label-off" id="label-off">OFF</div>
+                            <div class="key-switch-label key-label-play" id="label-play">PLAY</div>
                             <div class="key-switch-label key-label-remote" id="label-remote">REM</div>
                             <div class="key-switch-label key-label-teach" id="label-teach">TEA</div>
                             <div class="key-switch-dial" id="keySwitch">
@@ -210,6 +217,7 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                         <span>STATUS: <span id="lcd-status" style="color:#0f0;">READY</span></span>
                         <span>MODE: <span id="lcd-mode" style="color:#ff0;">TEACH</span></span>
                         <span>SPD: <span id="lcd-speed" style="color:#ff0;">50%</span></span>
+                        <span id="lcd-highspeed" style="display:none;color:#f00;background:#fee;padding:0 2px;border-radius:2px;">HIGH SPD</span>
                         <span>SEC: <span id="lcd-security" style="color:#f0f;">OPER</span></span>
                         <span>COORD: <span id="lcd-coord" style="color:#0ff;">JOINT</span><small id="lcd-tool-no" style="font-size:7px; color:#fff; display:none;">(00)</small></span>
                         <span>OG#1:<span id="og1-status" style="color:#666;">OFF</span></span>
@@ -298,12 +306,13 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                                 </div>
                             </div>
                             <div id="job-screen" style="display: flex; flex-direction: column; height: 100%; min-height: 150px; background: #1a1a2e;">
-                                <div id="job-header" style="display: flex; background: #1a3a6a; color: #fff; padding: 2px 6px; font-size: 6px; justify-content: space-between; align-items: center; border-bottom: 1px solid #fff;">
+                                <div id="job-header" style="display: flex; background: #1a3a6a; color: #fff; padding: 2px 6px; font-size: 6px; justify-content: space-between; align-items: center; border-bottom: 1px solid #fff; flex-wrap: wrap;">
                                     <div><span style="color:#aaa;">JOB:</span> <span id="current-job-name" style="color:#ff0;font-weight:bold;">JOB_CAJA</span></div>
                                     <div id="job-mode-indicator" style="color:#ff0;font-weight:bold;">INSERT MODE</div>
                                     <div><span style="color:#aaa;">STEP:</span> <span id="job-step-indicator" style="color:#0f0;">0000</span></div>
                                     <div><span style="color:#aaa;">METHOD:</span> <span id="job-method-indicator">MOVJ</span></div>
                                     <div><span style="color:#aaa;">VJ:</span> <span id="job-speed-indicator">50.00</span></div>
+                                    <div style="background:#ffcccc; color:#000; padding:1px 4px; border-radius:2px; font-weight:bold;"><span style="color:#333;">MOTION:</span> <span id="job-motion-indicator">STANDARD</span></div>
                                 </div>
 
                                 <div id="job-content-area" style="flex: 1; overflow-y: auto; background: #000; padding: 2px; font-family: 'Courier New', monospace; font-size: 7px; color: #0f0;"></div>
@@ -807,15 +816,15 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                         </div>
 
                         <div class="kb-top-center">
-                            <div class="kb-btn-sq kb-btn-blue" id="multi-layout-btn" onclick="toggleMultiLayout()">MULTI<br>LAYOUT</div>
-                            <div class="kb-btn-sq kb-btn-blue" id="tool-coord-btn" onclick="toggleCoordSystem()">TOOL SEL<br>COORD</div>
+                            <div class="kb-btn-sq kb-btn-blue double-func" id="multi-layout-btn" onclick="toggleMultiLayout()" style="background:#ffcccc;"><span class="btn-label-top">multi</span><br>layout</div>
+                            <div class="kb-btn-sq kb-btn-blue double-func" id="tool-coord-btn" onclick="toggleCoordSystem()"><span class="btn-label-top">tool sel</span><br>coord</div>
                             <div class="kb-btn-sq" onclick="handleDirectOpen()">DIRECT<br>OPEN</div>
-                            <div class="kb-btn-sq" onclick="handleGoBack()">GO BACK<br>PAGE</div>
-                            <div class="kb-btn-sq" onclick="handleLanguageArea()">LANGUAGE<br>AREA</div>
+                            <div class="kb-btn-sq double-func" onclick="handleGoBack()"><span class="btn-label-top">go back</span><br>page</div>
+                            <div class="kb-btn-sq double-func" onclick="handleLanguageArea()"><span class="btn-label-top">language</span><br>area</div>
                             <div class="kb-btn-sq kb-btn-blue" onclick="handleMainMenu()">MAIN<br>MENU</div>
-                            <div class="kb-btn-sq kb-btn-blue" onclick="handleSimpleMenu()">ENTRY<br>SIMPLE</div>
+                            <div class="kb-btn-sq kb-btn-blue double-func" onclick="handleSimpleMenu()"><span class="btn-label-top">entry</span><br>simple menu</div>
                             <div class="kb-btn-sq kb-btn-blue" id="servo-btn" onclick="toggleServo()">SERVO ON<br>READY</div>
-                            <div class="kb-btn-sq kb-btn-blue" onclick="handleAssist()">ASSIST</div>
+                            <div class="kb-btn-sq kb-btn-blue double-func" onclick="handleAssist()" style="background:#ffcccc;">ASSIST</div>
                             <div class="kb-btn-sq" onclick="pressCancel()">CANCEL</div>
                         </div>
 
@@ -856,45 +865,45 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                     </div>
 
                     <div class="kb-row-bot">
-                        <div class="kb-bot-col">
-                            <div class="kb-bot-btn" onclick="toggleShift()">SHIFT</div>
+<div class="kb-bot-col">
+                            <div class="kb-bot-btn double-func" onclick="toggleShift()">SHIFT</div>
                             <div class="kb-bot-btn" onclick="showMsg('ROBOT ACTIVADO')">ROBOT</div>
                             <div class="kb-bot-btn" onclick="showMsg('EX.AXIS')">EX.AXIS</div>
                             <div class="kb-bot-btn" onclick="showMsg('AUX')">AUX</div>
                         </div>
                         
                         <div class="kb-bot-col">
-                            <div class="kb-bot-btn blue-text" id="interlock-btn" onclick="toggleInterlock()">INTER<br>LOCK</div>
+                            <div class="kb-bot-btn blue-text" id="interlock-btn" onclick="toggleInterlock()" style="background:#ffcccc;">INTER<br>LOCK</div>
                             <div class="kb-bot-btn" onclick="showMsg('INFORM LIST')">INFORM<br>LIST</div>
-                            <div class="kb-bot-btn" onclick="showMsg('WELD ON/OFF')">WELD<br>ON/OFF</div>
-                            <div class="kb-bot-btn" onclick="showMsg('MOTION TYPE')">MOTION<br>TYPE</div>
+                            <div class="kb-bot-btn" onclick="showMsg('USAGE')">USAGE</div>
+                            <div class="kb-bot-btn double-func" onclick="handleMotionType()">MOTION<br>TYPE</div>
                         </div>
                         
                         <div class="kb-numpad">
-                            <div class="kb-bot-btn numpad-key" onclick="showMsg('7')">7</div>
-                            <div class="kb-bot-btn numpad-key" onclick="showMsg('8')">8</div>
-                            <div class="kb-bot-btn numpad-key" onclick="showMsg('9')">9</div>
-                            <div class="kb-bot-btn numpad-key" onclick="showMsg('4')">4</div>
-                            <div class="kb-bot-btn numpad-key" onclick="showMsg('5')">5 ∘</div>
-                            <div class="kb-bot-btn numpad-key" onclick="showMsg('6')">6</div>
-                            <div class="kb-bot-btn numpad-key" onclick="showMsg('1')">1</div>
-                            <div class="kb-bot-btn numpad-key" onclick="showMsg('2')">2</div>
-                            <div class="kb-bot-btn numpad-key" onclick="showMsg('3')">3</div>
-                            <div class="kb-bot-btn numpad-key" onclick="showMsg('0')">0</div>
-                            <div class="kb-bot-btn numpad-key" onclick="handleToolKey(1)">.<br><span style="font-size:3.5px; color:#2b4b9b; font-weight:bold;">TOOL 1 ON/OFF</span></div>
-                            <div class="kb-bot-btn numpad-key" onclick="handleToolKey(2)">-<br><span style="font-size:3.5px; color:#2b4b9b; font-weight:bold;">TOOL 2 ON/OFF</span></div>
+                            <div class="kb-bot-btn numpad-key double-func" onclick="showMsg('7')">7</div>
+                            <div class="kb-bot-btn numpad-key double-func" onclick="showMsg('8')">8</div>
+                            <div class="kb-bot-btn numpad-key double-func" onclick="showMsg('9')">9</div>
+                            <div class="kb-bot-btn numpad-key double-func" onclick="showMsg('4')">4</div>
+                            <div class="kb-bot-btn numpad-key double-func" onclick="showMsg('5')">5 ∘</div>
+                            <div class="kb-bot-btn numpad-key double-func" onclick="showMsg('6')">6</div>
+                            <div class="kb-bot-btn numpad-key double-func" onclick="showMsg('1')">1</div>
+                            <div class="kb-bot-btn numpad-key double-func" onclick="showMsg('2')">2</div>
+                            <div class="kb-bot-btn numpad-key double-func" onclick="showMsg('3')">3</div>
+                            <div class="kb-bot-btn numpad-key double-func" onclick="showMsg('0')">0</div>
+                            <div class="kb-bot-btn numpad-key double-func" onclick="handleToolKey(1)">.<br><span style="font-size:3.5px; color:#2b4b9b; font-weight:bold;">TOOL 1 ON/OFF</span></div>
+                            <div class="kb-bot-btn numpad-key double-func" onclick="handleToolKey(2)">-<br><span style="font-size:3.5px; color:#2b4b9b; font-weight:bold;">TOOL 2 ON/OFF</span></div>
                         </div>
-
-                        <div class="kb-bot-col">
-                            <div class="kb-bot-btn purple-text" onclick="startProgram()">TEST<br>START</div>
-                            <div class="kb-bot-btn purple-text" onclick="stepProgram('BWD')">BWD</div>
+ 
+<div class="kb-bot-col">
+                            <div class="kb-bot-btn purple-text" onclick="startProgram()" style="background:#ffcccc;">TEST<br>START</div>
+                            <div class="kb-bot-btn purple-text" onclick="stepProgram('BWD')" style="background:#ffcccc;">BWD</div>
                             <div class="kb-bot-btn" id="delete-btn" onclick="pressDelete()">DELETE</div>
                             <div class="kb-bot-btn" id="modify-btn" onclick="pressModify()">MODIFY</div>
                         </div>
                         
                         <div class="kb-bot-col">
-                            <div class="kb-bot-btn" onclick="toggleShift()">SHIFT</div>
-                            <div class="kb-bot-btn purple-text" onclick="stepProgram('FWD')">FWD</div>
+                            <div class="kb-bot-btn double-func" onclick="toggleShift()">SHIFT</div>
+                            <div class="kb-bot-btn purple-text" onclick="stepProgram('FWD')" style="background:#ffcccc;">FWD</div>
                             <div class="kb-bot-btn" id="insert-btn" onclick="pressInsert()">INSERT</div>
                             <div class="kb-bot-btn" onclick="pressEnter()" style="flex:1;">ENTER</div>
                         </div>
@@ -932,6 +941,7 @@ var DxState = {
     currentJobId: 'JOB_ALAMBRE',
     currentToolNo: 0,
     selectedLineIndex: 0,
+    selectedLines: null,
     selectedListIndex: 0,
     selectedTokenIndex: 0,
     isInserting: false,
@@ -945,7 +955,9 @@ var DxState = {
     insertSpeed: 50,
     jobHistory: [],
     focusedWindowIndex: 0,
-    isSimpleMenu: false
+    isSimpleMenu: false,
+    motionType: 'STANDARD', // STANDARD o CONVEYOR
+    isShiftOn: false
 };
 
 // Exponer a window para acceso externo/UI
@@ -985,8 +997,8 @@ let isShiftPressed = false;
 let isInterlockPressed = false;
 let isServoOn = false;
 let keyPosition = 0;
-const keyPositions = ['OFF', 'REMOTE', 'TEACH'];
-const keyRotations = [0, -120, 120];
+const keyPositions = ['REMOTE', 'PLAY', 'TEACH'];
+const keyRotations = [-120, 0, 120];
 let gripperAngle = 0;
 let gripper2Angle = 0;
 let digitalOutputs = { 1: false, 2: false, 3: false, 4: false };
@@ -1616,7 +1628,6 @@ function toggleShift(active) {
         }
     });
 
-    // Pequeño indicador visual en el LCD (opcional, muy auténtico)
     setInfoDisplay(isShiftPressed ? '✓ SHIFT: ACTIVADO (Segunda Función)' : '✓ SHIFT: DESACTIVADO');
 }
 
@@ -1697,9 +1708,9 @@ function updateKeySwitchDisplay() {
     
     dial.style.transform = `rotate(${keyRotations[keyPosition]}deg)`;
     
-    // Resaltar etiquetas
-    document.getElementById('label-off').classList.toggle('key-label-active', keyPosition === 0);
-    document.getElementById('label-remote').classList.toggle('key-label-active', keyPosition === 1);
+    document.getElementById('label-remote').classList.toggle('key-label-active', keyPosition === 0);
+    const labelPlay = document.getElementById('label-play');
+    if (labelPlay) labelPlay.classList.toggle('key-label-active', keyPosition === 1);
     document.getElementById('label-teach').classList.toggle('key-label-active', keyPosition === 2);
 }
 
@@ -1913,6 +1924,26 @@ function toggleCoordSystem() {
     renderJob();
 }
 
+function handleMotionType() {
+    const shiftActive = typeof isShiftPressed !== 'undefined' && isShiftPressed;
+    
+    if (shiftActive) {
+        const types = ['STANDARD', 'CONVEYOR'];
+        let idx = types.indexOf(DxState.motionType);
+        DxState.motionType = types[(idx + 1) % types.length];
+        console.log('handleMotionType: cambió a', DxState.motionType);
+        
+        const motionEl = document.getElementById('job-motion-indicator');
+        if (motionEl) motionEl.textContent = DxState.motionType;
+        
+        setInfoDisplay('✓ MOTION TYPE: ' + DxState.motionType + ' (SHIFT+TYPE)');
+    } else {
+        setInfoDisplay('ℹ MOTION TYPE: ' + DxState.motionType + ' — Use SHIFT+TYPE para cambiar');
+    }
+    updateDisplay();
+    renderJob();
+}
+
 function solveWorldIK(current, tx, ty, tz) {
     const keys = ['s', 'l', 'u', 'r', 'b', 't'];
     let q = { s: current.s, l: current.l, u: current.u, r: current.r, b: current.b, t: current.t };
@@ -1956,6 +1987,12 @@ function moveAxis(axis, dir) {
     if (RobotState.mode !== 'TEACH') { setInfoDisplay('⚠️ CAMBIE A MODO TEACH'); return; }
     if (RobotState.programRunning) return;
 
+    const isHighSpeed = (typeof isShiftPressed !== 'undefined' && isShiftPressed);
+    const originalSpeed = RobotState.speed;
+    if (isHighSpeed) {
+        RobotState.speed = 100;
+    }
+
     if (axis === 'a' || axis === 'e') {
         const isPinza2 = (axis === 'e');
         const maxOpen = 0.030;
@@ -1963,17 +2000,17 @@ function moveAxis(axis, dir) {
         angle = Math.max(0, Math.min(maxOpen, angle + (0.01 * dir)));
         if (isPinza2) gripper2Angle = angle; else gripperAngle = angle;
         setInfoDisplay(`✓ PINZA ${isPinza2 ? '2' : '1'}: ${Math.round((angle/maxOpen)*100)}%`);
+        RobotState.speed = originalSpeed;
         return;
     }
 
-    if (!RobotState.deadman) { setInfoDisplay('⚠️ DEADMAN (ESPACIO)'); return; }
-    if (!isServoOn) { setInfoDisplay('⚠️ SERVO DESCONECTADO'); return; }
-    
-    // REQUISITO INDUSTRIAL: INTERLOCK + EJE
-    if (!isInterlockPressed) {
-        setInfoDisplay('⚠️ Mantenga [INTERLOCK] + Eje');
-        return;
-    }
+    if (!RobotState.deadman) { setInfoDisplay('⚠️ DEADMAN (ESPACIO)'); RobotState.speed = originalSpeed; return; }
+    if (!isServoOn) { setInfoDisplay('⚠️ SERVO DESCONECTADO'); RobotState.speed = originalSpeed; return; }
+    if (!isInterlockPressed) { setInfoDisplay('⚠️ Mantenga [INTERLOCK] + Eje'); RobotState.speed = originalSpeed; return; }
+
+    const speedMsg = isHighSpeed ? ' [HIGH SPEED]' : '';
+    const highSpdEl = document.getElementById('lcd-highspeed');
+    if (highSpdEl) highSpdEl.style.display = isHighSpeed ? 'inline' : 'none';
 
     if (DxState.coordSystem === 'JOINT') {
         const axisMap = { x: 's', y: 'l', z: 'u', r: 'r', b: 'b', t: 't' };
@@ -1983,15 +2020,12 @@ function moveAxis(axis, dir) {
             RobotState.angles[sAxis] = Math.max(RobotState.limits[sAxis].min, Math.min(RobotState.limits[sAxis].max, RobotState.angles[sAxis] + inc));
             highlightJoint({ s: 0, l: 1, u: 2, r: 3, b: 4, t: 5 }[sAxis]);
             updateDisplay();
-            setInfoDisplay(`✓ ${sAxis.toUpperCase()} ${dir > 0 ? '+' : '−'}`);
+            setInfoDisplay(`✓ ${sAxis.toUpperCase()} ${dir > 0 ? '+' : '−'}${speedMsg}`);
         }
     } else {
         const current = calculateFK(RobotState.angles);
         const step = (RobotState.speed * 1.5) * dir;
-        
-        let targetX = current.x;
-        let targetY = current.y;
-        let targetZ = current.z;
+        let targetX = current.x, targetY = current.y, targetZ = current.z;
         
         if (axis === 'x') targetX += step;
         else if (axis === 'y') targetY += step;
@@ -1999,27 +2033,23 @@ function moveAxis(axis, dir) {
         else {
             const joints = { x: 's', y: 'l', z: 'u', r: 'r', b: 'b', t: 't' };
             const key = joints[axis];
-            if (key) RobotState.angles[key] += RobotState.speed * 0.15 * dir;
-            updateDisplay();
-            setInfoDisplay(`✓ ${axis.toUpperCase()} ${dir > 0 ? '+' : '−'}`);
-            return;
+            if (key) {
+                RobotState.angles[key] += RobotState.speed * 0.15 * dir;
+                updateDisplay();
+                setInfoDisplay(`✓ ${axis.toUpperCase()} ${dir > 0 ? '+' : '−'}${speedMsg}`);
+                RobotState.speed = originalSpeed;
+                return;
+            }
         }
         
         const newAngles = solveWorldIK(RobotState.angles, targetX, targetY, targetZ);
         if (newAngles) {
             RobotState.angles = newAngles;
             updateDisplay();
-            setInfoDisplay(`✓ ${axis.toUpperCase()} ${dir > 0 ? '+' : '−'}`);
-        } else {
-            const joints = { x: 's', y: 'l', z: 'u' };
-            const key = joints[axis];
-            if (key) {
-                RobotState.angles[key] += RobotState.speed * 0.15 * dir;
-                updateDisplay();
-                setInfoDisplay(`✓ ${axis.toUpperCase()} ${dir > 0 ? '+' : '−'}`);
-            }
+            setInfoDisplay(`✓ ${axis.toUpperCase()} ${dir > 0 ? '+' : '−'}${speedMsg}`);
         }
     }
+RobotState.speed = originalSpeed;
 }
 
 function updateDisplay() {
@@ -2101,7 +2131,7 @@ function handleDir(dir) {
         const dirs = ['X+', 'X-', 'Y+', 'Y-', 'Z+', 'Z-'];
         const speeds = [10, 25, 50, 75, 100];
         
-        const insertType = DxState.insertType;
+        let insertType = DxState.insertType || 'MOVJ';
         
         if (insertType === 'IMOV') {
             const txt = document.getElementById('job-mode-indicator').textContent;
@@ -2122,6 +2152,7 @@ function handleDir(dir) {
         if (dir === 'up' || dir === 'down') {
             const idx = types.indexOf(insertType);
             DxState.insertType = types[(idx + 1) % types.length];
+            insertType = DxState.insertType;
         } else if (dir === 'left' || dir === 'right') {
             const idx = speeds.indexOf(DxState.insertSpeed);
             DxState.insertSpeed = speeds[(idx + 1) % speeds.length];
@@ -2131,7 +2162,7 @@ function handleDir(dir) {
         if (insertType === 'MOVL' || insertType === 'MOVC') speedText = 'V=' + (DxState.insertSpeed * 10);
         
         document.getElementById('job-mode-indicator').textContent = 'INSERT: ' + insertType + ' ' + speedText;
-        setInfoDisplay('INSERT: ' + insertType + ' ' + speedText + '.00 - ENTER');
+        setInfoDisplay('INSERT: ' + insertType + ' ' + speedText + ' - ENTER');
         return;
     }
     
@@ -2143,15 +2174,56 @@ function handleDir(dir) {
     if (DxState.view === 'JOB') {
         const currentProgram = robotJobs[DxState.currentJobId];
         
-        // COMBINACIÓN SHIFT: Ajuste fino de velocidad (1% en 1%)
+        // SHIFT + flecha: selección múltiple
         if (isShiftPressed && (dir === 'up' || dir === 'down')) {
-            if (dir === 'up') RobotState.speed = Math.min(100, RobotState.speed + 1);
-            else RobotState.speed = Math.max(1, RobotState.speed - 1);
+            if (!currentProgram || currentProgram.length === 0) return;
             
-            const speedEl = document.getElementById('lcd-speed');
-            if (speedEl) speedEl.textContent = RobotState.speed + '%';
+            if (!DxState.selectedLines) DxState.selectedLines = [];
             
-            setInfoDisplay(`⚡ Velocidad: ${RobotState.speed}% (Ajuste Fino)`);
+            // Mover cursor
+            let newIndex = DxState.selectedLineIndex;
+            if (dir === 'up') newIndex = Math.max(0, newIndex - 1);
+            else newIndex = Math.min(currentProgram.length - 1, newIndex + 1);
+            
+            // Seleccionar todas las líneas entre la anterior y la nueva
+            const oldIndex = DxState.selectedLineIndex;
+            DxState.selectedLineIndex = newIndex;
+            DxState.selectedTokenIndex = 0;
+            
+            const start = Math.min(oldIndex, newIndex);
+            const end = Math.max(oldIndex, newIndex);
+            for (let i = start; i <= end; i++) {
+                if (!DxState.selectedLines.includes(i)) {
+                    DxState.selectedLines.push(i);
+                }
+            }
+            DxState.selectedLines.sort((a, b) => a - b);
+            
+            // Forzar actualización inmediata
+            setTimeout(() => {
+                renderJobDirect(DxState.selectedLines);
+            }, 0);
+            return;
+        }
+        
+        // SHIFT + flecha izquierda: deseleccionar todo
+        if (isShiftPressed && dir === 'left') {
+            if (DxState.selectedLines && DxState.selectedLines.length > 0) {
+                DxState.selectedLines = [];
+                setInfoDisplay('Seleccion borrada');
+                renderJob();
+            }
+            return;
+        }
+
+        // SHIFT + flecha derecha: seleccionar TODAS las líneas
+        if (isShiftPressed && dir === 'right') {
+            const currentProgram = robotJobs[DxState.currentJobId];
+            if (currentProgram) {
+                DxState.selectedLines = currentProgram.map((_, i) => i);
+                setInfoDisplay('Todas las lineas seleccionadas [' + DxState.selectedLines.length + ']');
+                renderJob();
+            }
             return;
         }
 
@@ -2408,8 +2480,15 @@ function handleEditAction(action) {
     } else if (action === 'SEARCH') {
         showMsg('SEARCH: Función en desarrollo'); return;
     } else if (action === 'COPY') {
-        DxState.clipboard = JSON.parse(JSON.stringify(currentProgram[DxState.selectedLineIndex]));
-        showMsg('✓ Línea ' + DxState.selectedLineIndex + ' copiada'); return;
+        // Si hay líneas seleccionadas múltiples, copiar todas
+        if (DxState.selectedLines && DxState.selectedLines.length > 0) {
+            DxState.clipboard = DxState.selectedLines.map(i => JSON.parse(JSON.stringify(currentProgram[i])));
+            showMsg(`✓ ${DxState.selectedLines.length} líneas copiadas`);
+        } else {
+            DxState.clipboard = JSON.parse(JSON.stringify(currentProgram[DxState.selectedLineIndex]));
+            showMsg('✓ Línea ' + DxState.selectedLineIndex + ' copiada');
+        }
+        return;
     } else if (action === 'CUT') {
         DxState.clipboard = JSON.parse(JSON.stringify(currentProgram[DxState.selectedLineIndex]));
         currentProgram.splice(DxState.selectedLineIndex, 1);
@@ -2465,6 +2544,30 @@ function insertDout(port, onOff) {
 }
 
 function pressSelect() {
+    const isShiftActive = typeof isShiftPressed !== 'undefined' && isShiftPressed;
+    
+    if (isShiftActive && DxState.view === 'JOB') {
+        // SHIFT+SELECT: Multi-line selection for copy
+        if (!DxState.selectedLines) DxState.selectedLines = [];
+        
+        const currentProgram = robotJobs[DxState.currentJobId];
+        if (currentProgram && currentProgram.length > 0) {
+            const lineIdx = DxState.selectedLineIndex;
+            const idx = DxState.selectedLines.indexOf(lineIdx);
+            
+            if (idx >= 0) {
+                DxState.selectedLines.splice(idx, 1);
+                setInfoDisplay(`✓ Línea ${lineIdx + 1} deseleccionada [${DxState.selectedLines.length} seleccionadas]`);
+            } else {
+                DxState.selectedLines.push(lineIdx);
+                DxState.selectedLines.sort((a, b) => a - b);
+                setInfoDisplay(`✓ Línea ${lineIdx + 1} seleccionada [${DxState.selectedLines.length} líneas]`);
+            }
+            renderJob();
+            return;
+        }
+    }
+    
     if (DxState.view === 'LIST') {
         const jobKeys = Object.keys(robotJobs);
         if (jobKeys.length > 0) {
@@ -2594,23 +2697,22 @@ function pressModify() {
 }
 
 function pressInsert() {
-    if (DxState.view !== 'JOB') { setInfoDisplay('⚠ Cambie a JOB'); return; }
-    if (!checkTeachMode('INSERT')) return;
-
-    const btn = document.getElementById('insert-btn');
-    if (DxState.activeEditAction === 'INSERT') {
-        cancelEdit();
-    } else {
-        cancelEdit();
-        DxState.activeEditAction = 'INSERT';
-        DxState.isInserting = true;
-        if (btn) btn.classList.add('blink-active');
-
-        // Definir instrucción por defecto en buffer
-        DxState.editingBuffer = 'MOVJ VJ=' + RobotState.speed + '.00';
-        setInfoDisplay('INSERT: ' + DxState.editingBuffer + ' - ENTER para insertar');
-        renderJob();
+    const currentView = DxState.view;
+    if (currentView !== 'JOB' && currentView !== 'LIST') {
+        setInfoDisplay('⚠ Cambie a JOB'); 
+        return; 
     }
+    if (currentView === 'LIST') setView('JOB');
+    
+    DxState.activeEditAction = 'INSERT';
+    DxState.isInserting = true;
+    const btn = document.getElementById('insert-btn');
+    if (btn) btn.classList.add('blink-active');
+    
+    DxState.editingBuffer = 'MOVJ VJ=' + RobotState.speed + '.00';
+    document.getElementById('job-mode-indicator').textContent = 'INSERT: ' + DxState.editingBuffer;
+    setInfoDisplay('INSERT: ' + DxState.editingBuffer + ' - ENTER');
+    renderJob();
 }
 
 function pressDelete() {
@@ -2663,11 +2765,11 @@ function resetToZero() {
     document.getElementById('lcd-status').textContent = 'HOMING';
 }
 
-function renderJob() {
+function renderJobDirect(selectedLinesArg) {
     const container = document.getElementById('job-content-area');
     if (!container) return;
     container.innerHTML = '';
-
+    
     const currentProgram = robotJobs[DxState.currentJobId];
     document.getElementById('current-job-name').textContent = DxState.currentJobId;
     document.getElementById('job-step-indicator').textContent = String(DxState.selectedLineIndex).padStart(4, '0');
@@ -2680,14 +2782,18 @@ function renderJob() {
     currentProgram.forEach((step, index) => {
         const line = document.createElement('div');
         const isSelected = index === DxState.selectedLineIndex;
+        const isMultiSelected = selectedLinesArg && selectedLinesArg.includes(index);
         
-        line.className = 'job-line' + (isSelected ? ' selected' : '');
+        line.className = 'job-line' + (isSelected ? ' selected' : '') + (isMultiSelected ? ' multi-selected' : '');
         
         // Estilo de línea seleccionada o en edición
         let lineStyle = 'padding:1px 2px;cursor:pointer;border-bottom:1px solid #333;';
         let lineNumStyle = 'color:#888;width:25px;display:inline-block;text-align:right;margin-right:4px;';
 
-        if (isSelected) {
+        if (isMultiSelected) {
+            lineStyle = 'background:#4a1a6b;color:#fff;padding:1px 2px;cursor:pointer;border-bottom:1px solid #2a0a4b;';
+            lineNumStyle += 'color:#d4a5ff;';
+        } else if (isSelected) {
             lineStyle = 'background:#1a3a6a;color:#fff;padding:1px 2px;cursor:pointer;border-bottom:1px solid #0a2050;';
             if (DxState.activeEditAction) {
                 lineNumStyle += 'text-decoration: underline; color: #fff; font-weight: bold;';
@@ -2695,7 +2801,7 @@ function renderJob() {
         }
 
         line.style.cssText = lineStyle;
-
+        
         const code = step.code || 'MOVJ VJ=50.00';
         const tokens = code.split(' ');
         let tokenHtml = '';
@@ -2725,10 +2831,15 @@ function renderJob() {
     // RENDER LÍNEA DE BUFFER
     const bufferContainer = document.getElementById('job-buffer-area');
     if (bufferContainer) {
-        if (DxState.activeEditAction) {
-            let actionColor = DxState.activeEditAction === 'DELETE' ? '#f44' : '#4f4';
-            bufferContainer.innerHTML = `<span style="color:${actionColor}; font-weight:bold; margin-right:8px;">${DxState.activeEditAction}:</span> <span>${DxState.editingBuffer}</span><span class="cursor-blink">_</span>`;
-            bufferContainer.style.background = '#0a2050';
+        if (DxState.isInserting) {
+            bufferContainer.innerHTML = `<span style="color:#0f0;">➤ ${DxState.insertType} ${DxState.insertType === 'MOVJ' || DxState.insertType === 'IMOV' ? 'VJ=' + DxState.insertSpeed : 'V=' + (DxState.insertSpeed * 10)}</span>`;
+            bufferContainer.style.background = '#1a1a2e';
+        } else if (DxState.isModifying) {
+            bufferContainer.innerHTML = `<span style="color:#fa0;">✎ MODIFY: ${DxState.editingBuffer}</span>`;
+            bufferContainer.style.background = '#1a1a2e';
+        } else if (DxState.isDeleting) {
+            bufferContainer.innerHTML = `<span style="color:#f55;">✖ DELETE: Línea ${DxState.selectedLineIndex + 1}</span>`;
+            bufferContainer.style.background = '#1a1a2e';
         } else {
             bufferContainer.innerHTML = '<span style="color:#666;">READY</span>';
             bufferContainer.style.background = '#1a1a2e';
@@ -2744,12 +2855,17 @@ function renderJob() {
     }
 }
 
+function renderJob() {
+    renderJobDirect(DxState.selectedLines);
+}
+
 function updateJobDetail() {
     const currentProgram = robotJobs[DxState.currentJobId];
     const step = currentProgram && currentProgram[DxState.selectedLineIndex];
     
     const methodEl = document.getElementById('job-method-indicator');
     const speedEl = document.getElementById('job-speed-indicator');
+    const motionEl = document.getElementById('job-motion-indicator');
     
     if (step && step.code) {
         const code = step.code;
@@ -2757,6 +2873,10 @@ function updateJobDetail() {
         const speedMatch = code.match(/VJ=(\d+\.\d+)/i) || code.match(/VL=(\d+\.\d+)/i) || code.match(/V=(\d+\.\d+)/i);
         if (methodEl) methodEl.textContent = method;
         if (speedEl) speedEl.textContent = speedMatch ? speedMatch[1] : '50.00';
+        if (motionEl) {
+            motionEl.textContent = DxState.motionType || 'STANDARD';
+            console.log('renderJob: motionType =', DxState.motionType);
+        }
         
         const angles = ['s','l','u','r','b','t'];
         const labels = ['S','L','U','R','B','T'];
@@ -2770,6 +2890,7 @@ function updateJobDetail() {
     } else {
         if (methodEl) methodEl.textContent = '---';
         if (speedEl) speedEl.textContent = '---';
+        if (motionEl) motionEl.textContent = DxState.motionType || 'STANDARD';
         ['s','l','u','r','b','t'].forEach(a => {
             const el = document.getElementById('job-pos-detail-' + a);
             if (el) el.textContent = `${a.toUpperCase()}: -----`;
@@ -2851,10 +2972,19 @@ function changeInstruction() {
 
 function confirmInsert() {
     const currentProgram = robotJobs[DxState.currentJobId];
+    const type = DxState.insertType || 'MOVJ';
+    const speed = DxState.insertSpeed || 50;
+    let code = type + ' ';
+    
+    if (type === 'MOVJ') code += 'VJ=' + speed.toFixed(2);
+    else if (type === 'MOVL') code += 'V=' + (speed * 10);
+    else if (type === 'MOVC') code += 'V=' + (speed * 10);
+    else if (type === 'IMOV') code += 'X+';
+    
     const newStep = {
         s: RobotState.angles.s, l: RobotState.angles.l, u: RobotState.angles.u,
         r: RobotState.angles.r, b: RobotState.angles.b, t: RobotState.angles.t,
-        code: 'MOVJ VJ=' + RobotState.speed.toFixed(2),
+        code: code,
         desc: 'PUNTO ' + (currentProgram.length + 1)
     };
     if (DxState.selectedLineIndex >= 0 && DxState.selectedLineIndex < currentProgram.length) {
@@ -2867,7 +2997,7 @@ function confirmInsert() {
     DxState.isInserting = false;
     saveJobsLocally();
     renderJob();
-    setInfoDisplay('INSERT: ' + newStep.code);
+    setInfoDisplay('INSERT: ' + code);
 }
 
 function renderList() {
@@ -3906,7 +4036,6 @@ window.pressInsert = pressInsert;
 window.pressDelete = pressDelete;
 window.handleDir = handleDir;
 window.moveAxis = moveAxis;
-window.showMsg = showMsg;
 window.pressCancel = pressCancel;
 window.setSpeed = setSpeed;
 window.toggleServo = toggleServo;

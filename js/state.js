@@ -36,7 +36,8 @@ window.DxState = window.DxState || {
     activeEditAction: null,
     editingBuffer: '',
     securityMode: 'EDITING',
-    clipboard: null
+    clipboard: null,
+    selectedLines: null
 };
 
 // Referencias locales para mantener compatibilidad con los imports de otros módulos

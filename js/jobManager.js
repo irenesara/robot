@@ -17,7 +17,8 @@ function renderJob() {
 
     currentProgram.forEach((step, index) => {
         const line = document.createElement('div');
-        line.className = 'job-line' + (index === DxState.selectedLineIndex ? ' selected' : '');
+        const isMultiSelected = DxState.selectedLines && DxState.selectedLines.includes(index);
+        line.className = 'job-line' + (index === DxState.selectedLineIndex ? ' selected' : '') + (isMultiSelected ? ' multi-selected' : '');
 
         // Visual feedback for EDITING: Underline line number if this line is being modified/deleted
         let lineNumStyle = '';
