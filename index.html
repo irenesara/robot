@@ -48,14 +48,17 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
 .lcd-top-bar { background: #000000; color: #0f0; padding: 1px 4px; font-size: 7px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; border-bottom: 2px solid #0f0; }
 .lcd-body { display: flex; flex: 1; height: auto; overflow: visible; }
 .lcd-sidebar { width: 50px; background: #000000; border-right: 1px solid #0f0; display: flex; flex-direction: column; padding: 2px; overflow-y: auto; flex-shrink: 0; }
-.lcd-sidebar-btn { min-height: 12px; font-size: 4px; text-align: center; border: 1px solid #0f0; background: #000000; cursor: pointer; font-weight: bold; border-radius: 2px; display: flex; align-items: center; justify-content: center; line-height: 1.1; margin: 0; padding: 1px; }
+.lcd-sidebar-btn { min-height: 14px; font-size: 4px; text-align: center; border: 1px solid #555; background: #d0d0d0; cursor: pointer; font-weight: bold; border-radius: 1px; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; margin: 1px 0; padding: 2px 1px; color: #000; gap: 1px; }
 .lcd-sidebar-btn:active, .lcd-sidebar-btn.active { background: #fff; border-left: 3px solid #1a3a6a; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
+.sidebar-icon { width: 12px; height: 8px; border-radius: 1px; border: 1px solid #333; flex-shrink: 0; }
 .lcd-main { flex: 1; display: flex; flex-direction: column; background: #fff; font-family: 'Courier New', monospace; font-size: 8px; position: relative; overflow-y: auto; overflow-x: hidden; }
 .lcd-header { background: #e0e0e0; border-bottom: 1px solid #ccc; padding: 1px 4px; display: flex; gap: 8px; font-weight: bold; font-size: 5px; color: #333; flex-shrink: 0; }
 .job-content { flex: 1; overflow-y: auto; padding: 1px; background: #fff; font-size: 7px; }
 .job-line { padding: 1px 2px; display: flex; gap: 4px; cursor: pointer; border-bottom: 1px solid #f0f0f0; }
 .job-line:hover { background: #f0f8ff; }
 .job-line.selected { background: #ffff00; color: #000; font-weight: bold; }
+.job-line.current-step { background: #003300 !important; border-left: 3px solid #0f0 !important; color: #0f0 !important; }
+.job-line.current-step.selected { background: #004400 !important; border-left: 4px solid #0f0 !important; }
 @keyframes blink { 0%,100% { background: #1a3a6a; color: #fff; } 50% { background: #0a2050; color: #ff0; } }
 .job-line-num { width: 25px; color: #666; text-align: right; user-select: none; }
 .job-cmd-btn { background: #444; color: #0f0; border: 1px solid #666; padding: 2px 5px; font-size: 6px; cursor: pointer; font-family: 'Courier New', monospace; font-weight: bold; flex: 1; min-width: 30px; text-align: center; }
@@ -211,16 +214,15 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                 </div>
 
                 <div class="lcd-display">
-                    <div class="lcd-top-bar">
-                        <span>SIMULADOR ROBOT <small style="font-size: 5px; opacity: 0.7;">v2.4</small></span>
-                        <span>STATUS: <span id="lcd-status" style="color:#0f0;">READY</span></span>
-                        <span>MODE: <span id="lcd-mode" style="color:#ff0;">TEACH</span></span>
-                        <span>SPD: <span id="lcd-speed" style="color:#ff0;">50%</span></span>
-                        <span>SEC: <span id="lcd-security" style="color:#f0f;">OPER</span></span>
-                        <span>COORD: <span id="lcd-coord" style="color:#0ff;">JOINT</span><small id="lcd-tool-no" style="font-size:7px; color:#fff; display:none;">(00)</small></span>
+                    <div class="lcd-top-bar" style="display:flex; justify-content:space-between; align-items:center; padding:1px 4px; background:#1a1a2e; border-bottom:1px solid #333; font-size:7px; color:#ccc; font-family:'Courier New',monospace;">
+                        <span id="lcd-status" style="color:#0f0;">READY</span>
+                        <span>MODE:<span id="lcd-mode" style="color:#ff0;">TEACH</span></span>
+                        <span>SPD:<span id="lcd-speed" style="color:#ff0;">LOW</span></span>
+                        <span>SEC:<span id="lcd-security" style="color:#f0f;">OPER</span></span>
+                        <span>COORD:<span id="lcd-coord" style="color:#0ff;">JOINT</span><small id="lcd-tool-no" style="font-size:7px; color:#fff; display:none;">(00)</small></span>
                         <span>OG#1:<span id="og1-status" style="color:#666;">OFF</span></span>
                         <span>OG#2:<span id="og2-status" style="color:#666;">OFF</span></span>
-                        <span style="color:#fc0; font-size:6px; margin-left:2px;" id="coord-hint">X=S L=U R=B</span></span>
+                        <span id="coord-hint" style="color:#fc0; font-size:6px;">X=S Y=L Z=U</span>
                     </div>
                     <div class="lcd-menu-bar" style="position: relative;">
                         <div class="menu-tab" onclick="toggleDropdown('job-dropdown', this)">JOB</div>
@@ -264,40 +266,27 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                             <div class="dropdown-item" onclick="resetLayout()">RESET LAYOUT</div>
                         </div>
 
-                        <div id="edit-dropdown" class="dropdown-menu" style="width: auto; padding: 4px; flex-direction: column; gap: 4px; border: 2px solid #000; background: #2b4b9b; position: absolute;">
-                            <div class="dx-dropdown-btn" onclick="handleEditAction('TOP LINE'); toggleDropdown('edit-dropdown')">TOP LINE</div>
-                            <div class="dx-dropdown-btn" onclick="handleEditAction('END LINE'); toggleDropdown('edit-dropdown')">END LINE</div>
-                            <div class="dx-dropdown-btn" onclick="handleEditAction('SEARCH'); toggleDropdown('edit-dropdown')">SEARCH</div>
-                            <div class="dx-dropdown-btn" id="copy-btn" onclick="handleEditAction('COPY'); toggleDropdown('edit-dropdown')">COPY</div>
-                            <div class="dx-dropdown-btn" onclick="handleEditAction('CUT'); toggleDropdown('edit-dropdown')">CUT</div>
-                            <div class="dx-dropdown-btn" onclick="handleEditAction('CHANGE SPEED'); toggleDropdown('edit-dropdown')">CHANGE SPEED</div>
-                            <div class="dx-dropdown-btn" onclick="handleEditAction('TRT'); toggleDropdown('edit-dropdown')">TRT</div>
-                            <div class="dx-dropdown-btn" onclick="handleEditAction('MODIFY TARGET AXIS'); toggleDropdown('edit-dropdown')">MODIFY TARGET<br>AXIS</div>
-                            <div style="border-top: 1px solid #fff; margin: 4px 0;"></div>
-                            <div class="dx-dropdown-btn" onclick="insertDout(1,'ON'); toggleDropdown('edit-dropdown')">DOUT OG#(1) ON</div>
-                            <div class="dx-dropdown-btn" onclick="insertDout(1,'OFF'); toggleDropdown('edit-dropdown')">DOUT OG#(1) OFF</div>
-                            <div class="dx-dropdown-btn" onclick="insertDout(2,'ON'); toggleDropdown('edit-dropdown')">DOUT OG#(2) ON</div>
-                            <div class="dx-dropdown-btn" onclick="insertDout(2,'OFF'); toggleDropdown('edit-dropdown')">DOUT OG#(2) OFF</div>
-                            <div class="dx-dropdown-btn" onclick="const sm = document.getElementById('edit-submenu'); sm.style.display = sm.style.display === 'flex' ? 'none' : 'flex'; event.stopPropagation();" style="display:flex; justify-content:space-between;"><span>EDIT LOCK</span> <span>▶</span></div>
-                            
-                            <div id="edit-submenu" style="display: none; position: absolute; left: 100%; bottom: 0; background: #2b4b9b; border: 2px solid #000; padding: 4px; flex-direction: column; gap: 4px; margin-left: -2px;">
-                                <div class="dx-dropdown-btn" onclick="handleEditAction('*LINE EDIT LOCK'); toggleDropdown('edit-dropdown'); document.getElementById('edit-submenu').style.display='none'">*LINE EDIT LOCK</div>
-                                <div class="dx-dropdown-btn" onclick="handleEditAction('COMMENT OUT'); toggleDropdown('edit-dropdown'); document.getElementById('edit-submenu').style.display='none'">COMMENT OUT</div>
-                                <div class="dx-dropdown-btn" onclick="handleEditAction('EDITLOCK CLR (ALL)'); toggleDropdown('edit-dropdown'); document.getElementById('edit-submenu').style.display='none'">EDITLOCK CLR<br>(ALL)</div>
-                                <div class="dx-dropdown-btn" onclick="handleEditAction('COMMENT OUT CLR'); toggleDropdown('edit-dropdown'); document.getElementById('edit-submenu').style.display='none'">COMMENT OUT<br>CLR(ALL)</div>
-                                <div class="dx-dropdown-btn" onclick="handleEditAction('CHANGE WELD. COND.'); toggleDropdown('edit-dropdown'); document.getElementById('edit-submenu').style.display='none'">CHANGE WELD.<br>COND.</div>
-                            </div>
+                        <div id="edit-dropdown" class="dropdown-menu" style="width: 130px; left: 12%;">
+                            <div class="dropdown-item" onclick="handleEditAction('UNDO'); toggleDropdown('edit-dropdown')">UNDO</div>
+                            <div class="dropdown-item" onclick="handleEditAction('CUT'); toggleDropdown('edit-dropdown')">CUT</div>
+                            <div class="dropdown-item" id="copy-btn" onclick="handleEditAction('COPY'); toggleDropdown('edit-dropdown')">COPY</div>
+                            <div class="dropdown-item" onclick="handleEditAction('PASTE'); toggleDropdown('edit-dropdown')">PASTE</div>
+                            <div class="dropdown-item" onclick="handleEditAction('SEARCH'); toggleDropdown('edit-dropdown')">SEARCH</div>
+                            <div class="dropdown-item" onclick="handleEditAction('REPLACE'); toggleDropdown('edit-dropdown')">REPLACE</div>
+                            <div class="dropdown-item" onclick="handleEditAction('CHANGE SPEED'); toggleDropdown('edit-dropdown')">CHANGE SPEED</div>
+                            <div class="dropdown-item" onclick="handleEditAction('TOP LINE'); toggleDropdown('edit-dropdown')">TOP LINE</div>
+                            <div class="dropdown-item" onclick="handleEditAction('END LINE'); toggleDropdown('edit-dropdown')">END LINE</div>
+                            <div class="dropdown-item" onclick="handleEditAction('REVERSE'); toggleDropdown('edit-dropdown')">REVERSE</div>
                         </div>
                     </div>
                     <div class="lcd-body">
                         <div class="lcd-sidebar">
-                            <div class="lcd-sidebar-btn active" id="btn-view-job" onclick="setView('JOB')">PROGRAMA</div>
-                            <div class="lcd-sidebar-btn" id="btn-view-general" onclick="setView('GENERAL')">GENERAL</div>
-                            <div class="lcd-sidebar-btn" id="btn-view-variable" onclick="setView('VARIABLE')">VARIABLE</div>
-                            <div class="lcd-sidebar-btn" id="btn-view-inout" onclick="setView('INOUT')">ENT/SAL</div>
-                            <div class="lcd-sidebar-btn" id="btn-view-robot" onclick="setView('ROBOT')">ROBOT</div>
-                            <div class="lcd-sidebar-btn" id="btn-view-sysinfo" onclick="setView('SYSTEM-INFO')">INFORM.SISTEMA</div>
-                            <div class="lcd-sidebar-btn" id="btn-view-utility" onclick="setView('UTILITY')">EX.SISTEMA</div>
+                            <div class="lcd-sidebar-btn active" id="btn-view-job" onclick="setView('JOB')"><div class="sidebar-icon" style="background:#2b4b9b;"></div>JOB</div>
+                            <div class="lcd-sidebar-btn" id="btn-view-general" onclick="setView('GENERAL')"><div class="sidebar-icon" style="background:#8b4513;"></div>ARC WELDING</div>
+                            <div class="lcd-sidebar-btn" id="btn-view-variable" onclick="setView('VARIABLE')"><div class="sidebar-icon" style="background:#006400;"></div>VARIABLE</div>
+                            <div class="lcd-sidebar-btn" id="btn-view-inout" onclick="setView('INOUT')"><div class="sidebar-icon" style="background:#4a4a8a;"></div>IN/OUT</div>
+                            <div class="lcd-sidebar-btn" id="btn-view-robot" onclick="setView('ROBOT')"><div class="sidebar-icon" style="background:#8a2be2;"></div>ROBOT</div>
+                            <div class="lcd-sidebar-btn" id="btn-view-sysinfo" onclick="setView('SYSTEM-INFO')"><div class="sidebar-icon" style="background:#555;"></div>SYSTEM INFO</div>
                         </div>
                         <div class="lcd-main">
                             <div id="data-screen" style="display: none; flex-direction: column; background: #eaeff2; height: 100%;">
@@ -778,6 +767,17 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                             </div>
                         </div>
                     </div>
+                    <!-- Human Interface Display Area (5th area from manual) -->
+                    <div id="lcd-human-interface" style="display:flex; background:#c0c0c0; border-top:2px solid #888; height:16px; align-items:stretch; flex-shrink:0;">
+                        <div style="display:flex; align-items:center; gap:1px; padding:0 2px;">
+                            <div onclick="navigateSidebar(-1)" style="cursor:pointer; background:#e0e0e0; border:1px solid #888; padding:0 3px; font-size:9px; font-weight:bold; display:flex; align-items:center; height:12px; box-shadow:inset 1px 1px 0 #fff;">◀</div>
+                            <div onclick="navigateSidebar(0)" style="cursor:pointer; background:#e0e0e0; border:1px solid #888; border-radius:50%; width:10px; height:10px; display:flex; align-items:center; justify-content:center; font-size:6px; box-shadow:inset 1px 1px 0 #fff;">⊙</div>
+                            <div onclick="navigateSidebar(1)" style="cursor:pointer; background:#e0e0e0; border:1px solid #888; padding:0 3px; font-size:9px; font-weight:bold; display:flex; align-items:center; height:12px; box-shadow:inset 1px 1px 0 #fff;">▶</div>
+                        </div>
+                        <div id="hi-btn-main" onclick="setMenuMode('main')" style="flex:1; display:flex; align-items:center; justify-content:center; font-size:6px; font-weight:bold; font-family:'Courier New',monospace; cursor:pointer; background:#4070b0; color:#fff; border:1px solid #333; margin:1px;">Main Menu</div>
+                        <div id="hi-btn-simple" onclick="setMenuMode('simple')" style="flex:1; display:flex; align-items:center; justify-content:center; font-size:6px; font-weight:bold; font-family:'Courier New',monospace; cursor:pointer; background:#a0a0a0; color:#333; border:1px solid #888; margin:1px;">Simple Menu</div>
+                        <div style="flex:1;"></div>
+                    </div>
                 </div>
 
                 <div id="insert-overlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 999;" onclick="cancelInsert()"></div>
@@ -963,12 +963,12 @@ let robotJobs = {
         { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, code: 'NOP', desc: 'INICIO' },
         { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, code: 'CALL JOB:SUB_PROG', desc: 'LLAMADA A SUBRUTINA' },
         { s: 30, l: -20, u: 50, r: 0, b: -45, t: 0, code: 'MOVJ VJ=50.00', desc: 'IR A ROLLO HILO' },
-        { s: 30, l: -40, u: 70, r: 0, b: -90, t: 0, code: 'MOVJ VJ=25.00', desc: 'BAJAR A HILO' },
+        { s: 30, l: -40, u: 70, r: 0, b: -90, t: 0, code: 'MOVL V=25.00', desc: 'BAJAR A HILO (LINEAL)' },
         { s: 30, l: -40, u: 70, r: 0, b: -90, t: 0, code: 'DOUT OG#(1) ON', desc: 'CERRAR PINZA 1 (COGER)' },
         { s: 30, l: -40, u: 70, r: 0, b: -90, t: 0, code: 'TIMER T=0.5', desc: 'ESPERAR CIERRE' },
-        { s: 30, l: -20, u: 50, r: 0, b: -45, t: 0, code: 'MOVJ VJ=10.00', desc: 'TENSAR SUAVE' },
+        { s: 30, l: -20, u: 50, r: 0, b: -45, t: 0, code: 'MOVL V=10.00', desc: 'TENSAR SUAVE (LINEAL)' },
         { s: 0, l: -20, u: 50, r: 90, b: -45, t: -90, code: 'MOVJ VJ=50.00', desc: 'TIRAR Y ENROLLAR' },
-        { s: -45, l: -10, u: 40, r: 180, b: 0, t: -180, code: 'MOVJ VJ=50.00', desc: 'ARRASTRAR LARGO' },
+        { s: -45, l: -10, u: 40, r: 180, b: 0, t: -180, code: 'MOVL V=50.00', desc: 'ARRASTRAR LINEAL' },
         { s: -45, l: -10, u: 40, r: 180, b: 0, t: -180, code: 'DOUT OG#(1) OFF', desc: 'SOLTAR ALAMBRE' },
         { s: -45, l: -30, u: 60, r: 0, b: 0, t: 0, code: 'MOVJ VJ=100.00', desc: 'RETORNO SEGURO' },
         { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, code: 'END', desc: 'FIN BUCLE' }
@@ -977,6 +977,15 @@ let robotJobs = {
         { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, code: 'NOP', desc: 'INICIO SUB' },
         { s: 0, l: 0, u: 0, r: 180, b: 0, t: 0, code: 'MOVJ VJ=50.00', desc: 'POSICIÓN SEGURA' },
         { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, code: 'END', desc: 'VOLVER' }
+    ],
+    "MOVL_DEMO": [
+        { s: 0, l: 0, u: 0, r: 0, b: 0, t: 0, code: 'NOP', desc: 'DEMO MOVL vs MOVJ' },
+        { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, code: 'MOVJ VJ=30.00', desc: 'POS INICIO (JOINT)' },
+        { s: 45, l: -10, u: 30, r: 0, b: -45, t: 0, code: 'MOVJ VJ=30.00', desc: 'POS A via MOVJ (curvo)' },
+        { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, code: 'MOVJ VJ=30.00', desc: 'RETORNO' },
+        { s: 45, l: -10, u: 30, r: 0, b: -45, t: 0, code: 'MOVL V=30.00', desc: 'POS A via MOVL (recto)' },
+        { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, code: 'MOVL V=30.00', desc: 'RETORNO LINEAL' },
+        { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, code: 'END', desc: 'FIN DEMO' }
     ]
 };
 
@@ -1042,8 +1051,14 @@ function loadJobsLocally() {
                 if (!parsed['JOB_ALAMBRE'].some(l => l.code && l.code.includes('CALL JOB:'))) {
                     parsed['JOB_ALAMBRE'].splice(1, 0, { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, code: 'CALL JOB:SUB_PROG', desc: 'LLAMADA A SUBRUTINA' });
                 }
+                // Actualizar: si no tiene instrucciones MOVL, reemplazar con la versión nueva
+                if (!parsed['JOB_ALAMBRE'].some(l => l.code && l.code.startsWith('MOVL'))) {
+                    parsed['JOB_ALAMBRE'] = robotJobs['JOB_ALAMBRE'];
+                }
             }
             if (!parsed['SUB_PROG']) parsed['SUB_PROG'] = robotJobs['SUB_PROG'];
+            // Siempre asegurar que MOVL_DEMO existe (programa de demostración)
+            if (!parsed['MOVL_DEMO']) parsed['MOVL_DEMO'] = robotJobs['MOVL_DEMO'];
             robotJobs = parsed;
         }
         if (!robotJobs[DxState.currentJobId]) {
@@ -1366,51 +1381,73 @@ function updateGuideLines() {
     
     if (guideLines) scene.remove(guideLines);
     
-    const origin = new THREE.Vector3(0, 0.01, 0);
-    const len = 0.4;
-    
-    const lineXGeo = new THREE.BufferGeometry();
-    lineXGeo.setAttribute('position', new THREE.Float32BufferAttribute([0, 0.01, 0, len, 0.01, 0], 3));
-    const lineX = new THREE.Line(lineXGeo, new THREE.LineBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.8 }));
-    
-    const lineYGeo = new THREE.BufferGeometry();
-    lineYGeo.setAttribute('position', new THREE.Float32BufferAttribute([0, 0.01, 0, 0, len + 0.01, 0], 3));
-    const lineY = new THREE.Line(lineYGeo, new THREE.LineBasicMaterial({ color: 0x00aa00, transparent: true, opacity: 0.8 }));
-    
-    const lineZGeo = new THREE.BufferGeometry();
-    lineZGeo.setAttribute('position', new THREE.Float32BufferAttribute([0, 0.01, 0, 0, 0.01, len], 3));
-    const lineZ = new THREE.Line(lineZGeo, new THREE.LineBasicMaterial({ color: 0x0066ff, transparent: true, opacity: 0.8 }));
+    const len = 0.15;
+    const d2r = Math.PI / 180;
     
     guideLines = new THREE.Group();
-    guideLines.add(lineX);
-    guideLines.add(lineY);
-    guideLines.add(lineZ);
     
-    const makeText = (label, color, pos) => {
-        const c = document.createElement('canvas');
-        c.width = 64; c.height = 64;
-        const cx = c.getContext('2d');
-        cx.fillStyle = color;
-        cx.font = 'bold 40px Arial';
-        cx.textAlign = 'center';
-        cx.textBaseline = 'middle';
-        cx.fillText(label, 32, 32);
-        const tex = new THREE.CanvasTexture(c);
-        const m = new THREE.MeshBasicMaterial({ map: tex, transparent: true });
-        const mesh = new THREE.Mesh(new THREE.PlaneGeometry(0.06, 0.06), m);
-        mesh.position.copy(pos);
-        mesh.lookAt(camera.position.clone().multiplyScalar(2));
-        return mesh;
-    };
-    
-    let labelX, labelY, labelZ;
-    if (DxState.coordSystem === 'TOOL') { labelX = 'Xt'; labelY = 'Yt'; labelZ = 'Zt'; }
-    else if (DxState.coordSystem === 'CILINDRICO') { labelX = 'R'; labelY = 'θ'; labelZ = 'Z'; }
-    else { labelX = 'X'; labelY = 'Y'; labelZ = 'Z'; }
-    
-    guideLines.add(makeText(labelX, '#ff0000', new THREE.Vector3(len + 0.08, 0.01, 0)));
-    guideLines.add(makeText(labelY, '#00aa00', new THREE.Vector3(0, len + 0.08, 0.01)));
-    guideLines.add(makeText(labelZ, '#0066ff', new THREE.Vector3(0, 0.01, len + 0.08)));
+    if (DxState.coordSystem === 'CILINDRICO') {
+        // =============================================
+        // CILÍNDRICO: R (radial), θ (arco), Z (vertical)
+        // Centrado en la base, R apunta hacia el TCP
+        // =============================================
+        const sAngle = RobotState ? RobotState.angles.s * d2r : 0;
+        
+        // R (rojo): línea radial desde la base hacia fuera
+        const rGeo = new THREE.BufferGeometry();
+        const rx = Math.cos(-sAngle) * len;
+        const rz = Math.sin(-sAngle) * len;
+        rGeo.setAttribute('position', new THREE.Float32BufferAttribute([0,0.02,0, rx,0.02,rz], 3));
+        guideLines.add(new THREE.Line(rGeo, new THREE.LineBasicMaterial({ color: 0xff0000, opacity: 0.9, transparent: true })));
+        
+        // θ (verde): arco pequeño alrededor de la base
+        const arcPoints = [];
+        const arcRadius = len * 0.6;
+        const arcStart = -sAngle - 0.5;
+        const arcEnd = -sAngle + 0.5;
+        for (let a = arcStart; a <= arcEnd; a += 0.05) {
+            arcPoints.push(Math.cos(a) * arcRadius, 0.02, Math.sin(a) * arcRadius);
+        }
+        const arcGeo = new THREE.BufferGeometry();
+        arcGeo.setAttribute('position', new THREE.Float32BufferAttribute(arcPoints, 3));
+        guideLines.add(new THREE.Line(arcGeo, new THREE.LineBasicMaterial({ color: 0x00cc00, opacity: 0.9, transparent: true })));
+        
+        // Z (azul): línea vertical
+        const zGeo = new THREE.BufferGeometry();
+        zGeo.setAttribute('position', new THREE.Float32BufferAttribute([0,0.02,0, 0,len+0.02,0], 3));
+        guideLines.add(new THREE.Line(zGeo, new THREE.LineBasicMaterial({ color: 0x0088ff, opacity: 0.9, transparent: true })));
+        
+        guideLines.position.set(0, 0.01, 0);
+    } else {
+        // Crear líneas X/Y/Z estándar
+        const lineXGeo = new THREE.BufferGeometry();
+        lineXGeo.setAttribute('position', new THREE.Float32BufferAttribute([0,0,0, len,0,0], 3));
+        guideLines.add(new THREE.Line(lineXGeo, new THREE.LineBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.9 })));
+        
+        const lineYGeo = new THREE.BufferGeometry();
+        lineYGeo.setAttribute('position', new THREE.Float32BufferAttribute([0,0,0, 0,len,0], 3));
+        guideLines.add(new THREE.Line(lineYGeo, new THREE.LineBasicMaterial({ color: 0x00cc00, transparent: true, opacity: 0.9 })));
+        
+        const lineZGeo = new THREE.BufferGeometry();
+        lineZGeo.setAttribute('position', new THREE.Float32BufferAttribute([0,0,0, 0,0,len], 3));
+        guideLines.add(new THREE.Line(lineZGeo, new THREE.LineBasicMaterial({ color: 0x0088ff, transparent: true, opacity: 0.9 })));
+        
+        if (DxState.coordSystem === 'TOOL' && RobotState && RobotState.angles && joints && joints.length >= 6) {
+            // TOOL: Ejes flotando en el TCP
+            const tcpPos = new THREE.Vector3();
+            joints[5].getWorldPosition(tcpPos);
+            guideLines.position.copy(tcpPos);
+            
+            const yaw = RobotState.angles.s * d2r;
+            const pitch = (RobotState.angles.l + RobotState.angles.u + RobotState.angles.b) * d2r;
+            guideLines.rotation.set(0, 0, 0);
+            guideLines.rotateY(-yaw);
+            guideLines.rotateZ(pitch);
+        } else {
+            // ROBOT: Ejes fijos en el origen
+            guideLines.position.set(0, 0.01, 0);
+        }
+    }
     
     scene.add(guideLines);
 }
@@ -1776,8 +1813,11 @@ function emergencyStop() {
 function handleFunc(func) {
     if (func === 'hold') {
         RobotState.programRunning = false;
+        // Sync cursor to the step where robot stopped (current step)
+        DxState.selectedLineIndex = RobotState.programStep;
         document.getElementById('lcd-status').textContent = 'HOLD';
-        setInfoDisplay('⏸️ PROGRAMA PAUSADO (HOLD)');
+        setInfoDisplay('⏸️ HOLD en paso ' + RobotState.programStep + ' — Mueva robot y pulse MODIFY + ENTER');
+        if (DxState.view === 'JOB') renderJob();
     } else {
         setInfoDisplay(func.toUpperCase());
     }
@@ -1838,94 +1878,247 @@ function setInfoDisplay(msg) {
     if (el) el.textContent = msg;
 }
 
-// Cinemática directa mejorada
+// ============================================================
+// CINEMÁTICA DIRECTA 6-DOF (FK) — Parámetros modelo visual
+// ============================================================
 function forwardKinematics(angles) {
     const d2r = Math.PI / 180;
-    const s = (angles.s || 0) * d2r;
-    const l = (angles.l || 0) * d2r;
-    const u = (angles.u || 0) * d2r;
-    const r = (angles.r || 0) * d2r;
-    const b = (angles.b || 0) * d2r;
-    const t = (angles.t || 0) * d2r;
-    
-    // Parámetros del robot MH12/DX200
-    const d1 = 335;   // altura base
-    const a2 = 670;   // largo eslabón 1
-    const a3 = 560;  // largo eslabón 2
-    const d4 = 150;  // largo eslabón 3 (muñeca)
-    
-    // Posición del tool usando transformación estándar
-    let c23 = Math.cos(l + u);
-    let s23 = Math.sin(l + u);
-    let c1 = Math.cos(s);
-    let s1 = Math.sin(s);
-    
-    // Posición cartesiana
-    let x = a2*c1*c23 + a3*c1*Math.cos(l) + d4*s1;
-    let y = a2*s1*c23 + a3*s1*Math.cos(l) + d4*c1;
-    let z = d1 - a2*s23 - a3*Math.sin(l);
-    
-    return { x: x||0, y: y||0, z: z||0, rx: r, ry: b, rz: t };
+    const sA = (angles.s || 0) * d2r;
+    const lA = (angles.l || 0) * d2r;
+    const uA = (angles.u || 0) * d2r;
+    const rA = (angles.r || 0) * d2r;
+    const bA = (angles.b || 0) * d2r;
+    const tA = (angles.t || 0) * d2r;
+
+    // Parámetros del robot (mm) — coinciden con buildRobot()
+    const d1 = 300;   // altura base (joint0.position.y = 0.30)
+    const a2 = 320;   // largo eslabón L→U (upperArm + elbow offset ~ 0.32)
+    const a3 = 150;   // largo eslabón U→muñeca (uArm ~ 0.15)
+    const d4 = 120;   // largo forearm R (wristRoll x=0.06 * 2 ~ 0.12)
+    const d6 = 40;    // offset flange T (joint5 x=0.04)
+
+    // Matrices de transformación homogénea (4×4)
+    // S: rotación en Y (base giratoria)
+    const cS = Math.cos(sA), sS = Math.sin(sA);
+    // L: rotación en Z (hombro)
+    const cL = Math.cos(lA), sL = Math.sin(lA);
+    // U: rotación en Z (codo)
+    const cU = Math.cos(uA), sU = Math.sin(uA);
+
+    // Posición del centro de muñeca (3-DOF posición)
+    const cLU = Math.cos(lA + uA);
+    const sLU = Math.sin(lA + uA);
+
+    // Brazo en el plano XZ del frame base
+    const arm_x = a2 * cL + a3 * cLU + d4 * cLU;
+    const arm_z = a2 * sL + a3 * sLU + d4 * sLU;
+
+    // Aplicar rotación S
+    const wx = arm_x * cS;
+    const wy = arm_x * sS;
+    const wz = d1 + arm_z;
+
+    // Orientación simplificada (Euler RPY del tool)
+    const rx = rA * (180 / Math.PI); // degrees
+    const ry = bA * (180 / Math.PI);
+    const rz = tA * (180 / Math.PI);
+
+    return { x: wx, y: wy, z: wz, rx: rx, ry: ry, rz: rz };
 }
 
-// Cinemática inversa numérica mejorada
-function inverseKinematics(targetPos) {
-    let angles = { ...RobotState.angles };
-    const maxIter = 30;
-    const tolerance = 1.0;
-    const d2r = Math.PI / 180;
-    
+// ============================================================
+// CINEMÁTICA INVERSA ROBUSTA (Jacobiano numérico + DLS)
+// ============================================================
+function solveLinearSystem(A, b) {
+    const n = b.length;
+    // Deep copy
+    let M = A.map(r => [...r]);
+    let v = [...b];
+    for (let i = 0; i < n; i++) {
+        // Partial pivoting
+        let maxRow = i;
+        for (let j = i + 1; j < n; j++) {
+            if (Math.abs(M[j][i]) > Math.abs(M[maxRow][i])) maxRow = j;
+        }
+        [M[i], M[maxRow]] = [M[maxRow], M[i]];
+        [v[i], v[maxRow]] = [v[maxRow], v[i]];
+        if (Math.abs(M[i][i]) < 1e-12) return null;
+        for (let j = i + 1; j < n; j++) {
+            const f = M[j][i] / M[i][i];
+            v[j] -= f * v[i];
+            for (let k = i; k < n; k++) M[j][k] -= f * M[i][k];
+        }
+    }
+    let x = new Array(n).fill(0);
+    for (let i = n - 1; i >= 0; i--) {
+        let s = 0;
+        for (let j = i + 1; j < n; j++) s += M[i][j] * x[j];
+        x[i] = (v[i] - s) / M[i][i];
+    }
+    return x;
+}
+
+function inverseKinematicsDLS(currentAngles, targetPos) {
+    const jointKeys = ['s', 'l', 'u', 'r', 'b', 't'];
+    const damping = 0.5;
+    const epsilon = 0.01; // grados para derivada numérica
+    const maxIter = 80;
+    const posTolerance = 0.5; // mm
+    const rotTolerance = 0.5; // grados
+    let angles = { ...currentAngles };
+
     for (let iter = 0; iter < maxIter; iter++) {
-        let pos = forwardKinematics(angles);
-        
-        // Error en posición
-        let ex = targetPos.x - pos.x;
-        let ey = targetPos.y - pos.y;
-        let ez = targetPos.z - pos.z;
-        
-        let error = Math.sqrt(ex*ex + ey*ey + ez*ez);
-        if (error < tolerance) break;
-        
-        // Parámetros en radianes
-        let s = angles.s * d2r;
-        let l = angles.l * d2r;
-        let u = angles.u * d2r;
-        let a2 = 670, a3 = 560;
-        
-        // Jacobian simplificado (derivadas parciales)
-        let dxds = -a2*Math.sin(s)*Math.cos(l) - a3*Math.sin(s)*Math.cos(l+u);
-        let dxdl = -a2*Math.cos(s)*Math.sin(l) - a3*Math.cos(s)*Math.sin(l+u);
-        let dxdu = -a3*Math.cos(s)*Math.sin(l+u);
-        
-        let dyds = a2*Math.cos(s)*Math.cos(l) + a3*Math.cos(s)*Math.cos(l+u);
-        let dydl = -a2*Math.sin(s)*Math.sin(l) - a3*Math.sin(s)*Math.sin(l+u);
-        let dydu = -a3*Math.sin(s)*Math.sin(l+u);
-        
-        let dzdl = -a2*Math.cos(l) - a3*Math.cos(l);
-        let dzdu = -a3*Math.cos(l+u);
-        
-        // Evitar cero
-        dxds = dxds || 0.001; dxdl = dxdl || 0.001;
-        dyds = dyds || 0.001; dydl = dydl || 0.001;
-        dzdl = dzdl || 0.001; dzdu = dzdu || 0.001;
-        
-        // Pseudo-inversa simple (dividir error por derivada)
-        let ds = ex/dxds + ey/dyds;
-        let dl = ex/dxdl + ey/dydl + ez/dzdl;
-        let du = ex/dxdu + ey/dydu + ez/dzdu;
-        
-        // Aplicar con learning rate
-        angles.s += ds * 0.3;
-        angles.l += dl * 0.3;
-        angles.u += du * 0.3;
-        
-        // Limitar
+        const cur = forwardKinematics(angles);
+        // Error vector [dx, dy, dz, drx, dry, drz]
+        const err = [
+            targetPos.x - cur.x,
+            targetPos.y - cur.y,
+            targetPos.z - cur.z,
+            (targetPos.rx || 0) - cur.rx,
+            (targetPos.ry || 0) - cur.ry,
+            (targetPos.rz || 0) - cur.rz
+        ];
+
+        const posErr = Math.sqrt(err[0]*err[0] + err[1]*err[1] + err[2]*err[2]);
+        const rotErr = Math.sqrt(err[3]*err[3] + err[4]*err[4] + err[5]*err[5]);
+        if (posErr < posTolerance && rotErr < rotTolerance) break;
+
+        // Jacobiano numérico 6×6
+        let J = [];
+        for (let i = 0; i < 6; i++) J[i] = new Array(6).fill(0);
+        for (let j = 0; j < 6; j++) {
+            const tmp = { ...angles };
+            tmp[jointKeys[j]] += epsilon;
+            const fk = forwardKinematics(tmp);
+            J[0][j] = (fk.x  - cur.x)  / epsilon;
+            J[1][j] = (fk.y  - cur.y)  / epsilon;
+            J[2][j] = (fk.z  - cur.z)  / epsilon;
+            J[3][j] = (fk.rx - cur.rx) / epsilon;
+            J[4][j] = (fk.ry - cur.ry) / epsilon;
+            J[5][j] = (fk.rz - cur.rz) / epsilon;
+        }
+
+        // JTJ + λ²I
+        let JTJ = [];
+        for (let i = 0; i < 6; i++) {
+            JTJ[i] = new Array(6).fill(0);
+            for (let j = 0; j < 6; j++) {
+                for (let k = 0; k < 6; k++) JTJ[i][j] += J[k][i] * J[k][j];
+                if (i === j) JTJ[i][j] += damping * damping;
+            }
+        }
+        // JT * err
+        let JTe = new Array(6).fill(0);
+        for (let i = 0; i < 6; i++) {
+            for (let k = 0; k < 6; k++) JTe[i] += J[k][i] * err[k];
+        }
+
+        const dQ = solveLinearSystem(JTJ, JTe);
+        if (!dQ) break;
+
+        // Aplicar incrementos con clamping
+        for (let i = 0; i < 6; i++) {
+            let inc = dQ[i];
+            inc = Math.max(-5, Math.min(5, inc)); // máx 5° por iteración
+            angles[jointKeys[i]] += inc;
+        }
+        // Limitar a rangos
         angles.s = Math.max(-170, Math.min(170, angles.s));
         angles.l = Math.max(-120, Math.min(120, angles.l));
         angles.u = Math.max(-120, Math.min(120, angles.u));
+        angles.r = Math.max(-190, Math.min(190, angles.r));
+        angles.b = Math.max(-120, Math.min(120, angles.b));
+        angles.t = Math.max(-360, Math.min(360, angles.t));
     }
-    
+
+    // Validar resultado
+    for (let k of jointKeys) if (isNaN(angles[k])) return null;
     return angles;
+}
+
+// Alias de compatibilidad
+function inverseKinematics(targetPos) {
+    return inverseKinematicsDLS(RobotState.angles, targetPos);
+}
+
+// ============================================================
+// INTERPOLACIÓN LINEAL CARTESIANA (para MOVL)
+// ============================================================
+// Estado de la trayectoria lineal activa
+let movlState = {
+    active: false,       // ¿hay un MOVL en curso?
+    startPos: null,      // posición cartesiana inicio {x,y,z,rx,ry,rz}
+    endPos: null,        // posición cartesiana destino
+    startAngles: null,   // ángulos de inicio (para fallback)
+    targetAngles: null,  // ángulos destino
+    progress: 0,         // 0.0 → 1.0
+    speed: 0.04          // incremento por frame
+};
+
+/**
+ * Ejecuta un frame de interpolación lineal cartesiana.
+ * Retorna true cuando la trayectoria está completa.
+ */
+function linearInterpolateFrame() {
+    if (!movlState.active) return true;
+
+    movlState.progress += movlState.speed;
+    if (movlState.progress >= 1.0) {
+        movlState.progress = 1.0;
+        movlState.active = false;
+    }
+
+    const t = movlState.progress;
+    const s = movlState.startPos;
+    const e = movlState.endPos;
+
+    // Interpolar posición TCP linealmente
+    const interp = {
+        x:  s.x  + (e.x  - s.x)  * t,
+        y:  s.y  + (e.y  - s.y)  * t,
+        z:  s.z  + (e.z  - s.z)  * t,
+        rx: s.rx + (e.rx - s.rx) * t,
+        ry: s.ry + (e.ry - s.ry) * t,
+        rz: s.rz + (e.rz - s.rz) * t
+    };
+
+    // Resolver IK para esta posición interpolada
+    const solved = inverseKinematicsDLS(RobotState.angles, interp);
+    if (solved) {
+        RobotState.angles.s = solved.s;
+        RobotState.angles.l = solved.l;
+        RobotState.angles.u = solved.u;
+        RobotState.angles.r = solved.r;
+        RobotState.angles.b = solved.b;
+        RobotState.angles.t = solved.t;
+    } else {
+        // Fallback: interpolar ángulos directamente si IK falla
+        const sa = movlState.startAngles;
+        const ta = movlState.targetAngles;
+        if (sa && ta) {
+            RobotState.angles.s = sa.s + (ta.s - sa.s) * t;
+            RobotState.angles.l = sa.l + (ta.l - sa.l) * t;
+            RobotState.angles.u = sa.u + (ta.u - sa.u) * t;
+            RobotState.angles.r = sa.r + (ta.r - sa.r) * t;
+            RobotState.angles.b = sa.b + (ta.b - sa.b) * t;
+            RobotState.angles.t = sa.t + (ta.t - sa.t) * t;
+        }
+    }
+
+    return !movlState.active; // true = completo
+}
+
+/**
+ * Inicia una trayectoria MOVL desde la posición actual hasta el step destino.
+ */
+function startMovlTrajectory(targetStep, speedFactor) {
+    movlState.startPos = forwardKinematics(RobotState.angles);
+    movlState.endPos = forwardKinematics(targetStep);
+    movlState.startAngles = { ...RobotState.angles };
+    movlState.targetAngles = { ...targetStep };
+    movlState.progress = 0;
+    movlState.speed = (speedFactor || 0.04) * 0.6; // MOVL es más lento que MOVJ
+    movlState.active = true;
 }
 
 function moveAxis(axis, dir) {
@@ -1960,60 +2153,134 @@ function moveAxis(axis, dir) {
         return;
     }
 
-    // Modo ROBOT - movimiento cartesiano real
-const axisMap = { x: 's', y: 'l', z: 'u', r: 'r', b: 'b', t: 't' };
-    const d2r = Math.PI / 180;
+    // Modo ROBOT/TOOL/USER - movimiento cartesiano real con IK robusta
+    const axisMap = { x: 's', y: 'l', z: 'u', r: 'r', b: 'b', t: 't' };
     
-    if (DxState.coordSystem === 'ROBOT' || DxState.coordSystem === 'TOOL' || DxState.coordSystem === 'USER') {
-        let step = RobotState.speed * 0.08; // pequeño paso
+    if (DxState.coordSystem === 'ROBOT' || DxState.coordSystem === 'TOOL' || DxState.coordSystem === 'USER' || DxState.coordSystem === 'CILINDRICO') {
+        const stepSize = RobotState.speed * 0.5; // mm por click (posición)
+        const rotStep = RobotState.speed * 0.3;  // grados por click (orientación)
+        const d2r = Math.PI / 180;
         
-        // Get current Cartesian position
+        // Guardar orientación original del tool respecto al mundo
+        const oldPitch = RobotState.angles.l + RobotState.angles.u + RobotState.angles.b;
+        const oldYaw = RobotState.angles.s;
+        const oldR = RobotState.angles.r;
+        const oldT = RobotState.angles.t;
+        
+        // Obtener posición cartesiana actual del TCP
         let pos = forwardKinematics(RobotState.angles);
         
-        // Move in requested direction
-        let newX = pos.x;
-        let newY = pos.y;
-        let newZ = pos.z;
+        // Crear posición destino
+        let target = { ...pos };
+        const isTranslation = (axis === 'x' || axis === 'y' || axis === 'z');
         
-        if (axis === 'x') newX += step * 100 * dir; // X direction
-        else if (axis === 'y') newY += step * 100 * dir; // Y direction
-        else if (axis === 'z') newZ += step * 100 * dir; // Z direction
-        else if (axis === 'r') { /* rotation - ignore for now */ return; }
-        else if (axis === 'b') { return; }
-        else if (axis === 't') { return; }
+        // Flag para saber si debemos compensar orientación
+        let compensateOrientation = isTranslation;
         
-        // Simple inverse kinematics for X/Y/Z movement
-        // Use geometry to calculate angles
-        let x = newX, y = newY, z = newZ;
+        if (isTranslation) {
+            if (DxState.coordSystem === 'CILINDRICO') {
+                // ================================================
+                // MODO CILÍNDRICO (R, θ, Z)
+                // X → R (radial in/out desde el eje base)
+                // Y → θ (rotación alrededor de la base = S)
+                // Z → altura vertical
+                // ================================================
+                if (axis === 'x') {
+                    // R (radial): mover en la dirección radial actual
+                    const sRad = oldYaw * d2r;
+                    target.x += stepSize * dir * Math.cos(sRad);
+                    target.y += stepSize * dir * Math.sin(sRad);
+                } else if (axis === 'y') {
+                    // θ (theta): rotar S directamente
+                    const thetaStep = rotStep * 0.5;
+                    RobotState.angles.s += thetaStep * dir;
+                    RobotState.angles.s = Math.max(-170, Math.min(170, RobotState.angles.s));
+                    // Compensar R para que no cambie la orientación del tool
+                    RobotState.angles.r = oldR - (thetaStep * dir);
+                    const rCyl = Math.sqrt(pos.x * pos.x + pos.y * pos.y);
+                    const newPos2 = forwardKinematics(RobotState.angles);
+                    setInfoDisplay(`CILINDRICO: R=${rCyl.toFixed(0)}mm θ=${RobotState.angles.s.toFixed(1)}° Z=${newPos2.z.toFixed(0)}mm`);
+                    updateDisplay();
+                    updateGuideLines();
+                    return; // θ es directo, no necesita IK
+                } else if (axis === 'z') {
+                    target.z += stepSize * dir;
+                }
+            } else if (DxState.coordSystem === 'TOOL') {
+                // ================================================
+                // MODO TOOL: Mover relativo al frame del tool
+                // ================================================
+                const yawRad = oldYaw * d2r;
+                const pitchRad = oldPitch * d2r;
+                
+                let dx_local = 0, dy_local = 0, dz_local = 0;
+                if (axis === 'x') dx_local = stepSize * dir;
+                if (axis === 'y') dy_local = stepSize * dir;
+                if (axis === 'z') dz_local = stepSize * dir;
+                
+                const cp = Math.cos(pitchRad), sp = Math.sin(pitchRad);
+                const cy = Math.cos(yawRad),   sy = Math.sin(yawRad);
+                
+                target.x += dx_local * (cp * cy) + dy_local * (-sy) + dz_local * (-sp * cy);
+                target.y += dx_local * (cp * sy) + dy_local * (cy)  + dz_local * (-sp * sy);
+                target.z += dx_local * (sp)      + dy_local * (0)   + dz_local * (cp);
+            } else {
+                // ================================================
+                // MODO ROBOT/USER: Mover en coordenadas del mundo
+                // ================================================
+                if (axis === 'x')      target.x += stepSize * dir;
+                else if (axis === 'y') target.y += stepSize * dir;
+                else if (axis === 'z') target.z += stepSize * dir;
+            }
+        } else {
+            // Rotación: misma lógica para todos los modos
+            if (axis === 'r') target.rx += rotStep * dir;
+            else if (axis === 'b') target.ry += rotStep * dir;
+            else if (axis === 't') target.rz += rotStep * dir;
+        }
         
-        // Theta1 (S axis) from X,Y
-        let newS = Math.atan2(y, x) * (180 / Math.PI);
-        
-        // Project to horizontal plane
-        let r_xy = Math.sqrt(x*x + y*y);
-        let z_from_base = z - 335; // base height
-        
-        // Distance to tool
-        let dist = Math.sqrt(r_xy*r_xy + z_from_base*z_from_base);
-        
-        // Use law of cosines for L and U
-        let a2 = 670, a3 = 560;
-        let cosU = (a2*a2 + a3*a3 - dist*dist) / (2 * a2 * a3);
-        cosU = Math.max(-0.99, Math.min(0.99, cosU));
-        
-        // Theta2 and Theta3
-        let alpha = Math.atan2(z_from_base, r_xy);
-        let beta = Math.acos(cosU);
-        
-        let newL = (alpha - Math.asin(a3 * Math.sin(beta) / dist)) * (180 / Math.PI);
-        let newU = (Math.PI - beta) * (180 / Math.PI);
-        
-        // Check limits
-        if (newS >= -170 && newS <= 170) RobotState.angles.s = newS;
-        if (newL >= -120 && newL <= 120) RobotState.angles.l = newL;
-        if (newU >= -120 && newU <= 120) RobotState.angles.u = newU;
-        
-        setInfoDisplay(`ROBOT:X=${newX.toFixed(0)} Y=${newY.toFixed(0)} Z=${newZ.toFixed(0)}`);
+        // Resolver IK con Jacobiano + DLS
+        const solved = inverseKinematicsDLS(RobotState.angles, target);
+        if (solved) {
+            RobotState.angles.s = solved.s;
+            RobotState.angles.l = solved.l;
+            RobotState.angles.u = solved.u;
+            RobotState.angles.r = solved.r;
+            RobotState.angles.b = solved.b;
+            RobotState.angles.t = solved.t;
+            
+            // ========================================================
+            // COMPENSACIÓN DE ORIENTACIÓN (solo al trasladar)
+            // El tool mantiene su ángulo respecto al suelo.
+            // ========================================================
+            if (compensateOrientation) {
+                const newPitch = RobotState.angles.l + RobotState.angles.u + RobotState.angles.b;
+                const pitchDrift = newPitch - oldPitch;
+                RobotState.angles.b -= pitchDrift;
+                
+                const yawDrift = RobotState.angles.s - oldYaw;
+                RobotState.angles.r = oldR - yawDrift;
+                
+                RobotState.angles.t = oldT;
+                
+                RobotState.angles.b = Math.max(-120, Math.min(120, RobotState.angles.b));
+                RobotState.angles.r = Math.max(-190, Math.min(190, RobotState.angles.r));
+                RobotState.angles.t = Math.max(-360, Math.min(360, RobotState.angles.t));
+            }
+            
+            // Mostrar posición actualizada
+            const newPos = forwardKinematics(RobotState.angles);
+            if (DxState.coordSystem === 'CILINDRICO' && isTranslation) {
+                const rCyl = Math.sqrt(newPos.x * newPos.x + newPos.y * newPos.y);
+                setInfoDisplay(`CILINDRICO: R=${rCyl.toFixed(0)}mm θ=${RobotState.angles.s.toFixed(1)}° Z=${newPos.z.toFixed(0)}mm`);
+            } else if (isTranslation) {
+                setInfoDisplay(`${DxState.coordSystem}: X=${newPos.x.toFixed(1)} Y=${newPos.y.toFixed(1)} Z=${newPos.z.toFixed(1)} mm`);
+            } else {
+                setInfoDisplay(`${DxState.coordSystem}: Rx=${newPos.rx.toFixed(1)}° Ry=${newPos.ry.toFixed(1)}° Rz=${newPos.rz.toFixed(1)}°`);
+            }
+        } else {
+            setInfoDisplay('⚠ LÍMITE: Posición fuera del espacio de trabajo');
+        }
     } else {
         // Modo JOINT - directo
         const sAxis = axisMap[axis];
@@ -2352,13 +2619,12 @@ function updateSidebarUI() {
         `;
     } else {
         sidebar.innerHTML = `
-            <div class="lcd-sidebar-btn active" id="btn-view-job" onclick="setView('JOB')">PROGRAMA</div>
-            <div class="lcd-sidebar-btn" id="btn-view-general" onclick="setView('GENERAL')">GENERAL</div>
-            <div class="lcd-sidebar-btn" id="btn-view-variable" onclick="setView('VARIABLE')">VARIABLE</div>
-            <div class="lcd-sidebar-btn" id="btn-view-inout" onclick="setView('INOUT')">ENT/SAL</div>
-            <div class="lcd-sidebar-btn" id="btn-view-robot" onclick="setView('ROBOT')">ROBOT</div>
-            <div class="lcd-sidebar-btn" id="btn-view-sysinfo" onclick="setView('SYSTEM-INFO')">INFORM.SISTEMA</div>
-            <div class="lcd-sidebar-btn" id="btn-view-utility" onclick="setView('UTILITY')">EX.SISTEMA</div>
+            <div class="lcd-sidebar-btn active" id="btn-view-job" onclick="setView('JOB')"><div class="sidebar-icon" style="background:#2b4b9b;"></div>JOB</div>
+            <div class="lcd-sidebar-btn" id="btn-view-general" onclick="setView('GENERAL')"><div class="sidebar-icon" style="background:#8b4513;"></div>ARC WELDING</div>
+            <div class="lcd-sidebar-btn" id="btn-view-variable" onclick="setView('VARIABLE')"><div class="sidebar-icon" style="background:#006400;"></div>VARIABLE</div>
+            <div class="lcd-sidebar-btn" id="btn-view-inout" onclick="setView('INOUT')"><div class="sidebar-icon" style="background:#4a4a8a;"></div>IN/OUT</div>
+            <div class="lcd-sidebar-btn" id="btn-view-robot" onclick="setView('ROBOT')"><div class="sidebar-icon" style="background:#8a2be2;"></div>ROBOT</div>
+            <div class="lcd-sidebar-btn" id="btn-view-sysinfo" onclick="setView('SYSTEM-INFO')"><div class="sidebar-icon" style="background:#555;"></div>SYSTEM INFO</div>
         `;
     }
     // Re-aplicar clases active si corresponde
@@ -2757,19 +3023,27 @@ function renderJob() {
         return;
     }
 
+    const lcdStatus = document.getElementById('lcd-status');
+    const isProgramStopped = lcdStatus && (lcdStatus.textContent === 'HOLD' || lcdStatus.textContent === 'STOPPED');
+
     currentProgram.forEach((step, index) => {
         const line = document.createElement('div');
         const isSelected = index === DxState.selectedLineIndex;
         const isMultiSelected = DxState.selectedLines && DxState.selectedLines.includes(index);
+        const isCurrentStep = (index === RobotState.programStep && !RobotState.programRunning && isProgramStopped);
         
-        line.className = 'job-line' + (isSelected ? ' selected' : '') + (isMultiSelected ? ' multi-selected' : '');
+        line.className = 'job-line' + (isSelected ? ' selected' : '') + (isMultiSelected ? ' multi-selected' : '') + (isCurrentStep ? ' current-step' : '');
 
         
         // Estilo de línea seleccionada o en edición
         let lineStyle = 'padding:1px 2px;cursor:pointer;border-bottom:1px solid #333;';
         let lineNumStyle = 'color:#888;width:25px;display:inline-block;text-align:right;margin-right:4px;';
 
-        if (isSelected) {
+        if (isCurrentStep && isSelected) {
+            lineStyle = 'background:#003300;color:#0f0;padding:1px 2px;cursor:pointer;border-bottom:1px solid #0a2050;border-left:4px solid #0f0;';
+        } else if (isCurrentStep) {
+            lineStyle = 'background:#002200;color:#0f0;padding:1px 2px;cursor:pointer;border-bottom:1px solid #333;border-left:3px solid #0a0;';
+        } else if (isSelected) {
             lineStyle = 'background:#1a3a6a;color:#fff;padding:1px 2px;cursor:pointer;border-bottom:1px solid #0a2050;';
             if (DxState.activeEditAction) {
                 lineNumStyle += 'text-decoration: underline; color: #fff; font-weight: bold;';
@@ -2783,21 +3057,30 @@ function renderJob() {
 
         line.style.cssText = lineStyle;
 
+        // Current step arrow marker (▶)
+        let stepMarker = '';
+        if (isCurrentStep) {
+            stepMarker = '<span style="color:#0f0; font-weight:bold; margin-right:3px; font-size:9px;">▶</span>';
+        }
+
         const code = step.code || 'MOVJ VJ=50.00';
         const tokens = code.split(' ');
         let tokenHtml = '';
         tokens.forEach((token, tIndex) => {
             let style = 'color:inherit;';
-            if (isSelected) {
+            if (isSelected && !isCurrentStep) {
                 if (tIndex === 0) style = 'color:#ff0;font-weight:bold;';
                 else if (tIndex === DxState.selectedTokenIndex) style = 'background: #000; color: #ffea00; padding: 0 2px; border-radius: 2px; border: 1px solid #ffea00;';
                 else style = 'color:#0ff;';
+            } else if (isCurrentStep) {
+                if (tIndex === 0) style = 'color:#0f0;font-weight:bold;';
+                else style = 'color:#0f0;';
             }
             tokenHtml += `<span style="${style}">${token}</span> `;
         });
 
         const stepNum = index === 0 ? 'NOP' : index === currentProgram.length - 1 ? 'END' : String(index);
-        line.innerHTML = `<span style="${lineNumStyle}">${stepNum}</span><span>${tokenHtml}</span>`;
+        line.innerHTML = `${stepMarker}<span style="${lineNumStyle}">${stepNum}</span><span>${tokenHtml}</span>`;
         
         line.onclick = (e) => {
             e.stopPropagation();
@@ -2938,11 +3221,15 @@ function changeInstruction() {
 
 function confirmInsert() {
     const currentProgram = robotJobs[DxState.currentJobId];
+    const instrType = DxState.insertType || 'MOVJ';
+    // MOVJ usa VJ= (velocidad articular %), MOVL/MOVC/IMOV usan V= (velocidad cartesiana mm/s)
+    const speedParam = instrType === 'MOVJ' ? 'VJ=' : 'V=';
+    const speedVal = (DxState.insertSpeed || RobotState.speed).toFixed(2);
     const newStep = {
         s: RobotState.angles.s, l: RobotState.angles.l, u: RobotState.angles.u,
         r: RobotState.angles.r, b: RobotState.angles.b, t: RobotState.angles.t,
-        code: 'MOVJ VJ=' + RobotState.speed.toFixed(2),
-        desc: 'PUNTO ' + (currentProgram.length + 1)
+        code: instrType + ' ' + speedParam + speedVal,
+        desc: (instrType === 'MOVL' ? 'PUNTO LINEAL ' : 'PUNTO ') + (currentProgram.length + 1)
     };
     if (DxState.selectedLineIndex >= 0 && DxState.selectedLineIndex < currentProgram.length) {
         currentProgram.splice(DxState.selectedLineIndex + 1, 0, newStep);
@@ -2954,7 +3241,7 @@ function confirmInsert() {
     DxState.isInserting = false;
     saveJobsLocally();
     renderJob();
-    setInfoDisplay('INSERT: ' + newStep.code);
+    setInfoDisplay('✓ INSERT: ' + newStep.code + (instrType === 'MOVL' ? ' (Lineal)' : ''));
 }
 
 function renderList() {
@@ -3720,8 +4007,10 @@ function startProgram() {
         setInfoDisplay('▶️ EJECUTANDO PROGRAMA');
     } else {
         RobotState.programRunning = false;
+        DxState.selectedLineIndex = RobotState.programStep;
         document.getElementById('lcd-status').textContent = 'STOPPED';
-        setInfoDisplay('⏹️ PROGRAMA DETENIDO');
+        setInfoDisplay('⏹️ DETENIDO en paso ' + RobotState.programStep);
+        if (DxState.view === 'JOB') renderJob();
     }
 }
 
@@ -3823,26 +4112,82 @@ function stepProgram(direction) {
     DxState.selectedTokenIndex = 0;
     
     const target = currentProgram[targetIndex];
+    const targetCode = target.code || '';
+    const isMovl = targetCode.startsWith('MOVL') || targetCode.startsWith('MOVC');
     const startAngles = { ...RobotState.angles };
-    let p = 0;
-    const stepAnim = setInterval(() => {
-        p += 0.15;
-        if (p >= 1.0) { 
-            p = 1.0; 
-            clearInterval(stepAnim); 
-        }
-        RobotState.angles.s = startAngles.s + (target.s - startAngles.s) * p;
-        RobotState.angles.l = startAngles.l + (target.l - startAngles.l) * p;
-        RobotState.angles.u = startAngles.u + (target.u - startAngles.u) * p;
-        RobotState.angles.r = startAngles.r + (target.r - startAngles.r) * p;
-        RobotState.angles.b = startAngles.b + (target.b - startAngles.b) * p;
-        RobotState.angles.t = startAngles.t + (target.t - startAngles.t) * p;
-    }, 30);
+
+    if (isMovl) {
+        // ======== MOVL: Interpolación lineal cartesiana paso a paso ========
+        const startPos = forwardKinematics(startAngles);
+        const endPos = forwardKinematics(target);
+        let p = 0;
+        const stepAnim = setInterval(() => {
+            p += 0.08; // Un poco más lento para que se note la línea recta
+            if (p >= 1.0) { 
+                p = 1.0; 
+                clearInterval(stepAnim);
+                // Posición final exacta
+                RobotState.angles.s = target.s;
+                RobotState.angles.l = target.l;
+                RobotState.angles.u = target.u;
+                RobotState.angles.r = target.r;
+                RobotState.angles.b = target.b;
+                RobotState.angles.t = target.t;
+            } else {
+                // Interpolar TCP linealmente
+                const interp = {
+                    x:  startPos.x  + (endPos.x  - startPos.x)  * p,
+                    y:  startPos.y  + (endPos.y  - startPos.y)  * p,
+                    z:  startPos.z  + (endPos.z  - startPos.z)  * p,
+                    rx: startPos.rx + (endPos.rx - startPos.rx) * p,
+                    ry: startPos.ry + (endPos.ry - startPos.ry) * p,
+                    rz: startPos.rz + (endPos.rz - startPos.rz) * p
+                };
+                const solved = inverseKinematicsDLS(RobotState.angles, interp);
+                if (solved) {
+                    RobotState.angles.s = solved.s;
+                    RobotState.angles.l = solved.l;
+                    RobotState.angles.u = solved.u;
+                    RobotState.angles.r = solved.r;
+                    RobotState.angles.b = solved.b;
+                    RobotState.angles.t = solved.t;
+                } else {
+                    // Fallback: joint interp
+                    RobotState.angles.s = startAngles.s + (target.s - startAngles.s) * p;
+                    RobotState.angles.l = startAngles.l + (target.l - startAngles.l) * p;
+                    RobotState.angles.u = startAngles.u + (target.u - startAngles.u) * p;
+                    RobotState.angles.r = startAngles.r + (target.r - startAngles.r) * p;
+                    RobotState.angles.b = startAngles.b + (target.b - startAngles.b) * p;
+                    RobotState.angles.t = startAngles.t + (target.t - startAngles.t) * p;
+                }
+            }
+        }, 30);
+        setInfoDisplay(direction === 'FWD' 
+            ? '📐 FWD MOVL: Paso ' + targetIndex + ' (Lineal)' 
+            : '📐 BWD MOVL: Paso ' + targetIndex + ' (Lineal)');
+    } else {
+        // ======== MOVJ: Interpolación articular (original) ========
+        let p = 0;
+        const stepAnim = setInterval(() => {
+            p += 0.15;
+            if (p >= 1.0) { 
+                p = 1.0; 
+                clearInterval(stepAnim); 
+            }
+            RobotState.angles.s = startAngles.s + (target.s - startAngles.s) * p;
+            RobotState.angles.l = startAngles.l + (target.l - startAngles.l) * p;
+            RobotState.angles.u = startAngles.u + (target.u - startAngles.u) * p;
+            RobotState.angles.r = startAngles.r + (target.r - startAngles.r) * p;
+            RobotState.angles.b = startAngles.b + (target.b - startAngles.b) * p;
+            RobotState.angles.t = startAngles.t + (target.t - startAngles.t) * p;
+        }, 30);
+        setInfoDisplay(direction === 'FWD' 
+            ? '✅ FWD: Paso ' + targetIndex + ' - ' + targetCode 
+            : '✅ BWD: Paso ' + targetIndex + ' - ' + targetCode);
+    }
 
     if (DxState.view !== 'JOB') setView('JOB');
     else renderJob();
-    
-    setInfoDisplay(direction === 'FWD' ? '✅ FWD: Paso ' + targetIndex + ' - ' + target.code : '✅ BWD: Paso ' + targetIndex + ' - ' + target.code);
 }
 
 loadJobsLocally();
@@ -3926,43 +4271,89 @@ window.addEventListener('load', () => {
                     if (DxState.view === 'JOB') renderJob();
                 }
             } else {
-                const lerpFactor = 0.04;
-                RobotState.angles.s += (step.s - RobotState.angles.s) * lerpFactor;
-                RobotState.angles.l += (step.l - RobotState.angles.l) * lerpFactor;
-                RobotState.angles.u += (step.u - RobotState.angles.u) * lerpFactor;
-                RobotState.angles.r += (step.r - RobotState.angles.r) * lerpFactor;
-                RobotState.angles.b += (step.b - RobotState.angles.b) * lerpFactor;
-                RobotState.angles.t += (step.t - RobotState.angles.t) * lerpFactor;
+                const isMovl = code.startsWith('MOVL');
+                const isMovc = code.startsWith('MOVC');
+
+                // Extraer velocidad del código para escalar la animación
+                let speedScale = 0.04;
+                const vjMatch = code.match(/VJ?=(\d+(?:\.\d+)?)/);
+                if (vjMatch) speedScale = parseFloat(vjMatch[1]) / 100 * 0.06;
 
                 const targetPinza1 = digitalOutputs[1] ? 0.015 : 0;
                 const targetPinza2 = digitalOutputs[2] ? 0.015 : 0;
-                gripperAngle += (targetPinza1 - gripperAngle) * lerpFactor;
-                gripper2Angle += (targetPinza2 - gripper2Angle) * lerpFactor;
+                gripperAngle += (targetPinza1 - gripperAngle) * 0.06;
+                gripper2Angle += (targetPinza2 - gripper2Angle) * 0.06;
 
                 document.getElementById('lcd-mode').textContent = (RobotState.programStep + 1) + '/' + currentProgram.length;
 
-                let maxError = Math.max(
-                    Math.abs(step.s - RobotState.angles.s),
-                    Math.abs(step.l - RobotState.angles.l),
-                    Math.abs(step.u - RobotState.angles.u),
-                    Math.abs(step.r - RobotState.angles.r),
-                    Math.abs(step.b - RobotState.angles.b),
-                    Math.abs(step.t - RobotState.angles.t)
-                );
-
-                if (maxError < 1.0) {
-                    RobotState.programStep++;
-                    if (RobotState.programStep >= currentProgram.length) {
-                        RobotState.programStep = 0;
-                        document.getElementById('infoDisplay').textContent = '🔄 REINICIANDO BUCLE';
+                if (isMovl || isMovc) {
+                    // ======== MOVL: INTERPOLACIÓN LINEAL CARTESIANA ========
+                    if (!movlState.active) {
+                        // Primer frame de este MOVL: iniciar trayectoria
+                        startMovlTrajectory(step, speedScale);
+                        document.getElementById('infoDisplay').textContent =
+                            '📐 MOVL: Trayectoria lineal en curso...';
                     }
-                    DxState.selectedLineIndex = RobotState.programStep;
-                    if (DxState.view === 'JOB') renderJob();
+
+                    const done = linearInterpolateFrame();
+
+                    if (done) {
+                        // Asegurar posición final exacta
+                        RobotState.angles.s = step.s;
+                        RobotState.angles.l = step.l;
+                        RobotState.angles.u = step.u;
+                        RobotState.angles.r = step.r;
+                        RobotState.angles.b = step.b;
+                        RobotState.angles.t = step.t;
+
+                        RobotState.programStep++;
+                        if (RobotState.programStep >= currentProgram.length) {
+                            RobotState.programStep = 0;
+                            systemInfo.cycleCount++;
+                            document.getElementById('infoDisplay').textContent = '🔄 CICLO ' + systemInfo.cycleCount;
+                        }
+                        DxState.selectedLineIndex = RobotState.programStep;
+                        if (DxState.view === 'JOB') renderJob();
+                    }
+                } else {
+                    // ======== MOVJ: INTERPOLACIÓN EN ESPACIO ARTICULAR ========
+                    // Desactivar MOVL si estaba activo
+                    movlState.active = false;
+
+                    const lerpFactor = speedScale;
+                    RobotState.angles.s += (step.s - RobotState.angles.s) * lerpFactor;
+                    RobotState.angles.l += (step.l - RobotState.angles.l) * lerpFactor;
+                    RobotState.angles.u += (step.u - RobotState.angles.u) * lerpFactor;
+                    RobotState.angles.r += (step.r - RobotState.angles.r) * lerpFactor;
+                    RobotState.angles.b += (step.b - RobotState.angles.b) * lerpFactor;
+                    RobotState.angles.t += (step.t - RobotState.angles.t) * lerpFactor;
+
+                    let maxError = Math.max(
+                        Math.abs(step.s - RobotState.angles.s),
+                        Math.abs(step.l - RobotState.angles.l),
+                        Math.abs(step.u - RobotState.angles.u),
+                        Math.abs(step.r - RobotState.angles.r),
+                        Math.abs(step.b - RobotState.angles.b),
+                        Math.abs(step.t - RobotState.angles.t)
+                    );
+
+                    if (maxError < 1.0) {
+                        RobotState.programStep++;
+                        if (RobotState.programStep >= currentProgram.length) {
+                            RobotState.programStep = 0;
+                            systemInfo.cycleCount++;
+                            document.getElementById('infoDisplay').textContent = '🔄 CICLO ' + systemInfo.cycleCount;
+                        }
+                        DxState.selectedLineIndex = RobotState.programStep;
+                        if (DxState.view === 'JOB') renderJob();
+                    }
                 }
             }
         }
 
         updateRobotDisplay();
+        // Actualizar ejes en tiempo real si están activos
+        if (DxState.coordSystem === 'TOOL' || DxState.coordSystem === 'CILINDRICO') updateGuideLines();
     }
 
     gameLoop();

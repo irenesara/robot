@@ -15,15 +15,28 @@ function renderJob() {
     document.getElementById('current-job-name').textContent = DxState.currentJobId;
     document.getElementById('job-line-indicator').textContent = String(DxState.selectedLineIndex).padStart(4, '0');
 
+    const lcdStatus = document.getElementById('lcd-status');
+    const isStopped = lcdStatus && (lcdStatus.textContent === 'HOLD' || lcdStatus.textContent === 'STOPPED');
+
     currentProgram.forEach((step, index) => {
         const line = document.createElement('div');
         const isMultiSelected = DxState.selectedLines && DxState.selectedLines.includes(index);
-        line.className = 'job-line' + (index === DxState.selectedLineIndex ? ' selected' : '') + (isMultiSelected ? ' multi-selected' : '');
+        const isCurrentStep = (index === RobotState.programStep && !RobotState.programRunning && isStopped);
+        line.className = 'job-line' 
+            + (index === DxState.selectedLineIndex ? ' selected' : '') 
+            + (isMultiSelected ? ' multi-selected' : '')
+            + (isCurrentStep ? ' current-step' : '');
 
         // Visual feedback for EDITING: Underline line number if this line is being modified/deleted
         let lineNumStyle = '';
         if (index === DxState.selectedLineIndex && DxState.activeEditAction) {
             lineNumStyle = 'text-decoration: underline; color: #fff; font-weight: bold;';
+        }
+
+        // Current step arrow marker (▶)
+        let stepMarker = '';
+        if (isCurrentStep) {
+            stepMarker = '<span style="color:#0f0; font-weight:bold; margin-right:2px;">▶</span>';
         }
 
         let tokenHtml = '';
@@ -36,7 +49,7 @@ function renderJob() {
             tokenHtml += `<span style="${style}">${token}</span> `;
         });
 
-        line.innerHTML = `<span class="job-line-num" style="${lineNumStyle}">${String(index).padStart(4, '0')}</span> <span>${tokenHtml}</span> <span style="color:#aaa; font-size: 8px;">// ${step.desc || ''}</span>`;
+        line.innerHTML = `${stepMarker}<span class="job-line-num" style="${lineNumStyle}">${String(index).padStart(4, '0')}</span> <span>${tokenHtml}</span> <span style="color:#aaa; font-size: 8px;">// ${step.desc || ''}</span>`;
         line.onclick = () => {
             DxState.selectedLineIndex = index;
             DxState.selectedTokenIndex = 0;
@@ -180,8 +193,10 @@ function startProgram() {
         setInfoDisplay('▶️ EJECUTANDO PROGRAMA');
     } else {
         RobotState.programRunning = false;
+        DxState.selectedLineIndex = RobotState.programStep;
         document.getElementById('lcd-status').textContent = 'STOPPED';
-        setInfoDisplay('⏹️ PROGRAMA DETENIDO');
+        setInfoDisplay('⏹️ PROGRAMA DETENIDO en paso ' + RobotState.programStep);
+        if (DxState.view === 'JOB') renderJob();
     }
 }
 
