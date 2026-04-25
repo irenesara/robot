@@ -220,8 +220,8 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                         <span>SPD:<span id="lcd-speed" style="color:#ff0;">LOW</span></span>
                         <span>SEC:<span id="lcd-security" style="color:#f0f;">OPER</span></span>
                         <span>COORD:<span id="lcd-coord" style="color:#0ff;">JOINT</span><small id="lcd-tool-no" style="font-size:7px; color:#fff; display:none;">(00)</small></span>
-                        <span>OG#1:<span id="og1-status" style="color:#666;">OFF</span></span>
-                        <span>OG#2:<span id="og2-status" style="color:#666;">OFF</span></span>
+                        <span>CYL1:<span id="og1-status" style="color:#666;">OFF</span></span>
+                        <span>CYL2:<span id="og2-status" style="color:#666;">OFF</span></span>
                         <span id="coord-hint" style="color:#fc0; font-size:6px;">X=S Y=L Z=U</span>
                     </div>
                     <div class="lcd-menu-bar" style="position: relative;">
@@ -282,7 +282,7 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                     <div class="lcd-body">
                         <div class="lcd-sidebar">
                             <div class="lcd-sidebar-btn active" id="btn-view-job" onclick="setView('JOB')"><div class="sidebar-icon" style="background:#2b4b9b;"></div>JOB</div>
-                            <div class="lcd-sidebar-btn" id="btn-view-general" onclick="setView('GENERAL')"><div class="sidebar-icon" style="background:#8b4513;"></div>ARC WELDING</div>
+                            <div class="lcd-sidebar-btn" id="btn-view-general" onclick="setView('GENERAL')"><div class="sidebar-icon" style="background:#8b4513;"></div>GENERAL</div>
                             <div class="lcd-sidebar-btn" id="btn-view-variable" onclick="setView('VARIABLE')"><div class="sidebar-icon" style="background:#006400;"></div>VARIABLE</div>
                             <div class="lcd-sidebar-btn" id="btn-view-inout" onclick="setView('INOUT')"><div class="sidebar-icon" style="background:#4a4a8a;"></div>IN/OUT</div>
                             <div class="lcd-sidebar-btn" id="btn-view-robot" onclick="setView('ROBOT')"><div class="sidebar-icon" style="background:#8a2be2;"></div>ROBOT</div>
@@ -297,6 +297,10 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                                 <div style="display: flex; border-top: 2px solid #1a3a6a; background: #ccc;">
                                     <div style="flex: 1; text-align: center; border-right: 1px solid #999; padding: 6px; font-size: 7px; cursor: pointer;" onclick="setView('JOB')">CLOSE</div>
                                 </div>
+                            </div>
+                            <div id="directopen-config-screen" style="display: none; flex-direction: column; background: #eaeff2; min-height: 100%;">
+                                <div style="background: #1a3a6a; color: white; padding: 4px 8px; font-size: 8px; font-weight: bold;">DIRECT OPEN - CONFIGURACIÓN</div>
+                                <div id="directopen-content" style="padding: 4px; font-family: 'Courier New', monospace; font-size: 7px; color: #000; flex: 1; overflow-y: auto;"></div>
                             </div>
                             <div id="job-screen" style="display: flex; flex-direction: column; height: 100%; min-height: 150px; background: #1a1a2e;">
                                 <div id="job-header" style="display: flex; background: #1a3a6a; color: #fff; padding: 2px 6px; font-size: 6px; justify-content: space-between; align-items: center; border-bottom: 1px solid #fff;">
@@ -335,31 +339,14 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                                         <div style="display:flex; justify-content:space-between;"><span style="color:#aaa;">T:</span><span id="ml-t">0.000°</span></div>
                                     </div>
                                     <div style="border-top: 1px solid #333; padding: 3px; font-family: 'Courier New', monospace; font-size: 5px; color: #0a0;">
-                                        OG#1: <span id="ml-og1" style="color:#666;">OFF</span><br>
-                                        OG#2: <span id="ml-og2" style="color:#666;">OFF</span>
+                                        CYL1: <span id="ml-og1" style="color:#666;">OFF</span> P1: <span id="ml-og-p1" style="color:#666;">OFF</span><br>
+                                        CYL2: <span id="ml-og2" style="color:#666;">OFF</span> P2: <span id="ml-og-p2" style="color:#666;">OFF</span>
                                     </div>
                                 </div>
                             </div>
                             <div id="general-screen" style="display: none; flex-direction: column; background: #eaeff2; min-height: 100%;">
-                                <div style="background: #1a3a6a; color: white; padding: 4px 8px; font-size: 8px; font-weight: bold;">GENERAL - PINZAS</div>
-                                <div style="padding: 8px; font-family: 'Courier New', monospace; font-size: 8px; color: #000;">
-                                    <div style="background: #fff; border: 1px solid #888; padding: 6px; margin-bottom: 6px;">
-                                        <b>PINZA 1 (OG#1)</b><br>
-                                        ESTADO: <span id="gen-pinza1-status" style="color:#0a0;">ABIERTA</span><br>
-                                        <button onclick="controlPinza(1, 'open')" style="padding:4px; background:#0a0; color:#fff; border:1px solid #050; cursor:pointer;">ABRIR</button>
-                                        <button onclick="controlPinza(1, 'close')" style="padding:4px; background:#a00; color:#fff; border:1px solid #500; cursor:pointer;">CERRAR</button>
-                                    </div>
-                                    <div style="background: #fff; border: 1px solid #888; padding: 6px; margin-bottom: 6px;">
-                                        <b>PINZA 2 (OG#2)</b><br>
-                                        ESTADO: <span id="gen-pinza2-status" style="color:#0a0;">ABIERTA</span><br>
-                                        <button onclick="controlPinza(2, 'open')" style="padding:4px; background:#0a0; color:#fff; border:1px solid #050; cursor:pointer;">ABRIR</button>
-                                        <button onclick="controlPinza(2, 'close')" style="padding:4px; background:#a00; color:#fff; border:1px solid #500; cursor:pointer;">CERRAR</button>
-                                    </div>
-                                    <div style="background: #fff; border: 1px solid #888; padding: 6px;">
-                                        PRESION AIRE: <b style="color:#a00;">6.0 Bar</b><br>
-                                        STATUS: <b style="color:#0a0;">OK</b>
-                                    </div>
-                                </div>
+                                <div style="background: #1a3a6a; color: white; padding: 4px 8px; font-size: 8px; font-weight: bold;">HERRAMIENTAS - CILINDROS / PINZAS</div>
+                                <div id="general-content" style="padding: 4px; font-family: 'Courier New', monospace; font-size: 7px; color: #000; overflow-y: auto; flex: 1;"></div>
                             </div>
                             <div id="variable-screen" style="display: none; flex-direction: column; background: #eaeff2; min-height: 100%;">
                                 <div style="background: #1a3a6a; color: white; padding: 4px 8px; font-size: 8px; font-weight: bold;">VARIABLE</div>
@@ -374,13 +361,13 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                                 </div>
                             </div>
                             <div id="inout-screen" style="display: none; flex-direction: column; background: #eaeff2; min-height: 100%;">
-                                <div style="background: #1a3a6a; color: white; padding: 4px 8px; font-size: 8px; font-weight: bold;">IN/OUT</div>
-                                <div style="padding: 8px; font-family: 'Courier New', monospace; font-size: 8px; color: #000;">
-                                    <div style="display: flex; gap: 4px; margin-bottom: 6px;">
-                                        <button onclick="setIOType('IN')" id="io-btn-in" style="flex:1; padding:3px; font-size:7px; font-weight:bold; background:#2b4b9b; color:#fff; border:1px solid #777;">INPUT</button>
-                                        <button onclick="setIOType('OG')" id="io-btn-og" style="flex:1; padding:3px; font-size:7px; font-weight:bold; background:#dcdcdc; border:1px solid #777;">OUTPUT</button>
+                                <div style="background: #1a3a6a; color: white; padding: 4px 8px; font-size: 8px; font-weight: bold;">UNIVERSAL IN/OUT</div>
+                                <div style="padding: 4px; font-family: 'Courier New', monospace; font-size: 7px; color: #000; flex: 1; display: flex; flex-direction: column;">
+                                    <div style="display: flex; gap: 3px; margin-bottom: 4px;">
+                                        <button onclick="setIOType('OG')" id="io-btn-og" style="flex:1; padding:2px; font-size:6px; font-weight:bold; background:#2b4b9b; color:#fff; border:1px solid #777; cursor:pointer;">OUTPUT (OG)</button>
+                                        <button onclick="setIOType('IN')" id="io-btn-in" style="flex:1; padding:2px; font-size:6px; font-weight:bold; background:#dcdcdc; border:1px solid #777; cursor:pointer;">INPUT (IN)</button>
                                     </div>
-                                    <div id="inout-content" style="background: #f0f0f0; border: 1px solid #888; padding: 4px; flex: 1; overflow-y: auto;">HOLA IO</div>
+                                    <div id="inout-content" style="background: #f0f0f0; border: 1px solid #888; padding: 3px; flex: 1; overflow-y: auto;"></div>
                                 </div>
                             </div>
                             <div id="list-screen" style="display: none; flex-direction: column; height: 100%; background: #ccc;">
@@ -1001,8 +988,21 @@ const keyPositions = ['OFF', 'REMOTE', 'TEACH'];
 const keyRotations = [0, -120, 120];
 let gripperAngle = 0;
 let gripper2Angle = 0;
+// Estado cilindros: false = subido (retraído), true = bajado (extendido)
+let cylinder1Down = false;
+let cylinder2Down = false;
+// Estado pinzas: false = abierta, true = cerrada
+let gripper1Closed = false;
+let gripper2Closed = false;
+// Variables de animación suave (lerp)
+let cyl1AnimPos = 0;    // 0=subido, 1=bajado
+let cyl2AnimPos = 0;
+let grip1AnimOpen = 1;  // 1=abierta, 0=cerrada
+let grip2AnimOpen = 1;
+// Salidas digitales: OG#1=Cilindro1, OG#2=Pinza1, OG#3=Cilindro2, OG#4=Pinza2
 let digitalOutputs = { 1: false, 2: false, 3: false, 4: false };
-let digitalInputs = { 1: true, 2: false, 3: false, 4: false };
+// Entradas digitales (sensores cilindros): IN#1=Cil1 Arriba, IN#2=Cil1 Abajo, IN#3=Cil2 Arriba, IN#4=Cil2 Abajo
+let digitalInputs = { 1: true, 2: false, 3: true, 4: false };
 
 let robotVariables = {
     B: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -1042,7 +1042,7 @@ var lcdTranslations = {
         'status-running': 'RUNNING', 'status-stopped': 'STOPPED', 'status-homing': 'HOMING',
         'mode-teach': 'TEACH', 'mode-play': 'PLAY', 'mode-remote': 'REMOTE',
         'tab-job': 'JOB', 'tab-edit': 'EDIT', 'tab-display': 'DISPLAY', 'tab-utility': 'UTILITY',
-        'side-job': 'JOB', 'side-arc': 'ARC WELDING', 'side-variable': 'VARIABLE',
+        'side-job': 'JOB', 'side-arc': 'GENERAL', 'side-variable': 'VARIABLE',
         'side-inout': 'IN/OUT', 'side-robot': 'ROBOT', 'side-sysinfo': 'SYSTEM INFO',
         'coord-joint': 'JOINT', 'coord-world': 'WORLD', 'coord-tool': 'TOOL',
         'lbl-mode': 'MODE:', 'lbl-spd': 'SPD:', 'lbl-sec': 'SEC:', 'lbl-coord': 'COORD:',
@@ -1065,7 +1065,7 @@ var lcdTranslations = {
         'status-running': 'EJECUC.', 'status-stopped': 'DETENIDO', 'status-homing': 'CERO MAQ',
         'mode-teach': 'ENSEÑ', 'mode-play': 'REPRO', 'mode-remote': 'REMOT',
         'tab-job': 'PROGRAMA', 'tab-edit': 'EDICIÓN', 'tab-display': 'PANTALLA', 'tab-utility': 'UTILID.',
-        'side-job': 'PROGRAMA', 'side-arc': 'SOLDADURA', 'side-variable': 'VARIABLE',
+        'side-job': 'PROGRAMA', 'side-arc': 'GENERAL', 'side-variable': 'VARIABLE',
         'side-inout': 'ENT/SAL', 'side-robot': 'ROBOT', 'side-sysinfo': 'INFO SIST',
         'coord-joint': 'ARTIC', 'coord-world': 'MUNDO', 'coord-tool': 'HERR',
         'lbl-mode': 'MODO:', 'lbl-spd': 'VEL:', 'lbl-sec': 'SEG:', 'lbl-coord': 'COORD:',
@@ -1288,212 +1288,506 @@ function buildRobot() {
     robotGroup = new THREE.Group();
     scene.add(robotGroup);
 
-    const yBlue = 0x005BBF; // Cobalt Blue
-    const yGrey = 0xA0A0A0;
-    const yDark = 0x222222;
+    // === COLORES YASKAWA MOTOMAN ===
+    const yBlue = 0x0057A8;
+    const yBlueMat = new THREE.MeshPhongMaterial({ color: yBlue, shininess: 90, specular: 0x333333 });
+    const yDark = 0x1C1C1C;
+    const yDarkMat = new THREE.MeshPhongMaterial({ color: yDark, shininess: 120, specular: 0x444444 });
+    const yGrey = 0x909090;
+    const yGreyMat = new THREE.MeshPhongMaterial({ color: yGrey, shininess: 100, specular: 0x333333 });
+    const yWhiteMat = new THREE.MeshPhongMaterial({ color: 0xDDDDDD, shininess: 60 });
+    const yOrangeMat = new THREE.MeshPhongMaterial({ color: 0xFF6600, shininess: 80 });
 
-    const floorPlateGeom = new THREE.BoxGeometry(0.8, 0.03, 0.8);
-    const floorPlateMat = new THREE.MeshPhongMaterial({ color: 0x333333, shininess: 50 });
-    const floorPlate = new THREE.Mesh(floorPlateGeom, floorPlateMat);
+    // ===============================================
+    // PLACA DE MONTAJE (suelo)
+    // ===============================================
+    const floorPlate = new THREE.Mesh(
+        new THREE.BoxGeometry(0.8, 0.03, 0.8),
+        new THREE.MeshPhongMaterial({ color: 0x2A2A2A, shininess: 30 })
+    );
     floorPlate.receiveShadow = true;
     floorPlate.position.y = 0.015;
     scene.add(floorPlate);
 
-    const baseGeom = new THREE.CylinderGeometry(0.18, 0.22, 0.15, 32);
-    const base = new THREE.Mesh(baseGeom, new THREE.MeshPhongMaterial({ color: yBlue, shininess: 100, specular: 0x222222 }));
-    base.castShadow = true;
-    base.receiveShadow = true;
-    base.position.y = 0.09;
-    robotGroup.add(base);
+    // ===============================================
+    // BASE — Estilo GP7 (forma escalonada)
+    // ===============================================
+    // Placa de anclaje con tornillos
+    const basePlate = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.22, 0.22, 0.02, 8),
+        yDarkMat.clone()
+    );
+    basePlate.castShadow = true;
+    basePlate.position.y = 0.04;
+    robotGroup.add(basePlate);
 
-    // Detalle de tornillos y base circular
-    const baseRing = new THREE.Mesh(new THREE.TorusGeometry(0.20, 0.015, 16, 64), new THREE.MeshPhongMaterial({ color: yDark }));
-    baseRing.rotation.x = Math.PI / 2;
-    baseRing.position.y = 0.02;
-    robotGroup.add(baseRing);
+    // Tornillos de anclaje (8 unidades)
+    for (let i = 0; i < 8; i++) {
+        const bolt = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.008, 0.008, 0.012, 8),
+            yGreyMat
+        );
+        const angle = (i / 8) * Math.PI * 2;
+        bolt.position.set(Math.cos(angle) * 0.19, 0.05, Math.sin(angle) * 0.19);
+        robotGroup.add(bolt);
+    }
 
-    const baseStructGeom = new THREE.CylinderGeometry(0.14, 0.16, 0.25, 32);
-    const baseStruct = new THREE.Mesh(baseStructGeom, new THREE.MeshPhongMaterial({ color: yBlue, shininess: 100, specular: 0x222222 }));
-    baseStruct.castShadow = true;
-    baseStruct.position.y = 0.22;
-    robotGroup.add(baseStruct);
+    // Base inferior — cuerpo ancho
+    const baseBody = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.17, 0.21, 0.10, 32),
+        yBlueMat.clone()
+    );
+    baseBody.castShadow = true;
+    baseBody.position.y = 0.10;
+    robotGroup.add(baseBody);
 
-    const sMotorGeo = new THREE.CylinderGeometry(0.065, 0.065, 0.18, 16);
-    const sMotor = new THREE.Mesh(sMotorGeo, new THREE.MeshPhongMaterial({ color: yDark, shininess: 100 }));
-    sMotor.rotation.z = Math.PI / 2;
-    sMotor.position.set(-0.16, 0.22, 0);
-    robotGroup.add(sMotor);
+    // Línea decorativa naranja (franja Yaskawa)
+    const baseStripe = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.172, 0.172, 0.008, 32),
+        yOrangeMat
+    );
+    baseStripe.position.y = 0.12;
+    robotGroup.add(baseStripe);
 
+    // Base superior — torre S
+    const baseTower = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.13, 0.16, 0.18, 32),
+        yBlueMat.clone()
+    );
+    baseTower.castShadow = true;
+    baseTower.position.y = 0.24;
+    robotGroup.add(baseTower);
+
+    // Placa del logo (frontal blanca)
+    const logoPlate = new THREE.Mesh(
+        new THREE.BoxGeometry(0.10, 0.06, 0.005),
+        yWhiteMat
+    );
+    logoPlate.position.set(0, 0.24, 0.145);
+    robotGroup.add(logoPlate);
+
+    // Motor S — housing lateral
+    const sMotorHousing = new THREE.Mesh(
+        new THREE.BoxGeometry(0.14, 0.14, 0.10),
+        yDarkMat.clone()
+    );
+    sMotorHousing.castShadow = true;
+    sMotorHousing.position.set(-0.13, 0.20, 0);
+    robotGroup.add(sMotorHousing);
+
+    // Ventilación motor S
+    for (let i = 0; i < 5; i++) {
+        const vent = new THREE.Mesh(
+            new THREE.BoxGeometry(0.10, 0.004, 0.08),
+            yGreyMat
+        );
+        vent.position.set(-0.13, 0.16 + i * 0.02, 0);
+        robotGroup.add(vent);
+    }
+
+    // ===============================================
+    // JOINT 0 — Eje S (Base Rotation)
+    // ===============================================
     const joint0 = new THREE.Group();
     joint0.position.y = 0.30;
     robotGroup.add(joint0);
 
-    const shoulderGeom = new THREE.CylinderGeometry(0.11, 0.11, 0.16, 24);
-    const shoulder = new THREE.Mesh(shoulderGeom, new THREE.MeshPhongMaterial({ color: yBlue, shininess: 100, specular: 0x222222 }));
-    shoulder.castShadow = true;
-    joint0.add(shoulder);
+    // Hombro — Horquilla doble (Yoke) estilo GP7
+    // Placa izquierda
+    const yokeL = new THREE.Mesh(
+        new THREE.BoxGeometry(0.06, 0.14, 0.025),
+        yBlueMat.clone()
+    );
+    yokeL.castShadow = true;
+    yokeL.position.set(0.03, 0, -0.065);
+    joint0.add(yokeL);
 
-    const lMotor = new THREE.Mesh(sMotorGeo, new THREE.MeshPhongMaterial({ color: yDark, shininess: 100 }));
-    lMotor.position.set(0, 0, -0.14);
-    lMotor.rotation.x = Math.PI / 2;
-    joint0.add(lMotor);
+    // Placa derecha
+    const yokeR = new THREE.Mesh(
+        new THREE.BoxGeometry(0.06, 0.14, 0.025),
+        yBlueMat.clone()
+    );
+    yokeR.castShadow = true;
+    yokeR.position.set(0.03, 0, 0.065);
+    joint0.add(yokeR);
 
+    // Puente superior del yoke
+    const yokeTop = new THREE.Mesh(
+        new THREE.BoxGeometry(0.08, 0.04, 0.16),
+        yBlueMat.clone()
+    );
+    yokeTop.castShadow = true;
+    yokeTop.position.set(0.02, 0.06, 0);
+    joint0.add(yokeTop);
+
+    // Tapa trasera del hombro
+    const shoulderBack = new THREE.Mesh(
+        new THREE.BoxGeometry(0.04, 0.12, 0.12),
+        yBlueMat.clone()
+    );
+    shoulderBack.castShadow = true;
+    shoulderBack.position.set(-0.04, 0, 0);
+    joint0.add(shoulderBack);
+
+    // Drum motor L (entre las placas del yoke)
+    const lMotorDrum = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.055, 0.055, 0.10, 24),
+        yDarkMat.clone()
+    );
+    lMotorDrum.castShadow = true;
+    lMotorDrum.position.set(0.0, 0, 0);
+    joint0.add(lMotorDrum);
+
+    // Eje del motor L visible
+    const lAxle = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.02, 0.02, 0.16, 16),
+        yGreyMat
+    );
+    lAxle.position.set(0.0, 0, 0);
+    joint0.add(lAxle);
+
+    // ===============================================
+    // JOINT 1 — Eje L (Shoulder Pitch)
+    // ===============================================
     const joint1 = new THREE.Group();
     joint1.position.y = 0.05;
     joint0.add(joint1);
 
-    const upperArmGeom = new THREE.CylinderGeometry(0.055, 0.08, 0.32, 24);
-    const upperArm = new THREE.Mesh(upperArmGeom, new THREE.MeshPhongMaterial({ color: yBlue, shininess: 100, specular: 0x222222 }));
-    upperArm.castShadow = true;
-    upperArm.rotation.z = Math.PI / 2;
-    upperArm.position.x = 0.16;
-    joint1.add(upperArm);
+    // Brazo superior — Cover angular estilo GP7
+    // Cuerpo principal del brazo (forma trapezoidal)
+    const armShape = new THREE.Shape();
+    armShape.moveTo(0, -0.045);
+    armShape.lineTo(0.32, -0.030);
+    armShape.lineTo(0.32, 0.030);
+    armShape.lineTo(0, 0.045);
+    armShape.lineTo(0, -0.045);
 
-    const elbowJoint = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.07, 0.07, 0.13, 16),
-        new THREE.MeshPhongMaterial({ color: yGrey, shininess: 100, specular: 0x222222 })
+    const armExtrude = { depth: 0.09, bevelEnabled: true, bevelThickness: 0.005, bevelSize: 0.005, bevelSegments: 2 };
+    const armGeom = new THREE.ExtrudeGeometry(armShape, armExtrude);
+    const armCover = new THREE.Mesh(armGeom, yBlueMat.clone());
+    armCover.castShadow = true;
+    armCover.position.z = -0.045;
+    joint1.add(armCover);
+
+    // Línea decorativa superior del brazo (borde de la carcasa)
+    const armEdge = new THREE.Mesh(
+        new THREE.BoxGeometry(0.30, 0.004, 0.094),
+        yDarkMat.clone()
     );
-    elbowJoint.castShadow = true;
-    elbowJoint.rotation.x = Math.PI / 2;
-    elbowJoint.position.x = 0.32;
-    joint1.add(elbowJoint);
+    armEdge.position.set(0.15, 0.048, 0);
+    joint1.add(armEdge);
 
-    const uMotor = new THREE.Mesh(sMotorGeo, new THREE.MeshPhongMaterial({ color: yDark, shininess: 100 }));
-    uMotor.position.set(0.32, 0, 0.12);
-    uMotor.rotation.x = Math.PI / 2;
-    joint1.add(uMotor);
+    // Canal de cables a lo largo del brazo
+    const cableChannel = new THREE.Mesh(
+        new THREE.BoxGeometry(0.25, 0.015, 0.020),
+        yDarkMat.clone()
+    );
+    cableChannel.position.set(0.15, -0.038, 0.04);
+    joint1.add(cableChannel);
+
+    // Articulación del codo — housing
+    const elbowHousing = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.058, 0.058, 0.12, 24),
+        yGreyMat.clone()
+    );
+    elbowHousing.castShadow = true;
+    elbowHousing.rotation.x = Math.PI / 2;
+    elbowHousing.position.x = 0.32;
+    joint1.add(elbowHousing);
+
+    // Anillos del codo
+    const elbowRing1 = new THREE.Mesh(
+        new THREE.TorusGeometry(0.06, 0.005, 8, 32),
+        yDarkMat
+    );
+    elbowRing1.position.set(0.32, 0, 0.04);
+    joint1.add(elbowRing1);
+    const elbowRing2 = elbowRing1.clone();
+    elbowRing2.position.set(0.32, 0, -0.04);
+    joint1.add(elbowRing2);
+
+    // Motor U — lateral al codo
+    const uMotorBox = new THREE.Mesh(
+        new THREE.BoxGeometry(0.07, 0.07, 0.06),
+        yDarkMat.clone()
+    );
+    uMotorBox.castShadow = true;
+    uMotorBox.position.set(0.32, 0, 0.09);
+    joint1.add(uMotorBox);
 
     joints.push(joint0);
     joints.push(joint1);
 
+    // ===============================================
+    // JOINT 2 — Eje U (Elbow)
+    // ===============================================
     const joint2 = new THREE.Group();
     joint2.position.x = 0.32;
     joint1.add(joint2);
 
-    // NUEVA PIEZA ÚNICA ARQUEADA (Eje U) - Reducida 1/4
-    const uArmShape = new THREE.Shape();
-    uArmShape.moveTo(0, 0.03);
-    uArmShape.quadraticCurveTo(0.075, 0.05, 0.15, 0.02); // Curva hacia abajo al final
-    uArmShape.lineTo(0.15, -0.02);
-    uArmShape.quadraticCurveTo(0.075, 0, 0, -0.03);
-    uArmShape.lineTo(0, 0.03);
+    // Antebrazo — Pieza curva estilo GP7 (más delgada)
+    const forearmShape = new THREE.Shape();
+    forearmShape.moveTo(0, 0.028);
+    forearmShape.quadraticCurveTo(0.05, 0.04, 0.10, 0.025);
+    forearmShape.lineTo(0.15, 0.018);
+    forearmShape.lineTo(0.15, -0.018);
+    forearmShape.lineTo(0.10, -0.025);
+    forearmShape.quadraticCurveTo(0.05, -0.035, 0, -0.028);
+    forearmShape.lineTo(0, 0.028);
 
-    const extrudeSettings = { depth: 0.07, bevelEnabled: true, bevelThickness: 0.005, bevelSize: 0.01, bevelSegments: 2 };
-    const uArmGeom = new THREE.ExtrudeGeometry(uArmShape, extrudeSettings);
-    const uArm = new THREE.Mesh(uArmGeom, new THREE.MeshPhongMaterial({ color: yBlue, shininess: 100, specular: 0x222222 }));
-    uArm.castShadow = true;
-    uArm.position.z = -0.035; // Centrar la extrusión
-    joint2.add(uArm);
+    const forearmExtrude = { depth: 0.065, bevelEnabled: true, bevelThickness: 0.004, bevelSize: 0.006, bevelSegments: 2 };
+    const forearmGeom = new THREE.ExtrudeGeometry(forearmShape, forearmExtrude);
+    const forearm = new THREE.Mesh(forearmGeom, yBlueMat.clone());
+    forearm.castShadow = true;
+    forearm.position.z = -0.0325;
+    joint2.add(forearm);
 
-    const wristBase = new THREE.Mesh(
-        new THREE.SphereGeometry(0.04, 20, 20),
-        new THREE.MeshPhongMaterial({ color: yGrey, shininess: 120 })
+    // Transición al muñeca
+    const wristTransition = new THREE.Mesh(
+        new THREE.SphereGeometry(0.035, 20, 20),
+        yGreyMat.clone()
     );
-    wristBase.castShadow = true;
-    wristBase.position.x = 0.15; // Ajustado por la reducción de tamaño
-    joint2.add(wristBase);
+    wristTransition.castShadow = true;
+    wristTransition.position.x = 0.15;
+    joint2.add(wristTransition);
 
     joints.push(joint2);
 
+    // ===============================================
+    // JOINT 3 — Eje R (Wrist Roll)
+    // ===============================================
     const joint3 = new THREE.Group();
-    joint3.position.x = 0.15; // Ajustado por la reducción de tamaño
+    joint3.position.x = 0.15;
     joint2.add(joint3);
 
-    // EJE R: Roll (Rotación del antebrazo)
-    const wristRollGeom = new THREE.CylinderGeometry(0.04, 0.045, 0.12, 16);
-    const wristRoll = new THREE.Mesh(wristRollGeom, new THREE.MeshPhongMaterial({ color: yBlue, shininess: 90 }));
-    wristRoll.rotation.z = Math.PI / 2;
-    wristRoll.position.x = 0.06;
-    joint3.add(wristRoll);
+    // Tubo de rotación R — cilindro compacto
+    const rTube = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.032, 0.036, 0.10, 20),
+        yBlueMat.clone()
+    );
+    rTube.castShadow = true;
+    rTube.rotation.z = Math.PI / 2;
+    rTube.position.x = 0.05;
+    joint3.add(rTube);
+
+    // Líneas en la superficie del R para visualizar la rotación
+    for (let i = 0; i < 8; i++) {
+        const stripe = new THREE.Mesh(
+            new THREE.BoxGeometry(0.09, 0.008, 0.002),
+            yDarkMat
+        );
+        const a = (i / 8) * Math.PI * 2;
+        const r = 0.036; // justo en la superficie del tubo
+        stripe.position.set(0.05, Math.cos(a) * r, Math.sin(a) * r);
+        stripe.rotation.x = a; // orientar tangente a la superficie
+        joint3.add(stripe);
+    }
+
     joints.push(joint3);
 
+    // ===============================================
+    // JOINT 4 — Eje B (Wrist Bend)
+    // ===============================================
     const joint4 = new THREE.Group();
     joint4.position.x = 0.12;
     joint3.add(joint4);
 
-    // EJE B: Bend (Giro arriba/abajo - Cabeceo)
-    // Esta es la "pequeña pieza" que menciona el usuario
-    const wristBendGeom = new THREE.BoxGeometry(0.06, 0.05, 0.05);
-    const wristBend = new THREE.Mesh(wristBendGeom, new THREE.MeshPhongMaterial({ color: yBlue, shininess: 90 }));
-    wristBend.position.x = 0.02;
-    joint4.add(wristBend);
-    
-    const bendMotor = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.06, 16), new THREE.MeshPhongMaterial({ color: yDark }));
-    bendMotor.rotation.x = Math.PI / 2;
-    bendMotor.userData.axisName = 'b';
-    bendMotor.userData.originalColor = yDark;
-    joint4.add(bendMotor);
+    // Housing del B — pieza compacta angular
+    const bHousing = new THREE.Mesh(
+        new THREE.BoxGeometry(0.05, 0.042, 0.042),
+        yBlueMat.clone()
+    );
+    bHousing.castShadow = true;
+    bHousing.position.x = 0.018;
+    joint4.add(bHousing);
+
+    // Eje visible del B
+    const bAxle = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.022, 0.022, 0.052, 16),
+        yDarkMat.clone()
+    );
+    bAxle.rotation.x = Math.PI / 2;
+    joint4.add(bAxle);
+
     joints.push(joint4);
 
+    // ===============================================
+    // JOINT 5 — Eje T (Tool Twist)
+    // ===============================================
     const joint5 = new THREE.Group();
     joint5.position.x = 0.04;
     joint4.add(joint5);
 
-    // EJE T: Twist (Rotación de las pinzas)
-    const toolFlangeGeom = new THREE.CylinderGeometry(0.035, 0.035, 0.02, 16);
-    const toolFlange = new THREE.Mesh(toolFlangeGeom, new THREE.MeshPhongMaterial({ color: yGrey, shininess: 90 }));
-    toolFlange.rotation.z = Math.PI / 2;
-    toolFlange.position.x = 0.01;
-    joint5.add(toolFlange);
+    // Brida de herramienta — disco metálico con patrón de tornillos
+    const flange = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.028, 0.028, 0.015, 24),
+        yGreyMat.clone()
+    );
+    flange.castShadow = true;
+    flange.rotation.z = Math.PI / 2;
+    flange.position.x = 0.008;
+    joint5.add(flange);
+
+    // Tornillos de la brida (6)
+    for (let i = 0; i < 6; i++) {
+        const fBolt = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.003, 0.003, 0.018, 6),
+            yDarkMat
+        );
+        fBolt.rotation.z = Math.PI / 2;
+        const a = (i / 6) * Math.PI * 2;
+        fBolt.position.set(0.008, Math.cos(a) * 0.022, Math.sin(a) * 0.022);
+        joint5.add(fBolt);
+    }
+
+    // Centro de la brida (marca de orientación)
+    const flangeCenter = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.008, 0.008, 0.018, 12),
+        yOrangeMat
+    );
+    flangeCenter.rotation.z = Math.PI / 2;
+    flangeCenter.position.x = 0.008;
+    joint5.add(flangeCenter);
+
     joints.push(joint5);
 
+    // === CILINDRO NEUMÁTICO 1 ===
     gripperGroup = new THREE.Group();
     gripperGroup.position.x = 0.04;
-    gripperGroup.position.z = 0.035;
-    gripperGroup.rotation.x = Math.PI / 2;
+    gripperGroup.position.z = 0.025;
     joint5.add(gripperGroup);
 
-    const gripperBaseGeom = new THREE.BoxGeometry(0.020, 0.030, 0.050);
-    const gripperBaseMat = new THREE.MeshPhongMaterial({ color: 0x1a1a1a, shininess: 90 });
-    const gripperBase = new THREE.Mesh(gripperBaseGeom, gripperBaseMat);
-    gripperBase.castShadow = true;
-    gripperGroup.add(gripperBase);
+    // Cuerpo del cilindro 1 (housing)
+    const cyl1Body = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.012, 0.012, 0.05, 16),
+        new THREE.MeshPhongMaterial({ color: 0x333333, shininess: 80 })
+    );
+    cyl1Body.castShadow = true;
+    gripperGroup.add(cyl1Body);
+
+    // Tapa superior cilindro 1
+    const cyl1Cap = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.014, 0.014, 0.006, 16),
+        new THREE.MeshPhongMaterial({ color: 0x222222, shininess: 60 })
+    );
+    cyl1Cap.position.y = 0.025;
+    gripperGroup.add(cyl1Cap);
+
+    // Tapa inferior cilindro 1
+    const cyl1CapBot = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.014, 0.014, 0.006, 16),
+        new THREE.MeshPhongMaterial({ color: 0x222222, shininess: 60 })
+    );
+    cyl1CapBot.position.y = -0.025;
+    gripperGroup.add(cyl1CapBot);
+
+    // Vástago/pistón cilindro 1 (se mueve)
+    const cyl1Piston = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.006, 0.006, 0.06, 12),
+        new THREE.MeshPhongMaterial({ color: 0xcccccc, shininess: 120, specular: 0x888888 })
+    );
+    cyl1Piston.castShadow = true;
+    cyl1Piston.position.y = -0.04;
+    cyl1Piston.userData.isCylinder1 = true;
+    gripperGroup.add(cyl1Piston);
+
+    // Pinza paralela cilindro 1
+    const grip1Base = new THREE.Mesh(
+        new THREE.BoxGeometry(0.024, 0.008, 0.018),
+        new THREE.MeshPhongMaterial({ color: 0x444444, shininess: 80 })
+    );
+    grip1Base.position.y = -0.035;
+    cyl1Piston.add(grip1Base);
 
     const fingerMat = new THREE.MeshPhongMaterial({ color: 0xdd8844, shininess: 90, specular: 0x444444 });
 
-    const fingerTopGeom = new THREE.BoxGeometry(0.008, 0.035, 0.090);
-    const fingerTop = new THREE.Mesh(fingerTopGeom, fingerMat);
-    fingerTop.castShadow = true;
-    fingerTop.position.y = 0.028;
-    fingerTop.position.z = 0.065;
-    fingerTop.userData.isPinza1Top = true;
-    gripperGroup.add(fingerTop);
+    // Dedo izquierdo pinza 1
+    const grip1FingerL = new THREE.Mesh(
+        new THREE.BoxGeometry(0.005, 0.030, 0.014),
+        fingerMat
+    );
+    grip1FingerL.castShadow = true;
+    grip1FingerL.position.set(-0.010, -0.019, 0);
+    grip1FingerL.userData.isGrip1L = true;
+    grip1Base.add(grip1FingerL);
 
-    const fingerBottomGeom = new THREE.BoxGeometry(0.008, 0.035, 0.090);
-    const fingerBottom = new THREE.Mesh(fingerBottomGeom, fingerMat);
-    fingerBottom.castShadow = true;
-    fingerBottom.position.y = -0.028;
-    fingerBottom.position.z = 0.065;
-    fingerBottom.userData.isPinza1Bottom = true;
-    gripperGroup.add(fingerBottom);
+    // Dedo derecho pinza 1
+    const grip1FingerR = new THREE.Mesh(
+        new THREE.BoxGeometry(0.005, 0.030, 0.014),
+        fingerMat
+    );
+    grip1FingerR.castShadow = true;
+    grip1FingerR.position.set(0.010, -0.019, 0);
+    grip1FingerR.userData.isGrip1R = true;
+    grip1Base.add(grip1FingerR);
 
+    // === CILINDRO NEUMÁTICO 2 ===
     scissorGroup = new THREE.Group();
     scissorGroup.position.x = 0.04;
-    scissorGroup.position.z = -0.035;
-    scissorGroup.rotation.x = Math.PI / 2;
+    scissorGroup.position.z = -0.025;
     joint5.add(scissorGroup);
 
-    const gripper2BaseGeom = new THREE.BoxGeometry(0.020, 0.030, 0.050);
-    const gripper2BaseMat = new THREE.MeshPhongMaterial({ color: 0x1a1a1a, shininess: 90 });
-    const gripper2Base = new THREE.Mesh(gripper2BaseGeom, gripper2BaseMat);
-    gripper2Base.castShadow = true;
-    scissorGroup.add(gripper2Base);
+    // Cuerpo del cilindro 2
+    const cyl2Body = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.012, 0.012, 0.05, 16),
+        new THREE.MeshPhongMaterial({ color: 0x333333, shininess: 80 })
+    );
+    cyl2Body.castShadow = true;
+    scissorGroup.add(cyl2Body);
 
-    const finger2TopGeom = new THREE.BoxGeometry(0.008, 0.035, 0.090);
-    const finger2Top = new THREE.Mesh(finger2TopGeom, fingerMat);
-    finger2Top.castShadow = true;
-    finger2Top.position.y = 0.028;
-    finger2Top.position.z = 0.065;
-    finger2Top.userData.isPinza2Top = true;
-    scissorGroup.add(finger2Top);
+    // Tapa superior cilindro 2
+    const cyl2Cap = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.014, 0.014, 0.006, 16),
+        new THREE.MeshPhongMaterial({ color: 0x222222, shininess: 60 })
+    );
+    cyl2Cap.position.y = 0.025;
+    scissorGroup.add(cyl2Cap);
 
-    const finger2BottomGeom = new THREE.BoxGeometry(0.008, 0.035, 0.090);
-    const finger2Bottom = new THREE.Mesh(finger2BottomGeom, fingerMat);
-    finger2Bottom.castShadow = true;
-    finger2Bottom.position.y = -0.028;
-    finger2Bottom.position.z = 0.065;
-    finger2Bottom.userData.isPinza2Bottom = true;
-    scissorGroup.add(finger2Bottom);
+    // Tapa inferior cilindro 2
+    const cyl2CapBot = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.014, 0.014, 0.006, 16),
+        new THREE.MeshPhongMaterial({ color: 0x222222, shininess: 60 })
+    );
+    cyl2CapBot.position.y = -0.025;
+    scissorGroup.add(cyl2CapBot);
+
+    // Vástago/pistón cilindro 2 (se mueve)
+    const cyl2Piston = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.006, 0.006, 0.06, 12),
+        new THREE.MeshPhongMaterial({ color: 0xcccccc, shininess: 120, specular: 0x888888 })
+    );
+    cyl2Piston.castShadow = true;
+    cyl2Piston.position.y = -0.04;
+    cyl2Piston.userData.isCylinder2 = true;
+    scissorGroup.add(cyl2Piston);
+
+    // Pinza paralela cilindro 2
+    const grip2Base = new THREE.Mesh(
+        new THREE.BoxGeometry(0.024, 0.008, 0.018),
+        new THREE.MeshPhongMaterial({ color: 0x444444, shininess: 80 })
+    );
+    grip2Base.position.y = -0.035;
+    cyl2Piston.add(grip2Base);
+
+    // Dedo izquierdo pinza 2
+    const grip2FingerL = new THREE.Mesh(
+        new THREE.BoxGeometry(0.005, 0.030, 0.014),
+        fingerMat
+    );
+    grip2FingerL.castShadow = true;
+    grip2FingerL.position.set(-0.010, -0.019, 0);
+    grip2FingerL.userData.isGrip2L = true;
+    grip2Base.add(grip2FingerL);
+
+    // Dedo derecho pinza 2
+    const grip2FingerR = new THREE.Mesh(
+        new THREE.BoxGeometry(0.005, 0.030, 0.014),
+        fingerMat
+    );
+    grip2FingerR.castShadow = true;
+    grip2FingerR.position.set(0.010, -0.019, 0);
+    grip2FingerR.userData.isGrip2R = true;
+    grip2Base.add(grip2FingerR);
 }
 
 function highlightJoint(index) {
@@ -1507,7 +1801,7 @@ function highlightJoint(index) {
             }
         });
         if (highlightLight) {
-            scene.remove(highlightLight);
+            if (highlightLight.parent) highlightLight.parent.remove(highlightLight);
             highlightLight = null;
         }
     }
@@ -1523,11 +1817,10 @@ function highlightJoint(index) {
                 child.material.emissive.setHex(0x880000);
             }
         });
-        const worldPos = new THREE.Vector3();
-        joints[index].getWorldPosition(worldPos);
+        // Añadir la luz directamente al grupo del joint para que siga la articulación
         highlightLight = new THREE.PointLight(0xff0000, 2.5, 0.6);
-        highlightLight.position.copy(worldPos);
-        scene.add(highlightLight);
+        highlightLight.position.set(0, 0, 0); // Origen local del joint = centro de la articulación
+        joints[index].add(highlightLight);
     }
 
     clearTimeout(activeJointTimeout);
@@ -1543,7 +1836,7 @@ function highlightJoint(index) {
             });
         }
         if (highlightLight) {
-            scene.remove(highlightLight);
+            if (highlightLight.parent) highlightLight.parent.remove(highlightLight);
             highlightLight = null;
         }
         activeJoint = -1;
@@ -1643,16 +1936,14 @@ function updateGuideLines() {
         guideLines.add(new THREE.Line(lineZGeo, new THREE.LineBasicMaterial({ color: 0x0088ff, transparent: true, opacity: 0.9 })));
         
         if (DxState.coordSystem === 'TOOL' && RobotState && RobotState.angles && joints && joints.length >= 6) {
-            // TOOL: Ejes flotando en el TCP
+            // TOOL: Ejes flotando en el TCP con rotación completa del end-effector
             const tcpPos = new THREE.Vector3();
             joints[5].getWorldPosition(tcpPos);
             guideLines.position.copy(tcpPos);
             
-            const yaw = RobotState.angles.s * d2r;
-            const pitch = (RobotState.angles.l + RobotState.angles.u + RobotState.angles.b) * d2r;
-            guideLines.rotation.set(0, 0, 0);
-            guideLines.rotateY(-yaw);
-            guideLines.rotateZ(pitch);
+            const tcpQuat = new THREE.Quaternion();
+            joints[5].getWorldQuaternion(tcpQuat);
+            guideLines.quaternion.copy(tcpQuat);
         } else {
             // ROBOT: Ejes fijos en el origen
             guideLines.position.set(0, 0.01, 0);
@@ -1781,16 +2072,37 @@ function updateRobotDisplay() {
         joints[4].rotation.z = RobotState.angles.b * Math.PI / 180;
         joints[5].rotation.x = RobotState.angles.t * Math.PI / 180;
 
+        // === Animación cilindros + pinzas (independiente con lerp) ===
+        const lerpSpd = 0.12;
+        cyl1AnimPos += ((cylinder1Down ? 1 : 0) - cyl1AnimPos) * lerpSpd;
+        cyl2AnimPos += ((cylinder2Down ? 1 : 0) - cyl2AnimPos) * lerpSpd;
+        grip1AnimOpen += ((gripper1Closed ? 0 : 1) - grip1AnimOpen) * lerpSpd;
+        grip2AnimOpen += ((gripper2Closed ? 0 : 1) - grip2AnimOpen) * lerpSpd;
+        // Sensores posición cilindros
+        digitalInputs[1] = cyl1AnimPos < 0.1;  // Cil1 ARRIBA
+        digitalInputs[2] = cyl1AnimPos > 0.9;  // Cil1 ABAJO
+        digitalInputs[3] = cyl2AnimPos < 0.1;  // Cil2 ARRIBA
+        digitalInputs[4] = cyl2AnimPos > 0.9;  // Cil2 ABAJO
         if (gripperGroup) {
             gripperGroup.children.forEach(child => {
-                if (child.userData.isPinza1Top) child.position.y = 0.028 + gripperAngle;
-                else if (child.userData.isPinza1Bottom) child.position.y = -0.028 - gripperAngle;
+                if (child.userData.isCylinder1) {
+                    child.position.y = -0.04 - cyl1AnimPos * 0.035;
+                    child.traverse(obj => {
+                        if (obj.userData.isGrip1L) obj.position.x = -0.004 - grip1AnimOpen * 0.010;
+                        if (obj.userData.isGrip1R) obj.position.x = 0.004 + grip1AnimOpen * 0.010;
+                    });
+                }
             });
         }
         if (scissorGroup) {
             scissorGroup.children.forEach(child => {
-                if (child.userData.isPinza2Top) child.position.y = 0.028 + gripper2Angle;
-                else if (child.userData.isPinza2Bottom) child.position.y = -0.028 - gripper2Angle;
+                if (child.userData.isCylinder2) {
+                    child.position.y = -0.04 - cyl2AnimPos * 0.035;
+                    child.traverse(obj => {
+                        if (obj.userData.isGrip2L) obj.position.x = -0.004 - grip2AnimOpen * 0.010;
+                        if (obj.userData.isGrip2R) obj.position.x = 0.004 + grip2AnimOpen * 0.010;
+                    });
+                }
             });
         }
     }
@@ -1817,7 +2129,7 @@ function setView(viewName) {
     const screens = ['job-screen', 'robot-menu-screen', 'robot-screen', 'list-screen',
         'security-screen', 'home-position-screen', 'system-info-menu-screen',
         'tool-screen', 'wgrav-screen', 'variable-screen', 'inout-screen', 
-        'alarm-screen', 'utility-screen', 'amplitude-screen', 'general-screen', 'data-screen', 'calibration-screen', 'master-rezero-screen', 'parameter-screen', 'clock-screen', 'file-screen'];
+        'alarm-screen', 'utility-screen', 'amplitude-screen', 'general-screen', 'data-screen', 'calibration-screen', 'master-rezero-screen', 'parameter-screen', 'clock-screen', 'file-screen', 'directopen-config-screen'];
     screens.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
@@ -1838,7 +2150,7 @@ function setView(viewName) {
         'ALARM': ['alarm-screen', renderAlarm],
         'UTILITY': ['utility-screen', null],
         'AMPLITUDE': ['amplitude-screen', null],
-        'GENERAL': ['general-screen', null],
+        'GENERAL': ['general-screen', renderGeneralScreen],
         'DATA': ['data-screen', null]
     };
 
@@ -2086,6 +2398,49 @@ function showMsg(msg) {
 function setInfoDisplay(msg) {
     const el = document.getElementById('infoDisplay');
     if (el) el.textContent = msg;
+}
+
+// ============================================================
+// ROTACIÓN COMPLETA DEL TOOL FRAME (6 ejes)
+// Devuelve la matriz 3x3 en coordenadas FK
+// ============================================================
+function getToolRotationMatrix(angles) {
+    const d2r = Math.PI / 180;
+    const S = (angles.s || 0) * d2r;
+    const L = (angles.l || 0) * d2r;
+    const U = (angles.u || 0) * d2r;
+    const R = (angles.r || 0) * d2r;
+    const B = (angles.b || 0) * d2r;
+    const T = (angles.t || 0) * d2r;
+    
+    // Multiplicar matrices 3x3
+    function mul(A, B) {
+        let C = [[0,0,0],[0,0,0],[0,0,0]];
+        for (let i = 0; i < 3; i++)
+            for (let j = 0; j < 3; j++)
+                for (let k = 0; k < 3; k++)
+                    C[i][j] += A[i][k] * B[k][j];
+        return C;
+    }
+    function Ry(a) { const c=Math.cos(a),s=Math.sin(a); return [[c,0,s],[0,1,0],[-s,0,c]]; }
+    function Rz(a) { const c=Math.cos(a),s=Math.sin(a); return [[c,-s,0],[s,c,0],[0,0,1]]; }
+    function Rx(a) { const c=Math.cos(a),s=Math.sin(a); return [[1,0,0],[0,c,-s],[0,s,c]]; }
+    
+    // Cadena rotacional Three.js: Ry(S)·Rz(L)·Rz(U)·Rx(R)·Rz(B)·Rx(T)
+    let M = Ry(S);
+    M = mul(M, Rz(L));
+    M = mul(M, Rz(U));
+    M = mul(M, Rx(R));
+    M = mul(M, Rz(B));
+    M = mul(M, Rx(T));
+    
+    // Columnas de M = ejes del tool en coords Three.js (x, y-up, z)
+    // Convertir a FK (x, y-horiz, z-up): FK.x=TJS.x, FK.y=-TJS.z, FK.z=TJS.y
+    return {
+        xAxis: { x: M[0][0], y: -M[2][0], z: M[1][0] },
+        yAxis: { x: M[0][1], y: -M[2][1], z: M[1][1] },
+        zAxis: { x: M[0][2], y: -M[2][2], z: M[1][2] }
+    };
 }
 
 // ============================================================
@@ -2418,22 +2773,20 @@ function moveAxis(axis, dir) {
                 }
             } else if (DxState.coordSystem === 'TOOL') {
                 // ================================================
-                // MODO TOOL: Mover relativo al frame del tool
+                // MODO TOOL: Mover relativo al frame completo del tool
+                // Usa la rotación completa de 6 ejes (S·L·U·R·B·T)
                 // ================================================
-                const yawRad = oldYaw * d2r;
-                const pitchRad = oldPitch * d2r;
+                const toolFrame = getToolRotationMatrix(RobotState.angles);
                 
                 let dx_local = 0, dy_local = 0, dz_local = 0;
                 if (axis === 'x') dx_local = stepSize * dir;
                 if (axis === 'y') dy_local = stepSize * dir;
                 if (axis === 'z') dz_local = stepSize * dir;
                 
-                const cp = Math.cos(pitchRad), sp = Math.sin(pitchRad);
-                const cy = Math.cos(yawRad),   sy = Math.sin(yawRad);
-                
-                target.x += dx_local * (cp * cy) + dy_local * (-sy) + dz_local * (-sp * cy);
-                target.y += dx_local * (cp * sy) + dy_local * (cy)  + dz_local * (-sp * sy);
-                target.z += dx_local * (sp)      + dy_local * (0)   + dz_local * (cp);
+                // Transformar delta local → delta FK usando los 3 ejes del tool
+                target.x += dx_local * toolFrame.xAxis.x + dy_local * toolFrame.yAxis.x + dz_local * toolFrame.zAxis.x;
+                target.y += dx_local * toolFrame.xAxis.y + dy_local * toolFrame.yAxis.y + dz_local * toolFrame.zAxis.y;
+                target.z += dx_local * toolFrame.xAxis.z + dy_local * toolFrame.yAxis.z + dz_local * toolFrame.zAxis.z;
             } else {
                 // ================================================
                 // MODO ROBOT/USER: Mover en coordenadas del mundo
@@ -2532,37 +2885,49 @@ function createRing(x, y, z) {
 }
 
 if (sAxis === 's' && scene) {
-                const glow = createGlow(0, 0.35, 0, 'red');
+                const pos = new THREE.Vector3();
+                joints[0].getWorldPosition(pos);
+                const glow = createGlow(pos.x, pos.y, pos.z, 'red');
                 scene.add(glow);
                 setTimeout(() => scene.remove(glow), 600);
             }
             if (sAxis === 'l' && scene) {
-                const glow = createGlow(0.1, 0.35, 0, 'orange');
+                const pos = new THREE.Vector3();
+                joints[1].getWorldPosition(pos);
+                const glow = createGlow(pos.x, pos.y, pos.z, 'orange');
                 scene.add(glow);
                 setTimeout(() => scene.remove(glow), 600);
             }
             if (sAxis === 'u' && scene) {
-                const glow = createGlow(0.4, 0.35, 0, 'orange');
+                const pos = new THREE.Vector3();
+                joints[2].getWorldPosition(pos);
+                const glow = createGlow(pos.x, pos.y, pos.z, 'orange');
                 scene.add(glow);
                 setTimeout(() => scene.remove(glow), 600);
             }
             if (sAxis === 'r' && scene) {
-                const glow = createGlow(0.45, 0.35, 0, 'red', 0.5);
-                const ring = createRing(0.45, 0.35, 0);
+                const pos = new THREE.Vector3();
+                joints[3].getWorldPosition(pos);
+                const glow = createGlow(pos.x, pos.y, pos.z, 'red', 0.5);
+                const ring = createRing(pos.x, pos.y, pos.z);
                 scene.add(glow);
                 scene.add(ring);
                 setTimeout(() => { scene.remove(glow); scene.remove(ring); }, 600);
             }
             if (sAxis === 'b' && scene) {
-                const glow = createGlow(0.55, 0.35, 0, 'red', 0.6);
-                const ring = createRing(0.55, 0.35, 0);
+                const pos = new THREE.Vector3();
+                joints[4].getWorldPosition(pos);
+                const glow = createGlow(pos.x, pos.y, pos.z, 'red', 0.6);
+                const ring = createRing(pos.x, pos.y, pos.z);
                 scene.add(glow);
                 scene.add(ring);
                 setTimeout(() => { scene.remove(glow); scene.remove(ring); }, 600);
             }
             if (sAxis === 't' && scene) {
-                const glow = createGlow(0.65, 0.35, 0, 'red', 0.5);
-                const ring = createRing(0.65, 0.35, 0);
+                const pos = new THREE.Vector3();
+                joints[5].getWorldPosition(pos);
+                const glow = createGlow(pos.x, pos.y, pos.z, 'red', 0.5);
+                const ring = createRing(pos.x, pos.y, pos.z);
                 scene.add(glow);
                 scene.add(ring);
                 setTimeout(() => { scene.remove(glow); scene.remove(ring); }, 600);
@@ -2594,7 +2959,7 @@ function updateDisplay() {
     const og1 = document.getElementById('og1-status');
     const og2 = document.getElementById('og2-status');
     if (og1) { og1.textContent = digitalOutputs[1] ? 'ON' : 'OFF'; og1.style.color = digitalOutputs[1] ? '#0f0' : '#666'; }
-    if (og2) { og2.textContent = digitalOutputs[2] ? 'ON' : 'OFF'; og2.style.color = digitalOutputs[2] ? '#0f0' : '#666'; }
+    if (og2) { og2.textContent = digitalOutputs[3] ? 'ON' : 'OFF'; og2.style.color = digitalOutputs[3] ? '#0f0' : '#666'; }
 
     document.getElementById('amp-s').textContent = (RobotState.angles.s * 0.5).toFixed(2) + ' mm';
     document.getElementById('amp-l').textContent = (RobotState.angles.l * 0.5).toFixed(2) + ' mm';
@@ -2619,6 +2984,9 @@ function checkTeachMode(actionName) {
 }
 
 function handleDir(dir) {
+    // Direct Open config: navegar slots con D-pad
+    if (directOpenConfigMode && directOpenHandleNav(dir)) return;
+
     if (DxState.isInserting) {
         const types = ['MOVJ', 'MOVL', 'MOVC', 'IMOV'];
         const speeds = [10, 25, 50, 75, 100];
@@ -2701,6 +3069,33 @@ function handleDir(dir) {
     }
 }
 
+// ============================================================
+// DIRECT OPEN — One-touch Operation (DX200 Manual §6.1)
+// ============================================================
+let directOpenSlots = {
+    1: { view: 'JOB',      label: 'JOB CONTENT' },
+    2: { view: 'INOUT',    label: 'IN/OUT' },
+    3: { view: 'GENERAL',  label: 'GENERAL' },
+    4: { view: 'VARIABLE', label: 'VARIABLE' },
+    5: { view: 'ROBOT',    label: 'ROBOT' },
+    6: { view: 'ALARM',    label: 'ALARM HISTORY' }
+};
+let directOpenConfigMode = false;
+let directOpenSelectedSlot = 1;
+
+const directOpenViewOptions = [
+    { view: 'JOB',         label: 'JOB CONTENT' },
+    { view: 'INOUT',       label: 'IN/OUT' },
+    { view: 'GENERAL',     label: 'GENERAL' },
+    { view: 'VARIABLE',    label: 'VARIABLE' },
+    { view: 'ROBOT',       label: 'ROBOT' },
+    { view: 'ALARM',       label: 'ALARM HISTORY' },
+    { view: 'LIST',        label: 'JOB LIST' },
+    { view: 'SYSTEM-INFO', label: 'SYSTEM INFO' },
+    { view: 'UTILITY',     label: 'UTILITY' },
+    { view: 'AMPLITUDE',   label: 'AMPLITUDE' }
+];
+
 function handleDirectOpen() {
     // Feedback visual del botón
     const btn = Array.from(document.querySelectorAll('.kb-btn-sq')).find(b => b.textContent.includes('DIRECT'));
@@ -2710,36 +3105,46 @@ function handleDirectOpen() {
         setTimeout(() => btn.style.background = oldBg, 150);
     }
 
+    // SHIFT + DIRECT OPEN → Abrir pantalla de configuración
+    if (isShiftPressed) {
+        directOpenConfigMode = true;
+        directOpenSelectedSlot = 1;
+        renderDirectOpenConfig();
+        return;
+    }
+
+    // Si estamos en la pantalla de config, cerrar y volver a JOB
+    if (directOpenConfigMode) {
+        directOpenConfigMode = false;
+        setView('JOB');
+        setInfoDisplay('✓ DIRECT OPEN: Configuración guardada');
+        return;
+    }
+
+    // Función original: Si estamos en JOB y la línea tiene CALL JOB, abrirlo
     if (DxState.view === 'JOB') {
         const currentProgram = robotJobs[DxState.currentJobId];
-        if (!currentProgram || !currentProgram[DxState.selectedLineIndex]) return;
-        const lineCode = currentProgram[DxState.selectedLineIndex].code || '';
-
-        // Si es una llamada a otro programa (CALL JOB)
-        if (lineCode.includes('CALL JOB:')) {
-            const jobNameMatch = lineCode.match(/CALL JOB:([A-Za-z0-9_]+)/);
-            if (jobNameMatch && jobNameMatch[1]) {
-                const targetJob = jobNameMatch[1];
-                if (robotJobs[targetJob]) {
-                    DxState.jobHistory.push(DxState.currentJobId);
-                    DxState.currentJobId = targetJob;
-                    DxState.selectedLineIndex = 0;
-                    renderJob();
-                    setInfoDisplay('✓ DIRECT OPEN: Abriendo ' + targetJob);
-                } else {
-                    setInfoDisplay('⚠ Error: JOB ' + targetJob + ' no encontrado');
+        if (currentProgram && currentProgram[DxState.selectedLineIndex]) {
+            const lineCode = currentProgram[DxState.selectedLineIndex].code || '';
+            if (lineCode.includes('CALL JOB:')) {
+                const jobNameMatch = lineCode.match(/CALL JOB:([A-Za-z0-9_]+)/);
+                if (jobNameMatch && jobNameMatch[1]) {
+                    const targetJob = jobNameMatch[1];
+                    if (robotJobs[targetJob]) {
+                        DxState.jobHistory.push(DxState.currentJobId);
+                        DxState.currentJobId = targetJob;
+                        DxState.selectedLineIndex = 0;
+                        renderJob();
+                        setInfoDisplay('✓ DIRECT OPEN: ' + targetJob);
+                        return;
+                    }
                 }
             }
-        } 
-        // Si es una variable
-        else if (lineCode.includes('B00') || lineCode.includes('I00') || lineCode.includes('D00') || lineCode.includes('R00')) {
-            setView('VARIABLE');
-            setInfoDisplay('✓ DIRECT OPEN: Variables');
         }
-        else {
-            setInfoDisplay('ℹ DIRECT OPEN: Seleccione CALL o Variable');
-        }
-    } else if (DxState.view === 'LIST') {
+    }
+
+    // Si estamos en LIST, abrir el JOB seleccionado
+    if (DxState.view === 'LIST') {
         const jobKeys = Object.keys(robotJobs);
         const targetJob = jobKeys[DxState.selectedListIndex];
         if (targetJob) {
@@ -2747,10 +3152,131 @@ function handleDirectOpen() {
             DxState.currentJobId = targetJob;
             DxState.selectedLineIndex = 0;
             setView('JOB');
-            setInfoDisplay('✓ DIRECT OPEN: Abriendo ' + targetJob);
+            setInfoDisplay('✓ DIRECT OPEN: ' + targetJob);
+            return;
         }
-    } else {
-        setInfoDisplay('ℹ DIRECT OPEN: Cambie a JOB o LIST');
+    }
+
+    // Sin contexto especial: abrir panel de atajos Direct Open
+    directOpenConfigMode = false;
+    renderDirectOpenShortcuts();
+}
+
+function renderDirectOpenConfig() {
+    // Usar setView para mostrar la pantalla
+    const screens = ['job-screen', 'robot-menu-screen', 'robot-screen', 'list-screen',
+        'security-screen', 'home-position-screen', 'system-info-menu-screen',
+        'tool-screen', 'wgrav-screen', 'variable-screen', 'inout-screen',
+        'alarm-screen', 'utility-screen', 'amplitude-screen', 'general-screen',
+        'data-screen', 'calibration-screen', 'master-rezero-screen',
+        'parameter-screen', 'clock-screen', 'file-screen'];
+    screens.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
+
+    const configScreen = document.getElementById('directopen-config-screen');
+    if (!configScreen) return;
+    configScreen.style.display = 'flex';
+
+    const container = document.getElementById('directopen-content');
+    if (!container) return;
+
+    let html = '<div style="background:#ffe;border:1px solid #aa8;padding:3px;margin-bottom:4px;font-size:6px;color:#555;">SHIFT+DIRECT OPEN para abrir. Use ▲▼ para seleccionar, ◄► para cambiar destino.</div>';
+
+    for (let i = 1; i <= 6; i++) {
+        const slot = directOpenSlots[i];
+        const isSelected = (i === directOpenSelectedSlot);
+        const bg = isSelected ? '#2b4b9b' : '#fff';
+        const fg = isSelected ? '#fff' : '#000';
+        html += `<div style="display:flex;align-items:center;padding:4px 6px;margin-bottom:2px;background:${bg};color:${fg};border:1px solid #888;cursor:pointer;" onclick="directOpenSelectedSlot=${i};renderDirectOpenConfig();">
+            <span style="width:20px;font-weight:bold;">F${i}</span>
+            <span style="flex:1;">→ ${slot.label}</span>
+            ${isSelected ? '<span style="font-size:6px;">◄ ►</span>' : ''}
+        </div>`;
+    }
+
+    html += '<div style="margin-top:6px;display:flex;gap:3px;">';
+    html += '<button onclick="directOpenConfigMode=false;setView(\'JOB\');setInfoDisplay(\'✓ Config guardada\');" style="flex:1;padding:3px;font-size:6px;background:#0a0;color:#fff;border:1px solid #050;cursor:pointer;font-weight:bold;">GUARDAR</button>';
+    html += '<button onclick="directOpenConfigMode=false;setView(\'JOB\');setInfoDisplay(\'✗ Config cancelada\');" style="flex:1;padding:3px;font-size:6px;background:#666;color:#fff;border:1px solid #333;cursor:pointer;">CANCELAR</button>';
+    html += '</div>';
+
+    container.innerHTML = html;
+}
+
+function renderDirectOpenShortcuts() {
+    // Mostrar panel de atajos rápidos usando la misma pantalla
+    const screens = ['job-screen', 'robot-menu-screen', 'robot-screen', 'list-screen',
+        'security-screen', 'home-position-screen', 'system-info-menu-screen',
+        'tool-screen', 'wgrav-screen', 'variable-screen', 'inout-screen',
+        'alarm-screen', 'utility-screen', 'amplitude-screen', 'general-screen',
+        'data-screen', 'calibration-screen', 'master-rezero-screen',
+        'parameter-screen', 'clock-screen', 'file-screen'];
+    screens.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
+
+    const configScreen = document.getElementById('directopen-config-screen');
+    if (!configScreen) return;
+    configScreen.style.display = 'flex';
+
+    const container = document.getElementById('directopen-content');
+    if (!container) return;
+
+    let html = '<div style="background:#ffe;border:1px solid #aa8;padding:3px;margin-bottom:4px;font-size:6px;color:#555;">DIRECT OPEN: Pulse un atajo para navegar. SHIFT+DIRECT OPEN para configurar.</div>';
+
+    for (let i = 1; i <= 6; i++) {
+        const slot = directOpenSlots[i];
+        html += `<div style="display:flex;align-items:center;padding:5px 8px;margin-bottom:2px;background:#fff;border:1px solid #888;cursor:pointer;transition:background 0.1s;" 
+            onmouseover="this.style.background='#d0e0ff'" onmouseout="this.style.background='#fff'"
+            onclick="directOpenByNumber(${i});">
+            <span style="width:24px;font-weight:bold;color:#1a3a6a;">F${i}</span>
+            <span style="flex:1;font-weight:bold;">→ ${slot.label}</span>
+            <span style="font-size:6px;color:#888;">${slot.view}</span>
+        </div>`;
+    }
+
+    html += '<div style="margin-top:6px;">';
+    html += '<button onclick="setView(\'JOB\');setInfoDisplay(\'✓ DIRECT OPEN cerrado\');" style="width:100%;padding:3px;font-size:6px;background:#666;color:#fff;border:1px solid #333;cursor:pointer;">CERRAR</button>';
+    html += '</div>';
+
+    container.innerHTML = html;
+    setInfoDisplay('DIRECT OPEN: Seleccione un atajo');
+}
+
+function directOpenHandleNav(dir) {
+    if (!directOpenConfigMode) return false;
+    if (dir === 'up') {
+        directOpenSelectedSlot = Math.max(1, directOpenSelectedSlot - 1);
+        renderDirectOpenConfig();
+        return true;
+    } else if (dir === 'down') {
+        directOpenSelectedSlot = Math.min(6, directOpenSelectedSlot + 1);
+        renderDirectOpenConfig();
+        return true;
+    } else if (dir === 'left' || dir === 'right') {
+        const slot = directOpenSlots[directOpenSelectedSlot];
+        const currentIdx = directOpenViewOptions.findIndex(o => o.view === slot.view);
+        let newIdx = currentIdx + (dir === 'right' ? 1 : -1);
+        if (newIdx < 0) newIdx = directOpenViewOptions.length - 1;
+        if (newIdx >= directOpenViewOptions.length) newIdx = 0;
+        directOpenSlots[directOpenSelectedSlot] = { ...directOpenViewOptions[newIdx] };
+        renderDirectOpenConfig();
+        return true;
+    }
+    return false;
+}
+
+// Acceso directo con teclas numéricas en modo Direct Open config
+function directOpenByNumber(num) {
+    if (num >= 1 && num <= 6 && directOpenSlots[num]) {
+        const slot = directOpenSlots[num];
+        directOpenConfigMode = false;
+        const el = document.getElementById('directopen-config-screen');
+        if (el) el.style.display = 'none';
+        setView(slot.view);
+        setInfoDisplay('✓ DIRECT OPEN F' + num + ' → ' + slot.label);
     }
 }
 
@@ -2896,7 +3422,7 @@ function updateSidebarUI() {
     } else {
         sidebar.innerHTML = `
             <div class="lcd-sidebar-btn active" id="btn-view-job" onclick="setView('JOB')"><div class="sidebar-icon" style="background:#2b4b9b;"></div>JOB</div>
-            <div class="lcd-sidebar-btn" id="btn-view-general" onclick="setView('GENERAL')"><div class="sidebar-icon" style="background:#8b4513;"></div>ARC WELDING</div>
+            <div class="lcd-sidebar-btn" id="btn-view-general" onclick="setView('GENERAL')"><div class="sidebar-icon" style="background:#8b4513;"></div>GENERAL</div>
             <div class="lcd-sidebar-btn" id="btn-view-variable" onclick="setView('VARIABLE')"><div class="sidebar-icon" style="background:#006400;"></div>VARIABLE</div>
             <div class="lcd-sidebar-btn" id="btn-view-inout" onclick="setView('INOUT')"><div class="sidebar-icon" style="background:#4a4a8a;"></div>IN/OUT</div>
             <div class="lcd-sidebar-btn" id="btn-view-robot" onclick="setView('ROBOT')"><div class="sidebar-icon" style="background:#8a2be2;"></div>ROBOT</div>
@@ -3538,7 +4064,7 @@ function renderList() {
 }
 
 let currentVarType = 'B';
-let currentIOType = 'IN';
+let currentIOType = 'OG';
 
 function setIOType(type) {
     currentIOType = type;
@@ -3577,20 +4103,36 @@ function renderInout() {
     const container = document.getElementById('inout-content');
     if (!container) return;
     
+    const ogNames = { 1: 'CILINDRO 1', 2: 'PINZA 1', 3: 'CILINDRO 2', 4: 'PINZA 2' };
+    const ogIcons = { 1: '▼▲', 2: '◁▷', 3: '▼▲', 4: '◁▷' };
+    const inNames = { 1: 'CIL1 ARRIBA', 2: 'CIL1 ABAJO', 3: 'CIL2 ARRIBA', 4: 'CIL2 ABAJO' };
+    
     if (currentIOType === 'IN') {
-        container.innerHTML = Object.entries(digitalInputs).map(([k, v]) => 
-            `<div style="display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #ccc;">
-                <span>IN#${String(k).padStart(5,'0')}:</span>
-                <span style="color:${v ? '#0a0' : '#666'}; font-weight:bold;">${v ? 'ON' : 'OFF'}</span>
-            </div>`
-        ).join('');
+        container.innerHTML = '<div style="color:#1a3a6a;font-weight:bold;padding:2px 0;border-bottom:2px solid #1a3a6a;margin-bottom:3px;">SENSOR INPUTS</div>' +
+            Object.entries(digitalInputs).map(([k, v]) => 
+                `<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 4px;border-bottom:1px solid #ccc;background:${v ? '#e8ffe8' : '#fff'};">
+                    <span>IN#${String(k).padStart(5,'0')}</span>
+                    <span style="color:#555;font-size:6px;">${inNames[k] || ''}</span>
+                    <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${v ? '#0a0' : '#ccc'};border:1px solid ${v ? '#060' : '#999'};box-shadow:${v ? '0 0 4px #0a0' : 'none'};"></span>
+                    <span style="color:${v ? '#0a0' : '#888'};font-weight:bold;width:20px;text-align:right;">${v ? 'ON' : 'OFF'}</span>
+                </div>`
+            ).join('');
     } else {
-        container.innerHTML = Object.entries(digitalOutputs).map(([k, v]) => 
-            `<div style="display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #ccc;">
-                <span>OG#${String(k).padStart(5,'0')}:</span>
-                <span style="color:${v ? '#0a0' : '#666'}; font-weight:bold;">${v ? 'ON' : 'OFF'}</span>
-            </div>`
-        ).join('');
+        container.innerHTML = '<div style="color:#1a3a6a;font-weight:bold;padding:2px 0;border-bottom:2px solid #1a3a6a;margin-bottom:3px;">UNIVERSAL OUTPUT</div>' +
+            Object.entries(digitalOutputs).map(([k, v]) => {
+                const isCyl = (k == 1 || k == 3);
+                const label = ogNames[k] || 'OG#' + k;
+                const stateText = isCyl ? (v ? 'ABAJO ▼' : 'ARRIBA ▲') : (v ? 'CERRADA' : 'ABIERTA');
+                const stateColor = v ? '#c00' : '#0a0';
+                return `<div style="display:flex;align-items:center;padding:3px 2px;border-bottom:1px solid #ccc;background:${v ? '#fff0f0' : '#f0fff0'};gap:3px;">
+                    <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${v ? '#0a0' : '#ccc'};border:1px solid ${v ? '#060' : '#999'};box-shadow:${v ? '0 0 4px #0a0' : 'none'};flex-shrink:0;"></span>
+                    <span style="width:50px;">OG#${String(k).padStart(5,'0')}</span>
+                    <span style="color:#1a3a6a;flex:1;">${label}</span>
+                    <span style="color:${stateColor};font-weight:bold;width:45px;text-align:center;font-size:6px;">${stateText}</span>
+                    <button onclick="toggleOutput(${k})" style="padding:1px 4px;font-size:5px;background:${v ? '#a00' : '#0a0'};color:#fff;border:1px solid #333;cursor:pointer;font-weight:bold;border-radius:2px;">${v ? 'OFF' : 'ON'}</button>
+                </div>`;
+            }).join('') +
+            '<div style="margin-top:4px;padding:3px;background:#dde;border:1px solid #99a;font-size:5px;color:#333;">PRESION AIRE: <b>6.0 Bar</b> | STATUS: <b style="color:#0a0;">OK</b></div>';
     }
 }
 
@@ -3692,58 +4234,70 @@ function updateFileList() {
     }).join('');
 }
 
+function toggleOutput(og) {
+    digitalOutputs[og] = !digitalOutputs[og];
+    syncOutputState(og);
+    const ogNames = { 1: 'CILINDRO 1', 2: 'PINZA 1', 3: 'CILINDRO 2', 4: 'PINZA 2' };
+    setInfoDisplay(`✓ ${ogNames[og]}: ${digitalOutputs[og] ? 'ON' : 'OFF'}`);
+    renderInout();
+    renderGeneralScreen();
+}
+
+function syncOutputState(og) {
+    if (og === 1) cylinder1Down = digitalOutputs[1];
+    if (og === 2) gripper1Closed = digitalOutputs[2];
+    if (og === 3) cylinder2Down = digitalOutputs[3];
+    if (og === 4) gripper2Closed = digitalOutputs[4];
+}
+
+function syncAllOutputStates() {
+    cylinder1Down = digitalOutputs[1];
+    gripper1Closed = digitalOutputs[2];
+    cylinder2Down = digitalOutputs[3];
+    gripper2Closed = digitalOutputs[4];
+}
+
 function controlPinza(num, action) {
-    if (num === 1) {
-        if (action === 'open') {
-            digitalOutputs[1] = false;
-            gripperAngle = 0.015;
-            document.getElementById('gen-pinza1-status').textContent = 'ABIERTA';
-            document.getElementById('gen-pinza1-status').style.color = '#0a0';
-        } else {
-            digitalOutputs[1] = true;
-            gripperAngle = 0;
-            document.getElementById('gen-pinza1-status').textContent = 'CERRADA';
-            document.getElementById('gen-pinza1-status').style.color = '#a00';
-        }
-        setInfoDisplay(`PINZA 1: ${action === 'open' ? 'ABIERTA' : 'CERRADA'}`);
-    } else if (num === 2) {
-        if (action === 'open') {
-            digitalOutputs[2] = false;
-            gripper2Angle = 0.015;
-            document.getElementById('gen-pinza2-status').textContent = 'ABIERTA';
-            document.getElementById('gen-pinza2-status').style.color = '#0a0';
-        } else {
-            digitalOutputs[2] = true;
-            gripper2Angle = 0;
-            document.getElementById('gen-pinza2-status').textContent = 'CERRADA';
-            document.getElementById('gen-pinza2-status').style.color = '#a00';
-        }
-        setInfoDisplay(`PINZA 2: ${action === 'open' ? 'ABIERTA' : 'CERRADA'}`);
-    }
+    // Legacy compatibility: num=1 -> pinza 1 (OG#2), num=2 -> pinza 2 (OG#4)
+    const og = (num === 1) ? 2 : 4;
+    digitalOutputs[og] = (action === 'close');
+    syncOutputState(og);
+    setInfoDisplay(`PINZA ${num}: ${action === 'open' ? 'ABIERTA' : 'CERRADA'}`);
+    renderInout();
+    renderGeneralScreen();
+}
+
+function renderGeneralScreen() {
+    const container = document.getElementById('general-content');
+    if (!container) return;
+    const items = [
+        { og: 1, name: 'CILINDRO 1', icon: '▼▲', state: cylinder1Down, onLabel: 'ABAJO ▼', offLabel: 'ARRIBA ▲', onAction: 'BAJAR', offAction: 'SUBIR' },
+        { og: 2, name: 'PINZA 1', icon: '◁▷', state: gripper1Closed, onLabel: 'CERRADA', offLabel: 'ABIERTA', onAction: 'CERRAR', offAction: 'ABRIR' },
+        { og: 3, name: 'CILINDRO 2', icon: '▼▲', state: cylinder2Down, onLabel: 'ABAJO ▼', offLabel: 'ARRIBA ▲', onAction: 'BAJAR', offAction: 'SUBIR' },
+        { og: 4, name: 'PINZA 2', icon: '◁▷', state: gripper2Closed, onLabel: 'CERRADA', offLabel: 'ABIERTA', onAction: 'CERRAR', offAction: 'ABRIR' }
+    ];
+    container.innerHTML = items.map(it => {
+        const stColor = it.state ? '#c00' : '#0a0';
+        const stText = it.state ? it.onLabel : it.offLabel;
+        return `<div style="background:#fff;border:1px solid #888;padding:4px 6px;margin-bottom:3px;display:flex;align-items:center;justify-content:space-between;">
+            <div><b>OG#${it.og} ${it.name}</b></div>
+            <span style="color:${stColor};font-weight:bold;font-size:8px;">${stText}</span>
+            <div style="display:flex;gap:2px;">
+                <button onclick="digitalOutputs[${it.og}]=true;syncOutputState(${it.og});renderGeneralScreen();renderInout();setInfoDisplay('✓ ${it.name}: ${it.onAction}');" style="padding:2px 5px;font-size:6px;background:#a00;color:#fff;border:1px solid #500;cursor:pointer;">${it.onAction}</button>
+                <button onclick="digitalOutputs[${it.og}]=false;syncOutputState(${it.og});renderGeneralScreen();renderInout();setInfoDisplay('✓ ${it.name}: ${it.offAction}');" style="padding:2px 5px;font-size:6px;background:#0a0;color:#fff;border:1px solid #050;cursor:pointer;">${it.offAction}</button>
+            </div>
+        </div>`;
+    }).join('') + `<div style="background:#fff;border:1px solid #888;padding:4px 6px;margin-bottom:3px;">
+        <div style="display:flex;justify-content:space-between;"><span>PRESIÓN AIRE:</span><b style="color:#a00;">6.0 Bar</b></div>
+        <div style="display:flex;justify-content:space-between;"><span>STATUS:</span><b style="color:#0a0;">OK</b></div>
+    </div>
+    <div style="background:#eef;border:1px solid #99a;padding:3px;font-size:5px;color:#555;">
+        <b>SENSORES:</b> CIL1${digitalInputs[1]?'▲':''}${digitalInputs[2]?'▼':''} | CIL2${digitalInputs[3]?'▲':''}${digitalInputs[4]?'▼':''}
+    </div>`;
 }
 
 function updateGeneralScreen() {
-    const p1 = document.getElementById('gen-pinza1-status');
-    const p2 = document.getElementById('gen-pinza2-status');
-    const og1 = document.getElementById('og1-status');
-    const og2 = document.getElementById('og2-status');
-    
-    if (p1) {
-        p1.textContent = digitalOutputs[1] ? 'CERRADA' : 'ABIERTA';
-        p1.style.color = digitalOutputs[1] ? '#a00' : '#0a0';
-    }
-    if (p2) {
-        p2.textContent = digitalOutputs[2] ? 'CERRADA' : 'ABIERTA';
-        p2.style.color = digitalOutputs[2] ? '#a00' : '#0a0';
-    }
-    if (og1) {
-        og1.textContent = digitalOutputs[1] ? 'ON' : 'OFF';
-        og1.style.color = digitalOutputs[1] ? '#0f0' : '#666';
-    }
-    if (og2) {
-        og2.textContent = digitalOutputs[2] ? 'ON' : 'OFF';
-        og2.style.color = digitalOutputs[2] ? '#0f0' : '#666';
-    }
+    renderGeneralScreen();
 }
 
 function showDataInfo(type) {
@@ -3908,11 +4462,15 @@ function handleToolKey(num) {
         return;
     }
     
-    // Si pasa seguridad, conmutamos la pinza
-    const currentState = digitalOutputs[num] ? 'ON' : 'OFF';
-    const newState = currentState === 'OFF' ? 'ON' : 'OFF';
-    controlPinza(num, newState === 'ON' ? 'close' : 'open');
-    showMsg(`TOOL ${num}: ${newState === 'ON' ? 'CERRADA' : 'ABIERTA'}`);
+    // TOOL 1 = toggle Pinza 1 (OG#2), TOOL 2 = toggle Pinza 2 (OG#4)
+    const og = (num === 1) ? 2 : 4;
+    digitalOutputs[og] = !digitalOutputs[og];
+    syncOutputState(og);
+    const pinzaNum = (num === 1) ? 1 : 2;
+    const estado = digitalOutputs[og] ? 'CERRADA' : 'ABIERTA';
+    setInfoDisplay(`✓ TOOL ${num}: PINZA ${pinzaNum} ${estado}`);
+    renderInout();
+    renderGeneralScreen();
 }
 
 function setClockFormat(fmt) {
@@ -4034,8 +4592,12 @@ function updateMultiLayout() {
     set('ml-t', a.t.toFixed(3) + '°');
     const og1El = document.getElementById('ml-og1');
     const og2El = document.getElementById('ml-og2');
+    const p1El = document.getElementById('ml-og-p1');
+    const p2El = document.getElementById('ml-og-p2');
     if (og1El) { og1El.textContent = digitalOutputs[1] ? 'ON' : 'OFF'; og1El.style.color = digitalOutputs[1] ? '#0f0' : '#666'; }
-    if (og2El) { og2El.textContent = digitalOutputs[2] ? 'ON' : 'OFF'; og2El.style.color = digitalOutputs[2] ? '#0f0' : '#666'; }
+    if (og2El) { og2El.textContent = digitalOutputs[3] ? 'ON' : 'OFF'; og2El.style.color = digitalOutputs[3] ? '#0f0' : '#666'; }
+    if (p1El) { p1El.textContent = digitalOutputs[2] ? 'ON' : 'OFF'; p1El.style.color = digitalOutputs[2] ? '#0f0' : '#666'; }
+    if (p2El) { p2El.textContent = digitalOutputs[4] ? 'ON' : 'OFF'; p2El.style.color = digitalOutputs[4] ? '#0f0' : '#666'; }
     set('ml-job-name', DxState.currentJobId || '---');
     set('ml-step', String(DxState.selectedLineIndex).padStart(4, '0'));
     const mlArea = document.getElementById('ml-job-area');
@@ -4499,10 +5061,14 @@ window.addEventListener('load', () => {
                 if (matchOn) {
                     const port = parseInt(matchOn[1]);
                     digitalOutputs[port] = true;
+                    syncOutputState(port);
                 } else if (matchOff) {
                     const port = parseInt(matchOff[1]);
                     digitalOutputs[port] = false;
+                    syncOutputState(port);
                 }
+                renderInout();
+                renderGeneralScreen();
                 RobotState.programStep++;
                 if (RobotState.programStep >= currentProgram.length) {
                     RobotState.programStep = 0;
@@ -4701,6 +5267,10 @@ window.toggleLcdBrightness = toggleLcdBrightness;
 window.resetLayout = resetLayout;
 window.controlPinza = controlPinza;
 window.updateGeneralScreen = updateGeneralScreen;
+window.toggleOutput = toggleOutput;
+window.syncOutputState = syncOutputState;
+window.renderGeneralScreen = renderGeneralScreen;
+window.renderInout = renderInout;
 window.rezeroAxis = rezeroAxis;
 window.rezeroAllAxes = rezeroAllAxes;
 window.updateFileList = updateFileList;
@@ -4719,6 +5289,10 @@ window.handleToolKey = handleToolKey;
 window.handleLanguageBtn = handleLanguageBtn;
 window.toggleLanguage = toggleLanguage;
 window.updateLcdLanguage = updateLcdLanguage;
+window.renderDirectOpenConfig = renderDirectOpenConfig;
+window.renderDirectOpenShortcuts = renderDirectOpenShortcuts;
+window.directOpenByNumber = directOpenByNumber;
+window.directOpenHandleNav = directOpenHandleNav;
 </script>
 </body>
 </html>
