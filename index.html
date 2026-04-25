@@ -2796,10 +2796,27 @@ function moveAxis(axis, dir) {
                 else if (axis === 'z') target.z += stepSize * dir;
             }
         } else {
-            // Rotación: misma lógica para todos los modos
-            if (axis === 'r') target.rx += rotStep * dir;
-            else if (axis === 'b') target.ry += rotStep * dir;
-            else if (axis === 't') target.rz += rotStep * dir;
+            // Rotación: depende del sistema de coordenadas
+            if (DxState.coordSystem === 'TOOL') {
+                // MODO TOOL: Rotar alrededor de los ejes del propio tool
+                // Los botones R/B/T controlan rotación alrededor del eje X/Y/Z del tool
+                const toolFrame = getToolRotationMatrix(RobotState.angles);
+                let rotAxis;
+                if (axis === 'r') rotAxis = toolFrame.xAxis; // Rx del tool
+                else if (axis === 'b') rotAxis = toolFrame.yAxis; // Ry del tool
+                else rotAxis = toolFrame.zAxis; // Rz del tool
+                
+                // Convertir rotación local del tool a cambios Rx/Ry/Rz globales
+                const dAngle = rotStep * dir;
+                target.rx += dAngle * rotAxis.x;
+                target.ry += dAngle * rotAxis.y;
+                target.rz += dAngle * rotAxis.z;
+            } else {
+                // MODO WORLD/USER/CILÍNDRICO: Rotar alrededor de ejes del mundo
+                if (axis === 'r') target.rx += rotStep * dir;
+                else if (axis === 'b') target.ry += rotStep * dir;
+                else if (axis === 't') target.rz += rotStep * dir;
+            }
         }
         
         // Resolver IK con Jacobiano + DLS
