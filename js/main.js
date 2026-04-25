@@ -9,8 +9,9 @@ import {
     emergencyStop, handleFunc, toggleDropdown, closeHomeConfirm, handleEditAction,
     pressSelect, pressModify, pressInsert, pressDelete, handleDir, moveAxis,
     showMsg, setSpeed, toggleServo, setMode, goToTop, resetToZero,
-    checkTeachMode, selectWgravLine, selectHomeAxis, setSecurityMode
+    checkTeachMode, selectWgravLine, selectHomeAxis, setSecurityMode, toggleLanguage, handleLanguageBtn
 } from './ui.js';
+import { updateLcdLanguage } from './lang.js';
 import { renderJob, startProgram, stepProgram } from './jobManager.js';
 
 loadJobsLocally();
@@ -18,6 +19,7 @@ loadJobsLocally();
 window.addEventListener('load', () => {
     const canvas = document.getElementById('canvas');
     initRenderer(canvas);
+    updateLcdLanguage();
     renderJob();
     updateKeySwitchDisplay();
 
@@ -120,3 +122,6 @@ window.goToTop = goToTop;
 window.resetToZero = resetToZero;
 window.selectHomeAxis = selectHomeAxis;
 window.setSecurityMode = setSecurityMode;
+window.toggleLanguage = toggleLanguage;
+window.handleLanguageBtn = handleLanguageBtn;
+

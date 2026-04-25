@@ -5,6 +5,7 @@
 import { DxState, robotJobs, saveJobsLocally, gripperAngle } from './state.js';
 import { RobotState } from './state.js';
 import { setInfoDisplay, setView, checkTeachMode, cancelEdit } from './ui.js';
+import { translations, getStatusText } from './lang.js';
 
 function renderJob() {
     const container = document.getElementById('job-content-area');
@@ -12,8 +13,24 @@ function renderJob() {
     container.innerHTML = '';
 
     const currentProgram = robotJobs[DxState.currentJobId];
+    const t = translations[DxState.language || 'en'];
+    
     document.getElementById('current-job-name').textContent = DxState.currentJobId;
-    document.getElementById('job-line-indicator').textContent = String(DxState.selectedLineIndex).padStart(4, '0');
+    
+    // Update labels in header
+    const jobHeader = document.getElementById('job-header');
+    if (jobHeader) {
+        const labels = jobHeader.querySelectorAll('span[style*="color:#aaa"]');
+        if (labels.length >= 3) {
+            labels[0].textContent = t['job-label'];
+            labels[1].textContent = t['step-label'];
+            labels[2].textContent = t['method-label'];
+        }
+        const modeInd = document.getElementById('job-mode-indicator');
+        if (modeInd) modeInd.textContent = t[DxState.isInserting ? 'insert-mode' : 'overwrite-mode'];
+        const stepInd = document.getElementById('job-step-indicator');
+        if (stepInd) stepInd.textContent = String(DxState.selectedLineIndex).padStart(4, '0');
+    }
 
     const lcdStatus = document.getElementById('lcd-status');
     const isStopped = lcdStatus && (lcdStatus.textContent === 'HOLD' || lcdStatus.textContent === 'STOPPED');
@@ -73,7 +90,7 @@ function renderJob() {
         bufferContainer.innerHTML = `<span style="color:${actionColor}; font-weight:bold; margin-right:8px;">${DxState.activeEditAction}:</span> <span>${DxState.editingBuffer}</span><span class="cursor-blink">_</span>`;
         bufferContainer.style.background = '#0a2050';
     } else {
-        bufferContainer.innerHTML = '<span style="color:#666;">READY</span>';
+        bufferContainer.innerHTML = `<span style="color:#666;">${t['ready-buffer']}</span>`;
         bufferContainer.style.background = '#1a1a2e';
     }
 
@@ -94,7 +111,8 @@ function renderList() {
     jobKeys.forEach((jobId, index) => {
         const line = document.createElement('div');
         line.className = 'job-line' + (index === DxState.selectedListIndex ? ' selected' : '');
-        line.innerHTML = `⭐ <strong>${jobId}</strong> <span style="color:#666; font-size: 8px; float:right;">[${robotJobs[jobId].length} steps]</span>`;
+        const stepsLabel = DxState.language === 'es' ? 'pasos' : 'steps';
+        line.innerHTML = `⭐ <strong>${jobId}</strong> <span style="color:#666; font-size: 8px; float:right;">[${robotJobs[jobId].length} ${stepsLabel}]</span>`;
         line.onclick = () => { DxState.selectedListIndex = index; renderList(); };
         container.appendChild(line);
     });
@@ -189,12 +207,20 @@ function startProgram() {
         if (currentProgram && RobotState.programStep >= currentProgram.length) {
             RobotState.programStep = 0;
         }
-        document.getElementById('lcd-status').textContent = 'RUNNING';
+        const statusEl = document.getElementById('lcd-status');
+        if (statusEl) {
+            statusEl.textContent = getStatusText('RUNNING');
+            statusEl.setAttribute('data-status', 'RUNNING');
+        }
         setInfoDisplay('▶️ EJECUTANDO PROGRAMA');
     } else {
         RobotState.programRunning = false;
         DxState.selectedLineIndex = RobotState.programStep;
-        document.getElementById('lcd-status').textContent = 'STOPPED';
+        const statusEl = document.getElementById('lcd-status');
+        if (statusEl) {
+            statusEl.textContent = getStatusText('STOPPED');
+            statusEl.setAttribute('data-status', 'STOPPED');
+        }
         setInfoDisplay('⏹️ PROGRAMA DETENIDO en paso ' + RobotState.programStep);
         if (DxState.view === 'JOB') renderJob();
     }

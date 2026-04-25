@@ -9,6 +9,7 @@ import {
 } from './state.js';
 import { highlightJoint } from './robot3d.js';
 import { renderJob, renderList } from './jobManager.js';
+import { translations, updateLcdLanguage, getStatusText } from './lang.js';
 
 function setView(viewName) {
     DxState.view = viewName;
@@ -161,7 +162,11 @@ function emergencyStop() {
         btn.textContent = 'INACTIVO';
         btn.classList.remove('active');
     }
-    document.getElementById('lcd-status').textContent = 'E-STOP';
+    const statusEl = document.getElementById('lcd-status');
+    if (statusEl) {
+        statusEl.textContent = getStatusText('E-STOP');
+        statusEl.setAttribute('data-status', 'E-STOP');
+    }
     setInfoDisplay('🚨 PARO EMERGENCIA');
 }
 
@@ -170,7 +175,11 @@ function handleFunc(func) {
         RobotState.programRunning = false;
         // Sync cursor to the step where robot stopped (current step)
         DxState.selectedLineIndex = RobotState.programStep;
-        document.getElementById('lcd-status').textContent = 'HOLD';
+        const statusEl = document.getElementById('lcd-status');
+        if (statusEl) {
+            statusEl.textContent = getStatusText('HOLD');
+            statusEl.setAttribute('data-status', 'HOLD');
+        }
         setInfoDisplay('⏸️ PROGRAMA PAUSADO en paso ' + RobotState.programStep + ' — Use MODIFY para cambiar posición');
         if (DxState.view === 'JOB') renderJob();
     } else {
@@ -324,10 +333,13 @@ function updateDisplay() {
     }
     
     const mlTitleEl = document.getElementById('ml-coord-title');
-    if (mlTitleEl) mlTitleEl.textContent = mode + " COORD";
+    const t = translations[DxState.language || 'en'];
+    const translatedMode = t['lcd-coord-' + mode.toLowerCase()] || mode;
+
+    if (mlTitleEl) mlTitleEl.textContent = translatedMode + " COORD";
     
     const robotTitleEl = document.getElementById('lcd-coords-title');
-    if (robotTitleEl) robotTitleEl.textContent = mode + " CURRENT POSITION";
+    if (robotTitleEl) robotTitleEl.textContent = translatedMode + " " + (t['menu-current-pos'] || "CURRENT POSITION");
 
     const toolNoEl = document.getElementById('lcd-tool-no');
     if (toolNoEl) {
@@ -624,7 +636,11 @@ function resetToZero() {
         gripperAngle = startGripper + (target.gripper - startGripper) * p;
     }, 30);
     setInfoDisplay('🏠 HOME FÍSICO (Retorno Absoluto a Cero)');
-    document.getElementById('lcd-status').textContent = 'HOMING';
+    const statusEl = document.getElementById('lcd-status');
+    if (statusEl) {
+        statusEl.textContent = getStatusText('HOMING');
+        statusEl.setAttribute('data-status', 'HOMING');
+    }
 }
 
 function setMenuMode(mode) {
@@ -632,17 +648,18 @@ function setMenuMode(mode) {
     if (!sidebar) return;
     const mainBtn = document.getElementById('hi-btn-main');
     const simpleBtn = document.getElementById('hi-btn-simple');
+    const t = translations[DxState.language || 'en'];
     
     if (mode === 'simple') {
         sidebar.innerHTML = `
             <div class="lcd-sidebar-btn lcd-sidebar-btn-simple active" onclick="setView('JOB')">
-                <span>📋</span><span>JOB</span>
+                <span>📋</span><span>${t['sidebar-job']}</span>
             </div>
             <div class="lcd-sidebar-btn lcd-sidebar-btn-simple" onclick="setView('ROBOT')">
-                <span>🤖</span><span>ROBOT</span>
+                <span>🤖</span><span>${t['sidebar-robot']}</span>
             </div>
             <div class="lcd-sidebar-btn lcd-sidebar-btn-simple" onclick="setView('INOUT')">
-                <span>⚡</span><span>I/O</span>
+                <span>⚡</span><span>${t['sidebar-inout']}</span>
             </div>
             <div class="lcd-sidebar-btn lcd-sidebar-btn-simple" onclick="setView('SYSTEM-INFO')">
                 <span>⚙️</span><span>SYS</span>
@@ -652,12 +669,12 @@ function setMenuMode(mode) {
         if (simpleBtn) { mainBtn.style.background = '#4070b0'; simpleBtn.style.color = '#fff'; }
     } else {
         sidebar.innerHTML = `
-            <div class="lcd-sidebar-btn active" id="btn-view-job" onclick="setView('JOB')"><div class="sidebar-icon" style="background:#2b4b9b;"></div>JOB</div>
-            <div class="lcd-sidebar-btn" id="btn-view-general" onclick="setView('GENERAL')"><div class="sidebar-icon" style="background:#8b4513;"></div>ARC WELDING</div>
-            <div class="lcd-sidebar-btn" id="btn-view-variable" onclick="setView('VARIABLE')"><div class="sidebar-icon" style="background:#006400;"></div>VARIABLE</div>
-            <div class="lcd-sidebar-btn" id="btn-view-inout" onclick="setView('INOUT')"><div class="sidebar-icon" style="background:#4a4a8a;"></div>IN/OUT</div>
-            <div class="lcd-sidebar-btn" id="btn-view-robot" onclick="setView('ROBOT')"><div class="sidebar-icon" style="background:#8a2be2;"></div>ROBOT</div>
-            <div class="lcd-sidebar-btn" id="btn-view-sysinfo" onclick="setView('SYSTEM-INFO')"><div class="sidebar-icon" style="background:#555;"></div>SYSTEM INFO</div>
+            <div class="lcd-sidebar-btn active" id="btn-view-job" onclick="setView('JOB')"><div class="sidebar-icon" style="background:#2b4b9b;"></div>${t['sidebar-job']}</div>
+            <div class="lcd-sidebar-btn" id="btn-view-general" onclick="setView('GENERAL')"><div class="sidebar-icon" style="background:#8b4513;"></div>${t['sidebar-arc']}</div>
+            <div class="lcd-sidebar-btn" id="btn-view-variable" onclick="setView('VARIABLE')"><div class="sidebar-icon" style="background:#006400;"></div>${t['sidebar-variable']}</div>
+            <div class="lcd-sidebar-btn" id="btn-view-inout" onclick="setView('INOUT')"><div class="sidebar-icon" style="background:#4a4a8a;"></div>${t['sidebar-inout']}</div>
+            <div class="lcd-sidebar-btn" id="btn-view-robot" onclick="setView('ROBOT')"><div class="sidebar-icon" style="background:#8a2be2;"></div>${t['sidebar-robot']}</div>
+            <div class="lcd-sidebar-btn" id="btn-view-sysinfo" onclick="setView('SYSTEM-INFO')"><div class="sidebar-icon" style="background:#555;"></div>${t['sidebar-sysinfo']}</div>
         `;
         if (mainBtn) { mainBtn.style.background = '#4070b0'; mainBtn.style.color = '#fff'; }
         if (simpleBtn) { simpleBtn.style.background = '#a0a0a0'; simpleBtn.style.color = '#333'; }
@@ -681,6 +698,21 @@ function navigateSidebar(dir) {
     }
 }
 
+function toggleLanguage() {
+    DxState.language = (DxState.language === 'en') ? 'es' : 'en';
+    updateLcdLanguage();
+    setInfoDisplay(DxState.language === 'en' ? '✓ Language: ENGLISH' : '✓ Idioma: ESPAÑOL');
+    updateDisplay();
+}
+
+function handleLanguageBtn() {
+    if (isShiftPressed) {
+        toggleLanguage();
+    } else {
+        setInfoDisplay('⚠ SHIFT + LANGUAGE para cambiar idioma');
+    }
+}
+
 export {
     setView, selectHomeAxis, setSecurityMode, selectWgravLine, toggleShift,
     toggleDeadman, toggleServo, setMode, setSpeed, rotateKeySwitch,
@@ -688,7 +720,7 @@ export {
     moveAxis, updateDisplay, checkTeachMode, handleDir, handleEditAction,
     pressSelect, toggleDropdown, closeHomeConfirm, pressModify, pressInsert,
     pressDelete, goToTop, resetToZero, toggleCoordSystem, keyPositions, keyPosition,
-    setMenuMode, navigateSidebar
+    setMenuMode, navigateSidebar, toggleLanguage, handleLanguageBtn
 };
 
 window.updateDisplay = updateDisplay;
@@ -696,3 +728,5 @@ window.moveAxis = moveAxis;
 window.toggleCoordSystem = toggleCoordSystem;
 window.setMenuMode = setMenuMode;
 window.navigateSidebar = navigateSidebar;
+window.toggleLanguage = toggleLanguage;
+window.handleLanguageBtn = handleLanguageBtn;

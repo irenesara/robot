@@ -823,7 +823,7 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                             <div class="kb-btn-sq kb-btn-blue" id="tool-coord-btn" onclick="toggleCoordSystem()"><span>TOOL SEL</span><span class="no-bg">COORD</span></div>
                             <div class="kb-btn-sq" onclick="handleDirectOpen()">DIRECT<br>OPEN</div>
                             <div class="kb-btn-sq" onclick="handleGoBack()"><span>GO BACK</span><span class="no-bg">PAGE</span></div>
-                            <div class="kb-btn-sq" onclick="handleLanguageArea()"><span>LANGUAGE</span><span class="no-bg">AREA</span></div>
+                            <div class="kb-btn-sq" onclick="handleLanguageBtn()"><span>LANGUAGE</span><span class="no-bg">AREA</span></div>
                             <div class="kb-btn-sq kb-btn-blue" onclick="handleMainMenu()">MAIN<br>MENU</div>
                             <div class="kb-btn-sq kb-btn-blue" onclick="handleSimpleMenu()"><span>ENTRY</span><span class="no-bg">SIMPLE</span></div>
                             <div class="kb-btn-sq kb-btn-blue" id="servo-btn" onclick="toggleServo()">SERVO ON<br>READY</div>
@@ -955,7 +955,9 @@ const DxState = {
     insertSpeed: 50,
     jobHistory: [],
     focusedWindowIndex: 0,
-    isSimpleMenu: false
+    isSimpleMenu: false,
+    language: 'en',
+    coordSystem: 'JOINT'
 };
 
 let robotJobs = {
@@ -1032,6 +1034,181 @@ let cameraTargetY = 0.1;
 let cameraTargetZ = 0;
 let isDragging = false, isPanning = false, dragStartX = 0, dragStartY = 0;
 let activeJoint = -1, activeJointTimeout, highlightLight = null;
+
+// ===== SISTEMA DE IDIOMAS (i18n) =====
+var lcdTranslations = {
+    en: {
+        'status-ready': 'READY', 'status-estop': 'E-STOP', 'status-hold': 'HOLD',
+        'status-running': 'RUNNING', 'status-stopped': 'STOPPED', 'status-homing': 'HOMING',
+        'mode-teach': 'TEACH', 'mode-play': 'PLAY', 'mode-remote': 'REMOTE',
+        'tab-job': 'JOB', 'tab-edit': 'EDIT', 'tab-display': 'DISPLAY', 'tab-utility': 'UTILITY',
+        'side-job': 'JOB', 'side-arc': 'ARC WELDING', 'side-variable': 'VARIABLE',
+        'side-inout': 'IN/OUT', 'side-robot': 'ROBOT', 'side-sysinfo': 'SYSTEM INFO',
+        'coord-joint': 'JOINT', 'coord-world': 'WORLD', 'coord-tool': 'TOOL',
+        'lbl-mode': 'MODE:', 'lbl-spd': 'SPD:', 'lbl-sec': 'SEC:', 'lbl-coord': 'COORD:',
+        'current-pos': 'CURRENT POSITION',
+        'hi-main': 'Main Menu', 'hi-simple': 'Simple Menu',
+        'dd-select-job': 'SELECT JOB', 'dd-call-master': 'CALL MASTER JOB',
+        'dd-create-job': 'CREATE NEW JOB', 'dd-rename-job': 'RENAME JOB',
+        'dd-copy-job': 'COPY JOB', 'dd-delete-job': 'DELETE JOB',
+        'dd-font-small': 'FONT SIZE SMALL', 'dd-font-med': 'FONT SIZE MEDIUM',
+        'dd-font-large': 'FONT SIZE LARGE', 'dd-hide-info': 'HIDE ROBOT INFO',
+        'dd-brightness': 'LCD BRIGHT: 100%', 'dd-reset-layout': 'RESET LAYOUT',
+        'dd-undo': 'UNDO', 'dd-cut': 'CUT', 'dd-copy': 'COPY', 'dd-paste': 'PASTE',
+        'dd-search': 'SEARCH', 'dd-replace': 'REPLACE', 'dd-change-speed': 'CHANGE SPEED',
+        'dd-top-line': 'TOP LINE', 'dd-end-line': 'END LINE', 'dd-reverse': 'REVERSE',
+        'buf-ready': 'READY', 'steps': 'steps',
+        'lang-msg': '✓ Language: ENGLISH'
+    },
+    es: {
+        'status-ready': 'LISTO', 'status-estop': 'PARO EMG', 'status-hold': 'ESPERA',
+        'status-running': 'EJECUC.', 'status-stopped': 'DETENIDO', 'status-homing': 'CERO MAQ',
+        'mode-teach': 'ENSEÑ', 'mode-play': 'REPRO', 'mode-remote': 'REMOT',
+        'tab-job': 'PROGRAMA', 'tab-edit': 'EDICIÓN', 'tab-display': 'PANTALLA', 'tab-utility': 'UTILID.',
+        'side-job': 'PROGRAMA', 'side-arc': 'SOLDADURA', 'side-variable': 'VARIABLE',
+        'side-inout': 'ENT/SAL', 'side-robot': 'ROBOT', 'side-sysinfo': 'INFO SIST',
+        'coord-joint': 'ARTIC', 'coord-world': 'MUNDO', 'coord-tool': 'HERR',
+        'lbl-mode': 'MODO:', 'lbl-spd': 'VEL:', 'lbl-sec': 'SEG:', 'lbl-coord': 'COORD:',
+        'current-pos': 'POSICIÓN ACTUAL',
+        'hi-main': 'Menú Princ.', 'hi-simple': 'Menú Simpl.',
+        'dd-select-job': 'SELEC. PROGRAMA', 'dd-call-master': 'LLAMAR MAESTRO',
+        'dd-create-job': 'CREAR PROGRAMA', 'dd-rename-job': 'RENOMBRAR PROG',
+        'dd-copy-job': 'COPIAR PROGRAMA', 'dd-delete-job': 'BORRAR PROGRAMA',
+        'dd-font-small': 'FUENTE PEQUEÑA', 'dd-font-med': 'FUENTE MEDIANA',
+        'dd-font-large': 'FUENTE GRANDE', 'dd-hide-info': 'OCULTAR INFO',
+        'dd-brightness': 'BRILLO LCD: 100%', 'dd-reset-layout': 'REINICIAR DISP',
+        'dd-undo': 'DESHACER', 'dd-cut': 'CORTAR', 'dd-copy': 'COPIAR', 'dd-paste': 'PEGAR',
+        'dd-search': 'BUSCAR', 'dd-replace': 'REEMPLAZAR', 'dd-change-speed': 'CAMBIAR VELOC',
+        'dd-top-line': 'LÍNEA INICIO', 'dd-end-line': 'LÍNEA FIN', 'dd-reverse': 'INVERTIR',
+        'buf-ready': 'LISTO', 'steps': 'pasos',
+        'lang-msg': '✓ Idioma: ESPAÑOL'
+    }
+};
+
+var statusMap = {
+    'READY': 'status-ready', 'LISTO': 'status-ready',
+    'E-STOP': 'status-estop', 'PARO EMG': 'status-estop',
+    'HOLD': 'status-hold', 'ESPERA': 'status-hold',
+    'RUNNING': 'status-running', 'EJECUC.': 'status-running',
+    'STOPPED': 'status-stopped', 'DETENIDO': 'status-stopped',
+    'HOMING': 'status-homing', 'CERO MAQ': 'status-homing'
+};
+
+var ddMap = {
+    'SELECT JOB': 'dd-select-job', 'SELEC. PROGRAMA': 'dd-select-job',
+    'CALL MASTER JOB': 'dd-call-master', 'LLAMAR MAESTRO': 'dd-call-master',
+    'CREATE NEW JOB': 'dd-create-job', 'CREAR PROGRAMA': 'dd-create-job',
+    'RENAME JOB': 'dd-rename-job', 'RENOMBRAR PROG': 'dd-rename-job',
+    'COPY JOB': 'dd-copy-job', 'COPIAR PROGRAMA': 'dd-copy-job',
+    'DELETE JOB': 'dd-delete-job', 'BORRAR PROGRAMA': 'dd-delete-job',
+    'FONT SIZE SMALL': 'dd-font-small', 'FUENTE PEQUEÑA': 'dd-font-small',
+    'FONT SIZE MEDIUM': 'dd-font-med', 'FUENTE MEDIANA': 'dd-font-med',
+    'FONT SIZE LARGE': 'dd-font-large', 'FUENTE GRANDE': 'dd-font-large',
+    'HIDE ROBOT INFO': 'dd-hide-info', 'OCULTAR INFO': 'dd-hide-info',
+    'LCD BRIGHT: 100%': 'dd-brightness', 'BRILLO LCD: 100%': 'dd-brightness',
+    'RESET LAYOUT': 'dd-reset-layout', 'REINICIAR DISP': 'dd-reset-layout',
+    'UNDO': 'dd-undo', 'DESHACER': 'dd-undo',
+    'CUT': 'dd-cut', 'CORTAR': 'dd-cut',
+    'COPY': 'dd-copy', 'COPIAR': 'dd-copy',
+    'PASTE': 'dd-paste', 'PEGAR': 'dd-paste',
+    'SEARCH': 'dd-search', 'BUSCAR': 'dd-search',
+    'REPLACE': 'dd-replace', 'REEMPLAZAR': 'dd-replace',
+    'CHANGE SPEED': 'dd-change-speed', 'CAMBIAR VELOC': 'dd-change-speed',
+    'TOP LINE': 'dd-top-line', 'LÍNEA INICIO': 'dd-top-line',
+    'END LINE': 'dd-end-line', 'LÍNEA FIN': 'dd-end-line',
+    'REVERSE': 'dd-reverse', 'INVERTIR': 'dd-reverse'
+};
+
+function updateLcdLanguage() {
+    const t = lcdTranslations[DxState.language || 'en'];
+
+    // Status bar
+    const statusEl = document.getElementById('lcd-status');
+    if (statusEl) {
+        const key = statusMap[statusEl.textContent.trim()];
+        if (key) statusEl.textContent = t[key];
+    }
+
+    // Top bar: update label text nodes (MODE:, SPD:, SEC:, COORD:)
+    const topBar = document.querySelector('.lcd-top-bar');
+    if (topBar) {
+        const spans = topBar.children;
+        for (let i = 0; i < spans.length; i++) {
+            const span = spans[i];
+            const firstChild = span.firstChild;
+            if (firstChild && firstChild.nodeType === 3) {
+                const txt = firstChild.textContent.trim();
+                if (txt === 'MODE:' || txt === 'MODO:') {
+                    firstChild.textContent = t['lbl-mode'];
+                } else if (txt === 'SPD:' || txt === 'VEL:') {
+                    firstChild.textContent = t['lbl-spd'];
+                } else if (txt === 'SEC:' || txt === 'SEG:') {
+                    firstChild.textContent = t['lbl-sec'];
+                } else if (txt === 'COORD:') {
+                    firstChild.textContent = t['lbl-coord'];
+                }
+            }
+        }
+    }
+
+    // Menu tabs
+    const tabs = document.querySelectorAll('.menu-tab');
+    if (tabs.length >= 4) {
+        tabs[0].textContent = t['tab-job'];
+        tabs[1].textContent = t['tab-edit'];
+        tabs[2].textContent = t['tab-display'];
+        tabs[3].textContent = t['tab-utility'];
+    }
+
+    // Sidebar buttons (main mode)
+    const sidebarBtns = document.querySelectorAll('.lcd-sidebar-btn:not(.lcd-sidebar-btn-simple)');
+    const sideKeys = ['side-job', 'side-arc', 'side-variable', 'side-inout', 'side-robot', 'side-sysinfo'];
+    sidebarBtns.forEach((btn, i) => {
+        if (sideKeys[i]) {
+            const icon = btn.querySelector('.sidebar-icon');
+            if (icon) {
+                btn.innerHTML = '';
+                btn.appendChild(icon);
+                btn.appendChild(document.createTextNode(t[sideKeys[i]]));
+            }
+        }
+    });
+
+    // Coord title
+    const coordTitle = document.getElementById('lcd-coords-title');
+    if (coordTitle) {
+        const mode = (DxState.coordSystem || 'JOINT').toLowerCase();
+        const coordName = t['coord-' + mode] || (DxState.coordSystem || 'JOINT');
+        coordTitle.textContent = coordName + ' ' + t['current-pos'];
+    }
+
+    // Dropdown items
+    document.querySelectorAll('.dropdown-item').forEach(item => {
+        const key = ddMap[item.textContent.trim()];
+        if (key && t[key]) item.textContent = t[key];
+    });
+
+    // HI buttons
+    const hiMain = document.getElementById('hi-btn-main');
+    const hiSimple = document.getElementById('hi-btn-simple');
+    if (hiMain) hiMain.textContent = t['hi-main'];
+    if (hiSimple) hiSimple.textContent = t['hi-simple'];
+}
+
+function toggleLanguage() {
+    DxState.language = (DxState.language === 'en') ? 'es' : 'en';
+    updateLcdLanguage();
+    const t = lcdTranslations[DxState.language];
+    setInfoDisplay(t['lang-msg']);
+}
+
+function handleLanguageBtn() {
+    if (isShiftPressed) {
+        toggleLanguage();
+    } else {
+        setInfoDisplay('⚠ SHIFT + LANGUAGE para cambiar idioma');
+    }
+}
 
 function saveJobsLocally() {
     try {
@@ -1240,9 +1417,11 @@ function buildRobot() {
     const wristBend = new THREE.Mesh(wristBendGeom, new THREE.MeshPhongMaterial({ color: yBlue, shininess: 90 }));
     wristBend.position.x = 0.02;
     joint4.add(wristBend);
-
+    
     const bendMotor = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.06, 16), new THREE.MeshPhongMaterial({ color: yDark }));
     bendMotor.rotation.x = Math.PI / 2;
+    bendMotor.userData.axisName = 'b';
+    bendMotor.userData.originalColor = yDark;
     joint4.add(bendMotor);
     joints.push(joint4);
 
@@ -1369,6 +1548,37 @@ function highlightJoint(index) {
         }
         activeJoint = -1;
     }, 1200);
+}
+
+let sHighlight = null;
+
+function highlightJointS() {
+    if (!scene) return;
+    
+    if (sHighlight) {
+        scene.remove(sHighlight);
+        if (sHighlight.userData.light) scene.remove(sHighlight.userData.light);
+        sHighlight = null;
+    }
+    
+    const geo = new THREE.SphereGeometry(0.04, 16, 16);
+    const mat = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.8 });
+    sHighlight = new THREE.Mesh(geo, mat);
+    sHighlight.position.set(0, 0.3, 0);
+    scene.add(sHighlight);
+    
+    const light = new THREE.PointLight(0xff3300, 2, 0.25);
+    light.position.set(0, 0.3, 0);
+    scene.add(light);
+    sHighlight.userData.light = light;
+    
+    setTimeout(() => {
+        if (sHighlight) {
+            scene.remove(sHighlight);
+            if (sHighlight.userData.light) scene.remove(sHighlight.userData.light);
+            sHighlight = null;
+        }
+    }, 600);
 }
 
 function updateGuideLines() {
@@ -2291,6 +2501,72 @@ function moveAxis(axis, dir) {
                 Math.min(RobotState.limits[sAxis].max, RobotState.angles[sAxis] + inc)
             );
             setInfoDisplay(`✓ MOVIENDO ${sAxis.toUpperCase()} ${dir > 0 ? '+' : '−'}`);
+            console.log('axis:', sAxis);
+            function createGlow(x, y, z, color, size) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 128;
+    canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+    const grad = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+    const c = color === 'red' ? '255,50,0' : '255,100,0';
+    grad.addColorStop(0, 'rgba(' + c + ',1)');
+    grad.addColorStop(0.3, 'rgba(' + c + ',0.5)');
+    grad.addColorStop(1, 'rgba(' + c + ',0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 128, 128);
+    const tex = new THREE.CanvasTexture(canvas);
+    const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, blending: THREE.AdditiveBlending, opacity: size || 1 });
+    const sprite = new THREE.Sprite(mat);
+    sprite.position.set(x, y, z);
+    sprite.scale.set(size ? size * 0.3 : 0.3, size ? size * 0.3 : 0.3, size ? size * 0.3 : 0.3);
+    return sprite;
+}
+
+function createRing(x, y, z) {
+    const geo = new THREE.TorusGeometry(0.02, 0.003, 8, 32);
+    const mat = new THREE.MeshBasicMaterial({ color: 0xff3300, transparent: true, opacity: 0.9 });
+    const ring = new THREE.Mesh(geo, mat);
+    ring.position.set(x, y, z);
+    ring.rotation.x = Math.PI / 2;
+    return ring;
+}
+
+if (sAxis === 's' && scene) {
+                const glow = createGlow(0, 0.35, 0, 'red');
+                scene.add(glow);
+                setTimeout(() => scene.remove(glow), 600);
+            }
+            if (sAxis === 'l' && scene) {
+                const glow = createGlow(0.1, 0.35, 0, 'orange');
+                scene.add(glow);
+                setTimeout(() => scene.remove(glow), 600);
+            }
+            if (sAxis === 'u' && scene) {
+                const glow = createGlow(0.4, 0.35, 0, 'orange');
+                scene.add(glow);
+                setTimeout(() => scene.remove(glow), 600);
+            }
+            if (sAxis === 'r' && scene) {
+                const glow = createGlow(0.45, 0.35, 0, 'red', 0.5);
+                const ring = createRing(0.45, 0.35, 0);
+                scene.add(glow);
+                scene.add(ring);
+                setTimeout(() => { scene.remove(glow); scene.remove(ring); }, 600);
+            }
+            if (sAxis === 'b' && scene) {
+                const glow = createGlow(0.55, 0.35, 0, 'red', 0.6);
+                const ring = createRing(0.55, 0.35, 0);
+                scene.add(glow);
+                scene.add(ring);
+                setTimeout(() => { scene.remove(glow); scene.remove(ring); }, 600);
+            }
+            if (sAxis === 't' && scene) {
+                const glow = createGlow(0.65, 0.35, 0, 'red', 0.5);
+                const ring = createRing(0.65, 0.35, 0);
+                scene.add(glow);
+                scene.add(ring);
+                setTimeout(() => { scene.remove(glow); scene.remove(ring); }, 600);
+            }
         }
     }
     updateDisplay();
@@ -4440,6 +4716,9 @@ window.changeInstruction = changeInstruction;
 window.updateJobDetail = updateJobDetail;
 window.renderJob = renderJob;
 window.handleToolKey = handleToolKey;
+window.handleLanguageBtn = handleLanguageBtn;
+window.toggleLanguage = toggleLanguage;
+window.updateLcdLanguage = updateLcdLanguage;
 </script>
 </body>
 </html>

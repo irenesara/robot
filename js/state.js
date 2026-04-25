@@ -37,7 +37,8 @@ window.DxState = window.DxState || {
     editingBuffer: '',
     securityMode: 'EDITING',
     clipboard: null,
-    selectedLines: null
+    selectedLines: null,
+    language: 'en' // Default to English as per user request
 };
 
 // Referencias locales para mantener compatibilidad con los imports de otros módulos
