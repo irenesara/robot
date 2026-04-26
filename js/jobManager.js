@@ -2,7 +2,7 @@
  * DX-200 Robot Simulator - Job Manager
  */
 
-import { DxState, robotJobs, saveJobsLocally, gripperAngle } from './state.js';
+import { DxState, robotJobs, saveJobsLocally } from './state.js';
 import { RobotState } from './state.js';
 import { setInfoDisplay, setView, checkTeachMode, cancelEdit } from './ui.js';
 import { translations, getStatusText } from './lang.js';
@@ -159,7 +159,7 @@ function pressEnter() {
         const newStep = {
             s: RobotState.angles.s, l: RobotState.angles.l, u: RobotState.angles.u,
             r: RobotState.angles.r, b: RobotState.angles.b, t: RobotState.angles.t,
-            gripper: gripperAngle, code: DxState.editingBuffer || ('MOVJ VJ=' + RobotState.speed + '.00'), desc: 'Punto ENSEÑADO'
+            gripper: RobotState.gripperAngle, code: DxState.editingBuffer || ('MOVJ VJ=' + RobotState.speed + '.00 PL=0'), desc: 'Punto ENSEÑADO'
         };
         if (DxState.selectedLineIndex >= 0 && DxState.selectedLineIndex < currentProgram.length) {
             currentProgram.splice(DxState.selectedLineIndex + 1, 0, newStep);
@@ -190,7 +190,7 @@ function pressEnter() {
             let step = currentProgram[DxState.selectedLineIndex];
             step.s = RobotState.angles.s; step.l = RobotState.angles.l; step.u = RobotState.angles.u;
             step.r = RobotState.angles.r; step.b = RobotState.angles.b; step.t = RobotState.angles.t;
-            step.gripper = gripperAngle;
+            step.gripper = RobotState.gripperAngle;
             step.code = DxState.editingBuffer;
             setInfoDisplay('✓ Punto modificado.');
         }
@@ -299,7 +299,7 @@ function stepProgram(direction) {
     const target = currentProgram[targetIndex];
 
     const startAngles = { ...RobotState.angles };
-    const startGripper = gripperAngle;
+    const startGripper = RobotState.gripperAngle;
     let p = 0;
     const stepAnim = setInterval(() => {
         p += 0.1;
@@ -311,7 +311,7 @@ function stepProgram(direction) {
         RobotState.angles.b = startAngles.b + (target.b - startAngles.b) * p;
         RobotState.angles.t = startAngles.t + (target.t - startAngles.t) * p;
         if (target.gripper !== undefined) {
-            gripperAngle = startGripper + (target.gripper - startGripper) * p;
+            RobotState.gripperAngle = startGripper + (target.gripper - startGripper) * p;
         }
     }, 30);
 

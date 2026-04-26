@@ -30,7 +30,8 @@ window.addEventListener('load', () => {
         if (RobotState.programRunning && currentProgram && currentProgram.length > 0) {
             const step = currentProgram[RobotState.programStep];
             const isTimer = (step.code || '').startsWith('TIMER');
-            const targetGripper = step.gripper !== undefined ? step.gripper : gripperAngle;
+            const targetGripper = step.gripper !== undefined ? step.gripper : RobotState.gripperAngle;
+            const targetGripper2 = step.gripper2 !== undefined ? step.gripper2 : RobotState.gripper2Angle;
 
             if (isTimer) {
                 RobotState.stepTimer++;
@@ -38,7 +39,8 @@ window.addEventListener('load', () => {
                 let match = (step.code || '').match(/T=([\d\.]+)/);
                 if (match && match[1]) maxFrames = parseFloat(match[1]) * 60;
 
-                gripperAngle += (targetGripper - gripperAngle) * 0.15;
+                RobotState.gripperAngle += (targetGripper - RobotState.gripperAngle) * 0.15;
+                RobotState.gripper2Angle += (targetGripper2 - RobotState.gripper2Angle) * 0.15;
 
                 if (RobotState.stepTimer > maxFrames) {
                     RobotState.stepTimer = 0;
@@ -58,7 +60,8 @@ window.addEventListener('load', () => {
                 RobotState.angles.r += (step.r - RobotState.angles.r) * lerpFactor;
                 RobotState.angles.b += (step.b - RobotState.angles.b) * lerpFactor;
                 RobotState.angles.t += (step.t - RobotState.angles.t) * lerpFactor;
-                gripperAngle += (targetGripper - gripperAngle) * lerpFactor;
+                RobotState.gripperAngle += (targetGripper - RobotState.gripperAngle) * lerpFactor;
+                RobotState.gripper2Angle += (targetGripper2 - RobotState.gripper2Angle) * lerpFactor;
 
                 document.getElementById('lcd-mode').textContent = (RobotState.programStep + 1) + '/' + currentProgram.length;
 
@@ -71,7 +74,17 @@ window.addEventListener('load', () => {
                     Math.abs(step.t - RobotState.angles.t)
                 );
 
-                if (maxError < 1.0) {
+                let plValue = 0;
+                let plMatch = (step.code || '').match(/PL=(\d+)/);
+                if (plMatch && plMatch[1]) {
+                    plValue = parseInt(plMatch[1]);
+                }
+                
+                // PL=0 means exact stop (threshold 1.0 degrees)
+                // PL>0 means smoothing (threshold increases, jumping to next point early)
+                let threshold = 1.0 + (plValue * 5.0);
+
+                if (maxError < threshold) {
                     RobotState.programStep++;
                     if (RobotState.programStep >= currentProgram.length) {
                         RobotState.programStep = 0;

@@ -5,7 +5,7 @@
 import {
     RobotState, DxState, robotJobs, wgravSelectedIdx, wgravCompleted,
     isShiftPressed, isServoOn, keyPosition, keyPositions, keyRotations,
-    gripperAngle, gripper2Angle, saveJobsLocally
+    saveJobsLocally
 } from './state.js';
 import { highlightJoint } from './robot3d.js';
 import { renderJob, renderList } from './jobManager.js';
@@ -203,9 +203,9 @@ function moveAxis(axis, dir) {
     if (axis === 'a' || axis === 'e') {
         const isPinza2 = (axis === 'e');
         const maxOpen = 0.030;
-        let angle = isPinza2 ? gripper2Angle : gripperAngle;
+        let angle = isPinza2 ? RobotState.gripper2Angle : RobotState.gripperAngle;
         angle = Math.max(0, Math.min(maxOpen, angle + (0.01 * dir)));
-        if (isPinza2) gripper2Angle = angle; else gripperAngle = angle;
+        if (isPinza2) RobotState.gripper2Angle = angle; else RobotState.gripperAngle = angle;
         
         const pct = Math.round((angle / maxOpen) * 100);
         setInfoDisplay(`✓ PINZA ${isPinza2 ? '2' : '1'}: ${pct}%`);
@@ -385,6 +385,33 @@ function handleDir(dir) {
     if (DxState.view === 'JOB') {
         const currentProgram = robotJobs[DxState.currentJobId];
         if (currentProgram && currentProgram.length > 0) {
+            // Edición rápida de parámetros con SHIFT + ▲/▼
+            if (isShiftPressed && (dir === 'up' || dir === 'down')) {
+                if (!checkTeachMode('Edición de parámetros')) return;
+                let step = currentProgram[DxState.selectedLineIndex];
+                let tokens = (step.code || '').split(' ');
+                if (DxState.selectedTokenIndex > 0 && tokens.length > DxState.selectedTokenIndex) {
+                    let target = tokens[DxState.selectedTokenIndex];
+                    if (target.startsWith('VJ=')) {
+                        const speeds = ['VJ=1.00', 'VJ=5.00', 'VJ=10.00', 'VJ=25.00', 'VJ=50.00', 'VJ=100.00'];
+                        let idx = speeds.indexOf(target);
+                        if (dir === 'up') idx = (idx + 1) % speeds.length;
+                        else idx = (idx - 1 + speeds.length) % speeds.length;
+                        tokens[DxState.selectedTokenIndex] = speeds[idx];
+                    } else if (target.startsWith('PL=')) {
+                        let plNum = parseInt(target.substring(3)) || 0;
+                        if (dir === 'up') plNum = Math.min(8, plNum + 1);
+                        else plNum = Math.max(0, plNum - 1);
+                        tokens[DxState.selectedTokenIndex] = 'PL=' + plNum;
+                    }
+                    step.code = tokens.join(' ');
+                    saveJobsLocally();
+                    renderJob();
+                    setInfoDisplay('✓ Parámetro actualizado');
+                }
+                return;
+            }
+
             if (dir === 'up') {
                 DxState.selectedLineIndex = Math.max(0, DxState.selectedLineIndex - 1);
                 DxState.selectedTokenIndex = 0;
@@ -577,7 +604,7 @@ function pressInsert() {
         if (btn) btn.classList.add('blink-active');
 
         // Default instruction in buffer
-        DxState.editingBuffer = 'MOVJ VJ=' + RobotState.speed + '.00';
+        DxState.editingBuffer = 'MOVJ VJ=' + RobotState.speed + '.00 PL=0';
         setInfoDisplay('INSERT activo. Elija instrucción y pulse ENTER.');
     }
     renderJob();
@@ -622,7 +649,7 @@ function resetToZero() {
     RobotState.programRunning = false;
     let target = { s: 0, l: 0, u: 0, r: 0, b: 0, t: 0, gripper: 0 };
     const startAngles = { ...RobotState.angles };
-    const startGripper = gripperAngle;
+    const startGripper = RobotState.gripperAngle;
     let p = 0;
     const zeroAnim = setInterval(() => {
         p += 0.05;
@@ -633,7 +660,7 @@ function resetToZero() {
         RobotState.angles.r = startAngles.r + (target.r - startAngles.r) * p;
         RobotState.angles.b = startAngles.b + (target.b - startAngles.b) * p;
         RobotState.angles.t = startAngles.t + (target.t - startAngles.t) * p;
-        gripperAngle = startGripper + (target.gripper - startGripper) * p;
+        RobotState.gripperAngle = startGripper + (target.gripper - startGripper) * p;
     }, 30);
     setInfoDisplay('🏠 HOME FÍSICO (Retorno Absoluto a Cero)');
     const statusEl = document.getElementById('lcd-status');
@@ -675,6 +702,9 @@ function setMenuMode(mode) {
             <div class="lcd-sidebar-btn" id="btn-view-inout" onclick="setView('INOUT')"><div class="sidebar-icon" style="background:#4a4a8a;"></div>${t['sidebar-inout']}</div>
             <div class="lcd-sidebar-btn" id="btn-view-robot" onclick="setView('ROBOT')"><div class="sidebar-icon" style="background:#8a2be2;"></div>${t['sidebar-robot']}</div>
             <div class="lcd-sidebar-btn" id="btn-view-sysinfo" onclick="setView('SYSTEM-INFO')"><div class="sidebar-icon" style="background:#555;"></div>${t['sidebar-sysinfo']}</div>
+            <div class="lcd-sidebar-btn" id="btn-view-exmemory" onclick="showMsg('EX MEMORY MENU')"><div class="sidebar-icon" style="background:#444;"></div>EX MEMORY</div>
+            <div class="lcd-sidebar-btn" id="btn-view-setup" onclick="showMsg('SETUP MENU')"><div class="sidebar-icon" style="background:#666;"></div>SETUP</div>
+            <div class="lcd-sidebar-btn" id="btn-view-displaysetup" onclick="showMsg('DISPLAY SETUP MENU')"><div class="sidebar-icon" style="background:#888;"></div>DISPLAY SETUP</div>
         `;
         if (mainBtn) { mainBtn.style.background = '#4070b0'; mainBtn.style.color = '#fff'; }
         if (simpleBtn) { simpleBtn.style.background = '#a0a0a0'; simpleBtn.style.color = '#333'; }
@@ -694,7 +724,7 @@ function navigateSidebar(dir) {
     if (dir === 0) {
         sidebar.scrollTop = 0;
     } else {
-        sidebar.scrollTop += dir * 30;
+        sidebar.scrollTop += dir * 150;
     }
 }
 

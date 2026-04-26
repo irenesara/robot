@@ -19,14 +19,16 @@ window.RobotState = window.RobotState || {
     programRunning: false,
     programStep: 0,
     stepTimer: 0,
-    mode: 'TEACH'
+    mode: 'TEACH',
+    gripperAngle: 0,
+    gripper2Angle: 0
 };
 
 window.DxState = window.DxState || {
     view: 'JOB',
     coordSystem: 'JOINT', // MANTENER: JOINT, WORLD, TOOL
     currentToolNo: 0,
-    currentJobId: 'JOB_ALAMBRE',
+    currentJobId: 'JOB_NUEVO',
     selectedLineIndex: 0,
     selectedListIndex: 0,
     selectedTokenIndex: 0,
@@ -46,17 +48,19 @@ const RobotState = window.RobotState;
 const DxState = window.DxState;
 
 let robotJobs = {
-    "JOB_ALAMBRE": [
-        { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, gripper: 0, code: 'NOP', desc: 'INICIO' },
-        { s: 30, l: -20, u: 50, r: 0, b: -45, t: 0, gripper: 0, code: 'MOVJ VJ=50.00', desc: 'IR A ROLLO HILO' },
-        { s: 30, l: -40, u: 70, r: 0, b: -90, t: 0, gripper: 0, code: 'MOVJ VJ=25.00', desc: 'BAJAR A HILO' },
-        { s: 30, l: -40, u: 70, r: 0, b: -90, t: 0, gripper: 0.015, code: 'TIMER T=0.5', desc: 'CERRAR PINZA (COGER)' },
-        { s: 30, l: -20, u: 50, r: 0, b: -45, t: 0, gripper: 0.015, code: 'MOVJ VJ=10.00', desc: 'TENSAR SUAVE' },
-        { s: 0, l: -20, u: 50, r: 90, b: -45, t: -90, gripper: 0.015, code: 'MOVJ VJ=50.00', desc: 'TIRAR Y ENROLLAR' },
-        { s: -45, l: -10, u: 40, r: 180, b: 0, t: -180, gripper: 0.015, code: 'MOVJ VJ=50.00', desc: 'ARRASTRAR LARGO' },
-        { s: -45, l: -10, u: 40, r: 180, b: 0, t: -180, gripper: 0, code: 'TIMER T=0.5', desc: 'SOLTAR ALAMBRE' },
-        { s: -45, l: -30, u: 60, r: 0, b: 0, t: 0, gripper: 0, code: 'MOVJ VJ=100.00', desc: 'RETORNO SEGURO' },
-        { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, gripper: 0, code: 'END', desc: 'FIN BUCLE' }
+    "JOB_NUEVO": [
+        { s: 0, l: -60, u: 60, r: 0, b: 0, t: 0, gripper: 0, gripper2: 0, code: 'NOP', desc: 'INICIO' },
+        { s: 45, l: -20, u: 40, r: 0, b: -45, t: 0, gripper: 0, gripper2: 0, code: 'MOVJ VJ=50.00 PL=4', desc: 'IR ZONA A' },
+        { s: 45, l: -40, u: 60, r: 0, b: -90, t: 0, gripper: 0, gripper2: 0, code: 'MOVL V=25.00 PL=0', desc: 'BAJAR A ZONA A' },
+        { s: 45, l: -40, u: 60, r: 0, b: -90, t: 0, gripper: 0.015, gripper2: 0, code: 'DOUT OG#(1) ON', desc: 'COGER OBJETO 1' },
+        { s: 45, l: -40, u: 60, r: 0, b: -90, t: 0, gripper: 0.015, gripper2: 0, code: 'TIMER T=0.5', desc: 'ESPERAR' },
+        { s: 0, l: 0, u: 30, r: 0, b: -45, t: 0, gripper: 0.015, gripper2: 0, code: 'MOVJ VJ=50.00 PL=4', desc: 'PASAR POR CENTRO' },
+        { s: -45, l: -20, u: 40, r: 90, b: -45, t: 90, gripper: 0.015, gripper2: 0, code: 'MOVJ VJ=50.00 PL=2', desc: 'IR ZONA B' },
+        { s: -45, l: -40, u: 60, r: 90, b: -90, t: 90, gripper: 0.015, gripper2: 0, code: 'MOVL V=50.00 PL=0', desc: 'BAJAR A ZONA B' },
+        { s: -45, l: -40, u: 60, r: 90, b: -90, t: 90, gripper: 0.015, gripper2: 0.015, code: 'DOUT OG#(2) ON', desc: 'COGER OBJETO 2' },
+        { s: -45, l: -40, u: 60, r: 90, b: -90, t: 90, gripper: 0.015, gripper2: 0.015, code: 'TIMER T=0.5', desc: 'ESPERAR' },
+        { s: 0, l: -60, u: 60, r: 0, b: 0, t: 0, gripper: 0, gripper2: 0, code: 'MOVJ VJ=100.00 PL=0', desc: 'SOLTAR Y VOLVER' },
+        { s: 0, l: -60, u: 60, r: 0, b: 0, t: 0, gripper: 0, gripper2: 0, code: 'END', desc: 'FIN PROGRAMA' }
     ]
 };
 
@@ -67,8 +71,6 @@ let isServoOn = false;
 let keyPosition = 0;
 const keyPositions = ['OFF', 'REMOTE', 'TEACH'];
 const keyRotations = [0, -120, 120];
-let gripperAngle = 0;
-let gripper2Angle = 0;
 
 function saveJobsLocally() {
     try {
@@ -81,7 +83,7 @@ function loadJobsLocally() {
         const saved = localStorage.getItem('dx200_robotJobs');
         if (saved) {
             let parsed = JSON.parse(saved);
-            if (!parsed['JOB_ALAMBRE']) parsed['JOB_ALAMBRE'] = robotJobs['JOB_ALAMBRE'];
+            if (!parsed['JOB_NUEVO']) parsed['JOB_NUEVO'] = robotJobs['JOB_NUEVO'];
             robotJobs = parsed;
         }
     } catch (e) { console.error("Error al cargar trabajos", e); }
@@ -90,5 +92,5 @@ function loadJobsLocally() {
 export {
     RobotState, DxState, robotJobs, wgravSelectedIdx, wgravCompleted,
     isShiftPressed, isServoOn, keyPosition, keyPositions, keyRotations,
-    gripperAngle, gripper2Angle, saveJobsLocally, loadJobsLocally
+    saveJobsLocally, loadJobsLocally
 };

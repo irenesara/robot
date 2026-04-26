@@ -2,7 +2,7 @@
  * DX-200 Robot Simulator - Three.js 3D Renderer
  */
 
-import { RobotState, gripperAngle, gripper2Angle } from './state.js';
+import { RobotState } from './state.js';
 
 let scene, camera, renderer;
 let robotGroup, joints = [];
@@ -420,14 +420,14 @@ function updateRobotDisplay() {
 
         if (gripperGroup) {
             gripperGroup.children.forEach(child => {
-                if (child.userData.isPinza1Top) child.position.y = 0.028 + gripperAngle;
-                else if (child.userData.isPinza1Bottom) child.position.y = -0.028 - gripperAngle;
+                if (child.userData.isPinza1Top) child.position.y = 0.028 + RobotState.gripperAngle;
+                else if (child.userData.isPinza1Bottom) child.position.y = -0.028 - RobotState.gripperAngle;
             });
         }
         if (scissorGroup) {
             scissorGroup.children.forEach(child => {
-                if (child.userData.isPinza2Top) child.position.y = 0.028 + gripper2Angle;
-                else if (child.userData.isPinza2Bottom) child.position.y = -0.028 - gripper2Angle;
+                if (child.userData.isPinza2Top) child.position.y = 0.028 + RobotState.gripper2Angle;
+                else if (child.userData.isPinza2Bottom) child.position.y = -0.028 - RobotState.gripper2Angle;
             });
         }
     }

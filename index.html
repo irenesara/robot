@@ -47,7 +47,8 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
 .lcd-display { background: #000000; border: 3px solid #0f0; border-radius: 0; height: 240px; flex-shrink: 0; color: #0f0; font-family: "Courier New", monospace; display: flex; flex-direction: column; overflow: hidden; margin: 0; user-select: none; position: relative; }
 .lcd-top-bar { background: #000000; color: #0f0; padding: 1px 4px; font-size: 7px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; border-bottom: 2px solid #0f0; }
 .lcd-body { display: flex; flex: 1; height: auto; overflow: visible; }
-.lcd-sidebar { width: 50px; background: #000000; border-right: 1px solid #0f0; display: flex; flex-direction: column; padding: 2px; overflow-y: auto; flex-shrink: 0; }
+.lcd-sidebar { width: 50px; background: #000000; border-right: 1px solid #0f0; display: flex; flex-direction: column; padding: 2px; overflow-y: auto; flex-shrink: 0; scroll-behavior: smooth; -ms-overflow-style: none; scrollbar-width: none; }
+.lcd-sidebar::-webkit-scrollbar { display: none; }
 .lcd-sidebar-btn { min-height: 14px; font-size: 4px; text-align: center; border: 1px solid #555; background: #d0d0d0; cursor: pointer; font-weight: bold; border-radius: 1px; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; margin: 1px 0; padding: 2px 1px; color: #000; gap: 1px; }
 .lcd-sidebar-btn:active, .lcd-sidebar-btn.active { background: #fff; border-left: 3px solid #1a3a6a; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
 .sidebar-icon { width: 12px; height: 8px; border-radius: 1px; border: 1px solid #333; flex-shrink: 0; }
@@ -215,7 +216,7 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
 
                 <div class="lcd-display">
                     <div class="lcd-top-bar" style="display:flex; justify-content:space-between; align-items:center; padding:1px 4px; background:#1a1a2e; border-bottom:1px solid #333; font-size:7px; color:#ccc; font-family:'Courier New',monospace;">
-                        <span id="lcd-status" style="color:#0f0;">READY</span>
+                        <span id="lcd-status" style="color:#0a0;">READY</span>
                         <span>MODE:<span id="lcd-mode" style="color:#ff0;">TEACH</span></span>
                         <span>SPD:<span id="lcd-speed" style="color:#ff0;">LOW</span></span>
                         <span>SEC:<span id="lcd-security" style="color:#f0f;">OPER</span></span>
@@ -287,6 +288,9 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                             <div class="lcd-sidebar-btn" id="btn-view-inout" onclick="setView('INOUT')"><div class="sidebar-icon" style="background:#4a4a8a;"></div>IN/OUT</div>
                             <div class="lcd-sidebar-btn" id="btn-view-robot" onclick="setView('ROBOT')"><div class="sidebar-icon" style="background:#8a2be2;"></div>ROBOT</div>
                             <div class="lcd-sidebar-btn" id="btn-view-sysinfo" onclick="setView('SYSTEM-INFO')"><div class="sidebar-icon" style="background:#555;"></div>SYSTEM INFO</div>
+                            <div class="lcd-sidebar-btn" id="btn-view-exmemory" onclick="showMsg('EX MEMORY MENU')"><div class="sidebar-icon" style="background:#444;"></div>EX MEMORY</div>
+                            <div class="lcd-sidebar-btn" id="btn-view-setup" onclick="showMsg('SETUP MENU')"><div class="sidebar-icon" style="background:#666;"></div>SETUP</div>
+                            <div class="lcd-sidebar-btn" id="btn-view-displaysetup" onclick="showMsg('DISPLAY SETUP MENU')"><div class="sidebar-icon" style="background:#888;"></div>DISPLAY SETUP</div>
                         </div>
                         <div class="lcd-main">
                             <div id="data-screen" style="display: none; flex-direction: column; background: #eaeff2; height: 100%;">
@@ -380,7 +384,7 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                                     <button class="r-menu-btn active" onclick="setView('TOOL')"><div class="r-menu-icon" style="background:#2b4b9b;border-color:#fff;"></div>TOOL</button>
                                     <button class="r-menu-btn" onclick="showMsg('OVERRUN & S-SENSOR')"><div class="r-menu-icon"></div>OVERRUN<br>& S-SENSOR</button>
                                     <button class="r-menu-btn" onclick="showMsg('COMMAND POSITION')"><div class="r-menu-icon"></div>COMMAND<br>POSITION</button>
-                                    <button class="r-menu-btn" onclick="showMsg('INTERFERENCE')"><div class="r-menu-icon"></div>INTERFERENCE</button>
+                                    <button class="r-menu-btn" onclick="openInterference()"><div class="r-menu-icon"></div>INTERFERENCE</button>
                                     <button class="r-menu-btn" onclick="showMsg('LIMIT RELEASE')"><div class="r-menu-icon"></div>LIMIT RELEASE</button>
                                     <button class="r-menu-btn" onclick="showMsg('SERVO MONITOR')"><div class="r-menu-icon"></div>SERVO MONITOR</button>
                                     <button class="r-menu-btn" onclick="showMsg('SHOCK SENS LEVEL')"><div class="r-menu-icon"></div>SHOCK SENS<br>LEVEL</button>
@@ -498,6 +502,13 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                                     </div>
                                     <div id="inout-content" style="background: #f0f0f0; border: 1px solid #888; padding: 4px; display: flex; flex-direction: column; gap: 2px;"></div>
                                 </div>
+                            </div>
+                            <div id="interference-screen" style="display: none; flex-direction: column; height: 100%; background: #eaeff2;">
+                                <div class="lcd-header" style="background: #1a3a6a; color: white; border-bottom: 2px solid #000; padding: 2px 8px; justify-content: space-between;">
+                                    <span>CUBIC INTERFERENCE</span>
+                                    <span id="interf-page" style="font-size:7px;">CUBE 1/8</span>
+                                </div>
+                                <div id="interf-content" style="padding: 3px 5px; display: flex; flex-direction: column; flex: 1; font-family: 'Courier New', monospace; font-size: 7px; color: #000; overflow-y: auto;"></div>
                             </div>
                             <div id="alarm-screen" style="display: none; flex-direction: column; height: 100%; background: #eaeff2;">
                                 <div class="lcd-header" style="background: #1a3a6a; color: white; border-bottom: 2px solid #000; padding: 2px 8px; justify-content: flex-start;">ALARM</div>
@@ -926,7 +937,7 @@ const RobotState = {
 
 const DxState = {
     view: 'JOB',
-    currentJobId: 'JOB_ALAMBRE',
+    currentJobId: 'JOB_NUEVO',
     selectedLineIndex: 0,
     selectedListIndex: 0,
     selectedTokenIndex: 0,
@@ -948,19 +959,19 @@ const DxState = {
 };
 
 let robotJobs = {
-    "JOB_ALAMBRE": [
-        { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, code: 'NOP', desc: 'INICIO' },
-        { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, code: 'CALL JOB:SUB_PROG', desc: 'LLAMADA A SUBRUTINA' },
-        { s: 30, l: -20, u: 50, r: 0, b: -45, t: 0, code: 'MOVJ VJ=50.00', desc: 'IR A ROLLO HILO' },
-        { s: 30, l: -40, u: 70, r: 0, b: -90, t: 0, code: 'MOVL V=25.00', desc: 'BAJAR A HILO (LINEAL)' },
-        { s: 30, l: -40, u: 70, r: 0, b: -90, t: 0, code: 'DOUT OG#(1) ON', desc: 'CERRAR PINZA 1 (COGER)' },
-        { s: 30, l: -40, u: 70, r: 0, b: -90, t: 0, code: 'TIMER T=0.5', desc: 'ESPERAR CIERRE' },
-        { s: 30, l: -20, u: 50, r: 0, b: -45, t: 0, code: 'MOVL V=10.00', desc: 'TENSAR SUAVE (LINEAL)' },
-        { s: 0, l: -20, u: 50, r: 90, b: -45, t: -90, code: 'MOVJ VJ=50.00', desc: 'TIRAR Y ENROLLAR' },
-        { s: -45, l: -10, u: 40, r: 180, b: 0, t: -180, code: 'MOVL V=50.00', desc: 'ARRASTRAR LINEAL' },
-        { s: -45, l: -10, u: 40, r: 180, b: 0, t: -180, code: 'DOUT OG#(1) OFF', desc: 'SOLTAR ALAMBRE' },
-        { s: -45, l: -30, u: 60, r: 0, b: 0, t: 0, code: 'MOVJ VJ=100.00', desc: 'RETORNO SEGURO' },
-        { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, code: 'END', desc: 'FIN BUCLE' }
+    "JOB_NUEVO": [
+        { s: 0, l: -60, u: 60, r: 0, b: 0, t: 0, gripper: 0, gripper2: 0, code: 'NOP', desc: 'INICIO' },
+        { s: 45, l: -20, u: 40, r: 0, b: -45, t: 0, gripper: 0, gripper2: 0, code: 'MOVJ VJ=50.00 PL=4', desc: 'IR ZONA A' },
+        { s: 45, l: -40, u: 60, r: 0, b: -90, t: 0, gripper: 0, gripper2: 0, code: 'MOVL V=25.00 PL=0', desc: 'BAJAR A ZONA A' },
+        { s: 45, l: -40, u: 60, r: 0, b: -90, t: 0, gripper: 0.015, gripper2: 0, code: 'DOUT OG#(1) ON', desc: 'COGER OBJETO 1' },
+        { s: 45, l: -40, u: 60, r: 0, b: -90, t: 0, gripper: 0.015, gripper2: 0, code: 'TIMER T=0.5', desc: 'ESPERAR' },
+        { s: 0, l: 0, u: 30, r: 0, b: -45, t: 0, gripper: 0.015, gripper2: 0, code: 'MOVJ VJ=50.00 PL=4', desc: 'PASAR POR CENTRO' },
+        { s: -45, l: -20, u: 40, r: 90, b: -45, t: 90, gripper: 0.015, gripper2: 0, code: 'MOVJ VJ=50.00 PL=2', desc: 'IR ZONA B' },
+        { s: -45, l: -40, u: 60, r: 90, b: -90, t: 90, gripper: 0.015, gripper2: 0, code: 'MOVL V=50.00 PL=0', desc: 'BAJAR A ZONA B' },
+        { s: -45, l: -40, u: 60, r: 90, b: -90, t: 90, gripper: 0.015, gripper2: 0.015, code: 'DOUT OG#(2) ON', desc: 'COGER OBJETO 2' },
+        { s: -45, l: -40, u: 60, r: 90, b: -90, t: 90, gripper: 0.015, gripper2: 0.015, code: 'TIMER T=0.5', desc: 'ESPERAR' },
+        { s: 0, l: -60, u: 60, r: 0, b: 0, t: 0, gripper: 0, gripper2: 0, code: 'MOVJ VJ=100.00 PL=0', desc: 'SOLTAR Y VOLVER' },
+        { s: 0, l: -60, u: 60, r: 0, b: 0, t: 0, gripper: 0, gripper2: 0, code: 'END', desc: 'FIN PROGRAMA' }
     ],
     "SUB_PROG": [
         { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, code: 'NOP', desc: 'INICIO SUB' },
@@ -1003,6 +1014,24 @@ let grip2AnimOpen = 1;
 let digitalOutputs = { 1: false, 2: false, 3: false, 4: false };
 // Entradas digitales (sensores cilindros): IN#1=Cil1 Arriba, IN#2=Cil1 Abajo, IN#3=Cil2 Arriba, IN#4=Cil2 Abajo
 let digitalInputs = { 1: true, 2: false, 3: true, 4: false };
+
+// ===== ZONAS DE INTERFERENCIA (AREA) =====
+let interferenceZones = [];
+for (let i = 0; i < 8; i++) {
+    interferenceZones.push({
+        enabled: false,
+        name: 'CUBE ' + (i + 1),
+        xMin: -200, xMax: 200,
+        yMin: -200, yMax: 200,
+        zMin: 0, zMax: 400,
+        color: ['#ff4444', '#44ff44', '#4444ff', '#ffff44', '#ff44ff', '#44ffff', '#ff8844', '#88ff44'][i],
+        inside: false,      // TCP está dentro?
+        signalOut: 57 + i,  // SOUT# (57-64)
+        teachStep: 0        // 0=ninguno, 1=enseñando MIN, 2=enseñando MAX
+    });
+}
+let interfCurrentPage = 0;
+let interfZoneMeshes = [];  // Cubos 3D en la escena
 
 let robotVariables = {
     B: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -1206,7 +1235,244 @@ function handleLanguageBtn() {
     if (isShiftPressed) {
         toggleLanguage();
     } else {
-        setInfoDisplay('⚠ SHIFT + LANGUAGE para cambiar idioma');
+        // Sin SHIFT = AREA (Interference Zones)
+        openInterference();
+    }
+}
+
+// ===== SISTEMA DE ZONAS DE INTERFERENCIA (AREA) — Fiel al DX200 =====
+// Estado interno de la pantalla
+let interfCursorRow = 0;  // 0=METHOD, 1=CTRL GROUP, 2=CHECK, 3=TEACH METHOD, 4=ALARM, 5=MAX_X,6=MAX_Y,7=MAX_Z, 8=MIN_X,9=MIN_Y,10=MIN_Z
+let interfModifyActive = false; // true cuando MODIFY está activo esperando ENTER
+
+function openInterference() {
+    if (DxState.securityMode !== 'MANAGEMENT') {
+        setInfoDisplay('⚠ VIEW ONLY: MANAGEMENT MODE REQUIRED TO EDIT');
+    } else {
+        setInfoDisplay('✓ INTERFERENCE ZONE CONFIGURATION');
+    }
+    interfCursorRow = 0;
+    interfModifyActive = false;
+    setView('INTERFERENCE');
+}
+
+function renderInterferenceScreen() {
+    const zone = interferenceZones[interfCurrentPage];
+    const pageEl = document.getElementById('interf-page');
+    if (pageEl) pageEl.textContent = 'CUBE ' + (interfCurrentPage + 1) + '/8';
+    
+    const container = document.getElementById('interf-content');
+    if (!container) return;
+    
+    const fk = forwardKinematics(RobotState.angles);
+    const tcpX = fk.x.toFixed(1), tcpY = fk.y.toFixed(1), tcpZ = fk.z.toFixed(1);
+    
+    const methods = ['CUBIC INTERFERENCE', 'AXIS INTERFERENCE'];
+    const checks = ['COMMAND POSITION', 'FEEDBACK POSITION'];
+    const teaches = ['MAX/MIN', 'CENTER POS'];
+    
+    const sel = (row) => interfCursorRow === row ? 'background:#0000aa;color:#fff;' : '';
+    const modSel = (row) => (interfCursorRow === row && interfModifyActive) ? 'background:#aa0000;color:#fff;' : sel(row);
+    
+    let h = '';
+    // Settings block
+    h += '<div style="background:#fff;border:1px solid #888;padding:3px;margin-bottom:2px;">';
+    h += '<div style="display:flex;justify-content:space-between;padding:1px 2px;' + sel(0) + '" onclick="interfSetCursor(0)"><span>METHOD</span><span style="font-weight:bold;">' + (zone.enabled ? methods[0] : '---') + '</span></div>';
+    h += '<div style="display:flex;justify-content:space-between;padding:1px 2px;' + sel(1) + '" onclick="interfSetCursor(1)"><span>CONTROL GROUP</span><span style="font-weight:bold;">R1</span></div>';
+    h += '<div style="display:flex;justify-content:space-between;padding:1px 2px;' + sel(2) + '" onclick="interfSetCursor(2)"><span>CHECK MEASURE</span><span style="font-weight:bold;">' + checks[zone.checkMeasure || 0] + '</span></div>';
+    h += '<div style="display:flex;justify-content:space-between;padding:1px 2px;' + sel(3) + '" onclick="interfSetCursor(3)"><span>TEACHING METHOD</span><span style="font-weight:bold;">' + teaches[zone.teachMethod || 0] + '</span></div>';
+    h += '<div style="display:flex;justify-content:space-between;padding:1px 2px;' + sel(4) + '" onclick="interfSetCursor(4)"><span>ALARM OUTPUT</span><span style="font-weight:bold;">' + (zone.alarmOutput ? 'ON' : 'OFF') + '</span></div>';
+    h += '</div>';
+    
+    // MAX position
+    h += '<div style="background:#fff;border:1px solid #888;padding:3px;margin-bottom:2px;">';
+    h += '<div style="font-weight:bold;font-size:6px;color:#666;margin-bottom:1px;">MAX POSITION (mm)</div>';
+    h += '<div style="display:flex;justify-content:space-between;padding:1px 2px;' + modSel(5) + '" onclick="interfSetCursor(5)"><span>X</span><span style="font-weight:bold;">' + zone.xMax.toFixed(1) + '</span></div>';
+    h += '<div style="display:flex;justify-content:space-between;padding:1px 2px;' + modSel(6) + '" onclick="interfSetCursor(6)"><span>Y</span><span style="font-weight:bold;">' + zone.yMax.toFixed(1) + '</span></div>';
+    h += '<div style="display:flex;justify-content:space-between;padding:1px 2px;' + modSel(7) + '" onclick="interfSetCursor(7)"><span>Z</span><span style="font-weight:bold;">' + zone.zMax.toFixed(1) + '</span></div>';
+    h += '</div>';
+    
+    // MIN position
+    h += '<div style="background:#fff;border:1px solid #888;padding:3px;margin-bottom:2px;">';
+    h += '<div style="font-weight:bold;font-size:6px;color:#666;margin-bottom:1px;">MIN POSITION (mm)</div>';
+    h += '<div style="display:flex;justify-content:space-between;padding:1px 2px;' + modSel(8) + '" onclick="interfSetCursor(8)"><span>X</span><span style="font-weight:bold;">' + zone.xMin.toFixed(1) + '</span></div>';
+    h += '<div style="display:flex;justify-content:space-between;padding:1px 2px;' + modSel(9) + '" onclick="interfSetCursor(9)"><span>Y</span><span style="font-weight:bold;">' + zone.yMin.toFixed(1) + '</span></div>';
+    h += '<div style="display:flex;justify-content:space-between;padding:1px 2px;' + modSel(10) + '" onclick="interfSetCursor(10)"><span>Z</span><span style="font-weight:bold;">' + zone.zMin.toFixed(1) + '</span></div>';
+    h += '</div>';
+    
+    // TCP + status
+    h += '<div style="background:#f0f0f0;border:1px solid #888;padding:3px;">';
+    h += '<div style="display:flex;justify-content:space-between;font-size:6px;">';
+    h += '<span>TCP: X=' + tcpX + ' Y=' + tcpY + ' Z=' + tcpZ + '</span>';
+    h += '<span>SOUT#' + zone.signalOut + ' ' + (zone.inside ? 'ON' : 'OFF') + '</span>';
+    h += '</div>';
+    if (interfModifyActive) {
+        h += '<div style="color:#a00;font-weight:bold;font-size:6px;margin-top:1px;">▶ MODIFY: Jog robot, then press [ENTER]</div>';
+    }
+    h += '</div>';
+    
+    container.innerHTML = h;
+}
+
+function interfSetCursor(row) { interfCursorRow = row; renderInterferenceScreen(); }
+
+// Navegar cursor con ▲▼ (llamado desde handleDir)
+function interfHandleDir(dir) {
+    if (dir === 'up') interfCursorRow = Math.max(0, interfCursorRow - 1);
+    else if (dir === 'down') interfCursorRow = Math.min(10, interfCursorRow + 1);
+    renderInterferenceScreen();
+}
+
+// SELECT: cambia opciones del campo seleccionado
+function interfHandleSelect() {
+    if (DxState.securityMode !== 'MANAGEMENT') {
+        setInfoDisplay('❌ SECURITY: MANAGEMENT MODE REQUIRED');
+        return;
+    }
+    const zone = interferenceZones[interfCurrentPage];
+    if (interfCursorRow === 0) {
+        zone.enabled = !zone.enabled;
+        updateInterferenceZone3D(interfCurrentPage);
+        setInfoDisplay(zone.enabled ? '✓ CUBIC INTERFERENCE: ON' : '✓ METHOD: ---');
+    } else if (interfCursorRow === 2) {
+        zone.checkMeasure = (zone.checkMeasure || 0) === 0 ? 1 : 0;
+    } else if (interfCursorRow === 3) {
+        zone.teachMethod = (zone.teachMethod || 0) === 0 ? 1 : 0;
+    } else if (interfCursorRow === 4) {
+        zone.alarmOutput = !zone.alarmOutput;
+    }
+    renderInterferenceScreen();
+}
+
+// MODIFY: entra en modo captura para MAX/MIN (filas 5-10)
+function interfHandleModify() {
+    if (DxState.securityMode !== 'MANAGEMENT') {
+        setInfoDisplay('❌ SECURITY: MANAGEMENT MODE REQUIRED');
+        return;
+    }
+    if (interfCursorRow >= 5 && interfCursorRow <= 10) {
+        interfModifyActive = true;
+        setInfoDisplay('▶ MODIFY: Jog robot to position, then press [ENTER]');
+        renderInterferenceScreen();
+    } else {
+        setInfoDisplay('⚠ MODIFY: Seleccione una coordenada MAX/MIN');
+    }
+}
+
+// ENTER: confirma posición TCP en el campo activo
+function interfHandleEnter() {
+    if (!interfModifyActive) return false;
+    const zone = interferenceZones[interfCurrentPage];
+    const fk = forwardKinematics(RobotState.angles);
+    const x = Math.round(fk.x * 10) / 10;
+    const y = Math.round(fk.y * 10) / 10;
+    const z = Math.round(fk.z * 10) / 10;
+    
+    // Graba la coordenada correspondiente
+    if (interfCursorRow === 5) { zone.xMax = x; setInfoDisplay('✓ MAX X = ' + x + ' mm'); }
+    else if (interfCursorRow === 6) { zone.yMax = y; setInfoDisplay('✓ MAX Y = ' + y + ' mm'); }
+    else if (interfCursorRow === 7) { zone.zMax = z; setInfoDisplay('✓ MAX Z = ' + z + ' mm'); }
+    else if (interfCursorRow === 8) { zone.xMin = x; setInfoDisplay('✓ MIN X = ' + x + ' mm'); }
+    else if (interfCursorRow === 9) { zone.yMin = y; setInfoDisplay('✓ MIN Y = ' + y + ' mm'); }
+    else if (interfCursorRow === 10) { zone.zMin = z; setInfoDisplay('✓ MIN Z = ' + z + ' mm'); }
+    
+    interfModifyActive = false;
+    updateInterferenceZone3D(interfCurrentPage);
+    renderInterferenceScreen();
+    return true; // señal de que fue consumido
+}
+
+// PAGE: cambia de cubo (llamado desde handleGoBack cuando SHIFT + PAGE)
+function interfPageNext() {
+    interfCurrentPage = (interfCurrentPage + 1) % 8;
+    interfCursorRow = 0;
+    interfModifyActive = false;
+    renderInterferenceScreen();
+}
+function interfPagePrev() {
+    interfCurrentPage = (interfCurrentPage - 1 + 8) % 8;
+    interfCursorRow = 0;
+    interfModifyActive = false;
+    renderInterferenceScreen();
+}
+
+// === 3D: Crear/actualizar cubos transparentes ===
+function updateInterferenceZone3D(index) {
+    if (!scene) return;
+    const zone = interferenceZones[index];
+    
+    if (interfZoneMeshes[index]) {
+        scene.remove(interfZoneMeshes[index]);
+        if (interfZoneMeshes[index].geometry) interfZoneMeshes[index].geometry.dispose();
+        if (interfZoneMeshes[index].material) interfZoneMeshes[index].material.dispose();
+        if (interfZoneMeshes[index].userData.edges) {
+            scene.remove(interfZoneMeshes[index].userData.edges);
+        }
+        interfZoneMeshes[index] = null;
+    }
+    
+    if (!zone.enabled) return;
+    
+    const scale = 0.001;
+    const xMin = zone.xMin * scale, xMax = zone.xMax * scale;
+    const yMin = zone.yMin * scale, yMax = zone.yMax * scale;
+    const zMin = zone.zMin * scale, zMax = zone.zMax * scale;
+    
+    const sx = Math.abs(xMax - xMin) || 0.01;
+    const sy = Math.abs(yMax - yMin) || 0.01;
+    const sz = Math.abs(zMax - zMin) || 0.01;
+    const cx = (xMin + xMax) / 2;
+    const cy = (zMin + zMax) / 2;
+    const cz = -(yMin + yMax) / 2;
+    
+    const color = new THREE.Color(zone.color);
+    const geom = new THREE.BoxGeometry(sx, sz, sy);
+    const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.15, depthWrite: false, side: THREE.DoubleSide });
+    const mesh = new THREE.Mesh(geom, mat);
+    mesh.position.set(cx, cy, cz);
+    mesh.renderOrder = 1;
+    scene.add(mesh);
+    
+    const edgesGeom = new THREE.EdgesGeometry(geom);
+    const edgesMat = new THREE.LineBasicMaterial({ color, linewidth: 1, transparent: true, opacity: 0.6 });
+    const edges = new THREE.LineSegments(edgesGeom, edgesMat);
+    edges.position.copy(mesh.position);
+    scene.add(edges);
+    mesh.userData.edges = edges;
+    
+    interfZoneMeshes[index] = mesh;
+}
+
+function updateAllInterferenceZones3D() {
+    for (let i = 0; i < 8; i++) updateInterferenceZone3D(i);
+}
+
+// === Chequeo TCP dentro de zonas ===
+function checkInterferenceZones() {
+    const fk = forwardKinematics(RobotState.angles);
+    const tcpX = fk.x, tcpY = fk.y, tcpZ = fk.z;
+    
+    for (let i = 0; i < 8; i++) {
+        const zone = interferenceZones[i];
+        if (!zone.enabled) { zone.inside = false; continue; }
+        
+        const wasInside = zone.inside;
+        zone.inside = (tcpX >= zone.xMin && tcpX <= zone.xMax && tcpY >= zone.yMin && tcpY <= zone.yMax && tcpZ >= zone.zMin && tcpZ <= zone.zMax);
+        
+        if (interfZoneMeshes[i]) {
+            const mesh = interfZoneMeshes[i];
+            if (zone.inside) {
+                const flash = Math.sin(Date.now() * 0.008) * 0.5 + 0.5;
+                mesh.material.opacity = 0.15 + flash * 0.25;
+                if (mesh.userData.edges) mesh.userData.edges.material.opacity = 0.6 + flash * 0.4;
+            } else {
+                mesh.material.opacity = 0.15;
+                if (mesh.userData.edges) mesh.userData.edges.material.opacity = 0.6;
+            }
+        }
+        
+        if (zone.inside && !wasInside) setInfoDisplay('⚠ INTERFERENCE: CUBE ' + (i+1) + ' — TCP INSIDE (SOUT#' + zone.signalOut + ' ON)');
+        if (!zone.inside && wasInside) setInfoDisplay('✓ CUBE ' + (i+1) + ': TCP LEFT ZONE (SOUT#' + zone.signalOut + ' OFF)');
     }
 }
 
@@ -1221,26 +1487,16 @@ function loadJobsLocally() {
         const saved = localStorage.getItem('dx200_robotJobs');
         if (saved) {
             let parsed = JSON.parse(saved);
-            if (!parsed['JOB_ALAMBRE']) {
-                parsed['JOB_ALAMBRE'] = robotJobs['JOB_ALAMBRE'];
-            } else {
-                // Asegurar que la linea CALL JOB está presente para que el usuario pueda probar
-                if (!parsed['JOB_ALAMBRE'].some(l => l.code && l.code.includes('CALL JOB:'))) {
-                    parsed['JOB_ALAMBRE'].splice(1, 0, { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, code: 'CALL JOB:SUB_PROG', desc: 'LLAMADA A SUBRUTINA' });
-                }
-                // Actualizar: si no tiene instrucciones MOVL, reemplazar con la versión nueva
-                if (!parsed['JOB_ALAMBRE'].some(l => l.code && l.code.startsWith('MOVL'))) {
-                    parsed['JOB_ALAMBRE'] = robotJobs['JOB_ALAMBRE'];
-                }
+            if (!parsed['JOB_NUEVO']) {
+                parsed['JOB_NUEVO'] = robotJobs['JOB_NUEVO'];
             }
-            if (!parsed['SUB_PROG']) parsed['SUB_PROG'] = robotJobs['SUB_PROG'];
-            // Siempre asegurar que MOVL_DEMO existe (programa de demostración)
             if (!parsed['MOVL_DEMO']) parsed['MOVL_DEMO'] = robotJobs['MOVL_DEMO'];
+            
             robotJobs = parsed;
-        }
-        if (!robotJobs[DxState.currentJobId]) {
-            const keys = Object.keys(robotJobs);
-            DxState.currentJobId = keys.length > 0 ? keys[0] : 'JOB_ALAMBRE';
+            let keys = Object.keys(robotJobs);
+            if (!keys.includes(DxState.currentJobId)) {
+                DxState.currentJobId = keys.length > 0 ? keys[0] : 'JOB_NUEVO';
+            }
         }
     } catch (e) { console.error("Error al cargar trabajos", e); }
 }
@@ -2129,7 +2385,7 @@ function setView(viewName) {
     const screens = ['job-screen', 'robot-menu-screen', 'robot-screen', 'list-screen',
         'security-screen', 'home-position-screen', 'system-info-menu-screen',
         'tool-screen', 'wgrav-screen', 'variable-screen', 'inout-screen', 
-        'alarm-screen', 'utility-screen', 'amplitude-screen', 'general-screen', 'data-screen', 'calibration-screen', 'master-rezero-screen', 'parameter-screen', 'clock-screen', 'file-screen', 'directopen-config-screen'];
+        'alarm-screen', 'utility-screen', 'amplitude-screen', 'general-screen', 'data-screen', 'calibration-screen', 'master-rezero-screen', 'parameter-screen', 'clock-screen', 'file-screen', 'directopen-config-screen', 'interference-screen'];
     screens.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
@@ -2151,7 +2407,8 @@ function setView(viewName) {
         'UTILITY': ['utility-screen', null],
         'AMPLITUDE': ['amplitude-screen', null],
         'GENERAL': ['general-screen', renderGeneralScreen],
-        'DATA': ['data-screen', null]
+        'DATA': ['data-screen', null],
+        'INTERFERENCE': ['interference-screen', renderInterferenceScreen]
     };
 
     const mapping = viewMap[viewName];
@@ -3024,6 +3281,11 @@ function handleDir(dir) {
         if (dir === 'down' && wgravSelectedIdx < 4) selectWgravLine(wgravSelectedIdx + 1);
         return;
     }
+
+    if (DxState.view === 'INTERFERENCE') {
+        interfHandleDir(dir);
+        return;
+    }
     if (DxState.view === 'JOB') {
         const currentProgram = robotJobs[DxState.currentJobId];
         
@@ -3304,6 +3566,12 @@ function handleGoBack() {
         const oldBg = btn.style.background;
         btn.style.background = '#fff';
         setTimeout(() => btn.style.background = oldBg, 150);
+    }
+
+    if (DxState.view === 'INTERFERENCE') {
+        if (isShiftPressed) interfPagePrev();
+        else interfPageNext();
+        return;
     }
 
     if (DxState.jobHistory.length > 0) {
@@ -3597,6 +3865,8 @@ function pressSelect() {
                 setInfoDisplay('✓ SELECT pulsado');
             }
         }
+    } else if (DxState.view === 'INTERFERENCE') {
+        interfHandleSelect();
     } else if (DxState.view === 'HOME-POSITION') {
         document.getElementById('home-confirm-dialog').style.display = 'flex';
     } else if (DxState.view === 'WGRAV') {
@@ -3702,6 +3972,10 @@ function cancelEdit() {
 function pressModify() {
     if (DxState.view === 'WGRAV') {
         setInfoDisplay('⚠ MANTENGA PULSADO [FWD] PARA MEDICIÓN'); return;
+    }
+    if (DxState.view === 'INTERFERENCE') {
+        interfHandleModify();
+        return;
     }
     if (DxState.view !== 'JOB') { setInfoDisplay('⚠ MODIFY: Cambie a JOB'); return; }
     if (!checkTeachMode('MODIFY')) return;
@@ -4710,7 +4984,7 @@ function runDeleteJob() {
             return;
         }
         delete robotJobs[DxState.currentJobId];
-        DxState.currentJobId = jobKeys.find(k => k !== DxState.currentJobId) || 'JOB_ALAMBRE';
+        DxState.currentJobId = jobKeys.find(k => k !== DxState.currentJobId) || 'JOB_NUEVO';
         saveJobsLocally();
         setInfoDisplay('✓ JOB eliminado');
         renderJob();
@@ -4750,6 +5024,9 @@ function loadJob(jobName) {
 }
 
 function pressEnter() {
+    if (DxState.view === 'INTERFERENCE') {
+        if (interfHandleEnter()) return;
+    }
     if (DxState.view === 'WGRAV') {
         const wInput = document.getElementById('wgrav-val-w');
         if (wInput && wInput.textContent !== '*.*** kg') {
@@ -4779,7 +5056,8 @@ function pressEnter() {
         const newStep = {
             s: RobotState.angles.s, l: RobotState.angles.l, u: RobotState.angles.u,
             r: RobotState.angles.r, b: RobotState.angles.b, t: RobotState.angles.t,
-            code: DxState.editingBuffer || ('MOVJ VJ=' + RobotState.speed.toFixed(2)), 
+            gripper: gripperAngle, gripper2: gripper2Angle,
+            code: DxState.editingBuffer || ('MOVJ VJ=' + RobotState.speed.toFixed(2) + ' PL=0'), 
             desc: 'Punto ENSEÑADO'
         };
         currentProgram.splice(DxState.selectedLineIndex + 1, 0, newStep);
@@ -5213,6 +5491,13 @@ window.addEventListener('load', () => {
         updateRobotDisplay();
         // Actualizar ejes en tiempo real si están activos
         if (DxState.coordSystem === 'TOOL' || DxState.coordSystem === 'CILINDRICO') updateGuideLines();
+        // Chequear zonas de interferencia (cada 5 frames para rendimiento)
+        if (!window._interfFrameCount) window._interfFrameCount = 0;
+        window._interfFrameCount++;
+        if (window._interfFrameCount % 5 === 0) {
+            checkInterferenceZones();
+            if (DxState.view === 'INTERFERENCE') renderInterferenceScreen();
+        }
     }
 
     gameLoop();
@@ -5310,6 +5595,15 @@ window.renderDirectOpenConfig = renderDirectOpenConfig;
 window.renderDirectOpenShortcuts = renderDirectOpenShortcuts;
 window.directOpenByNumber = directOpenByNumber;
 window.directOpenHandleNav = directOpenHandleNav;
+window.renderInterferenceScreen = renderInterferenceScreen;
+window.interfPagePrev = interfPagePrev;
+window.interfPageNext = interfPageNext;
+window.interfToggleEnabled = interfToggleEnabled;
+window.interfSetFromTCP = interfSetFromTCP;
+window.interfTeachPoint = interfTeachPoint;
+window.updateInterferenceZone3D = updateInterferenceZone3D;
+window.updateAllInterferenceZones3D = updateAllInterferenceZones3D;
+window.checkInterferenceZones = checkInterferenceZones;
 </script>
 </body>
 </html>
