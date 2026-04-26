@@ -49,7 +49,7 @@ const DxState = window.DxState;
 
 let robotJobs = {
     "JOB_NUEVO": [
-        { s: 0, l: -60, u: 60, r: 0, b: 0, t: 0, gripper: 0, gripper2: 0, code: 'NOP', desc: 'INICIO' },
+        { s: 0, l: -20, u: 60, r: 0, b: 0, t: 0, gripper: 0, gripper2: 0, code: 'NOP', desc: 'INICIO' },
         { s: 45, l: -20, u: 40, r: 0, b: -45, t: 0, gripper: 0, gripper2: 0, code: 'MOVJ VJ=50.00 PL=4', desc: 'IR ZONA A' },
         { s: 45, l: -40, u: 60, r: 0, b: -90, t: 0, gripper: 0, gripper2: 0, code: 'MOVL V=25.00 PL=0', desc: 'BAJAR A ZONA A' },
         { s: 45, l: -40, u: 60, r: 0, b: -90, t: 0, gripper: 0.015, gripper2: 0, code: 'DOUT OG#(1) ON', desc: 'COGER OBJETO 1' },
@@ -59,8 +59,8 @@ let robotJobs = {
         { s: -45, l: -40, u: 60, r: 90, b: -90, t: 90, gripper: 0.015, gripper2: 0, code: 'MOVL V=50.00 PL=0', desc: 'BAJAR A ZONA B' },
         { s: -45, l: -40, u: 60, r: 90, b: -90, t: 90, gripper: 0.015, gripper2: 0.015, code: 'DOUT OG#(2) ON', desc: 'COGER OBJETO 2' },
         { s: -45, l: -40, u: 60, r: 90, b: -90, t: 90, gripper: 0.015, gripper2: 0.015, code: 'TIMER T=0.5', desc: 'ESPERAR' },
-        { s: 0, l: -60, u: 60, r: 0, b: 0, t: 0, gripper: 0, gripper2: 0, code: 'MOVJ VJ=100.00 PL=0', desc: 'SOLTAR Y VOLVER' },
-        { s: 0, l: -60, u: 60, r: 0, b: 0, t: 0, gripper: 0, gripper2: 0, code: 'END', desc: 'FIN PROGRAMA' }
+        { s: 0, l: -20, u: 60, r: 0, b: 0, t: 0, gripper: 0, gripper2: 0, code: 'MOVJ VJ=100.00 PL=0', desc: 'SOLTAR Y VOLVER' },
+        { s: 0, l: -20, u: 60, r: 0, b: 0, t: 0, gripper: 0, gripper2: 0, code: 'END', desc: 'FIN PROGRAMA' }
     ]
 };
 
