@@ -40,7 +40,9 @@ window.DxState = window.DxState || {
     securityMode: 'EDITING',
     clipboard: null,
     selectedLines: null,
-    language: 'en' // Default to English as per user request
+    language: 'en', // Default to English as per user request
+    activeDialog: null,     // Nombre del diálogo/pantalla secundaria abierta
+    _previousView: 'JOB'   // Vista anterior para poder retornar con CANCEL
 };
 
 // Referencias locales para mantener compatibilidad con los imports de otros módulos

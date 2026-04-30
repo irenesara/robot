@@ -12,7 +12,15 @@ import { renderJob, renderList } from './jobManager.js';
 import { translations, updateLcdLanguage, getStatusText } from './lang.js';
 
 function setView(viewName) {
+    // Guardar la vista anterior para que CANCEL pueda retornar
+    if (DxState.view !== viewName) {
+        DxState._previousView = DxState.view;
+    }
     DxState.view = viewName;
+
+    // Actualizar activeDialog: null si es JOB, nombre de vista si es otra pantalla
+    DxState.activeDialog = (viewName === 'JOB') ? null : viewName;
+
     document.querySelectorAll('.lcd-sidebar-btn').forEach(b => b.classList.remove('active'));
     let baseView = viewName.startsWith('ROBOT') ? 'ROBOT' : viewName;
     if (baseView === 'SECURITY') baseView = 'SYSINFO';
@@ -637,6 +645,79 @@ function cancelEdit() {
     document.querySelectorAll('.blink-active').forEach(el => el.classList.remove('blink-active'));
 }
 
+function pressCancel() {
+    // ═══════════════════════════════════════════════════════════════
+    // CANCEL BUTTON — PRIORIDAD INDUSTRIAL DX200
+    // ═══════════════════════════════════════════════════════════════
+
+    // Feedback visual tecla
+    const btn = Array.from(document.querySelectorAll('.kb-btn-sq')).find(b => b.textContent.includes('CANCEL'));
+    if (btn) {
+        const oldBg = btn.style.background;
+        btn.style.background = '#fff';
+        setTimeout(() => btn.style.background = oldBg, 150);
+    }
+
+    // 1. Cerrar ventana de ASSIST
+    const assist = document.getElementById('assist-screen');
+    if (assist && assist.style.display !== 'none') {
+        assist.style.display = 'none';
+        setInfoDisplay('CANCEL: Ayuda cerrada');
+        return;
+    }
+
+    // 2. Cerrar diálogo HOME CONFIRM
+    const homeConfirm = document.getElementById('home-confirm-dialog');
+    if (homeConfirm && homeConfirm.style.display !== 'none' && homeConfirm.style.display !== '') {
+        homeConfirm.style.display = 'none';
+        setInfoDisplay('CANCEL: Confirmación cancelada');
+        return;
+    }
+
+    // 3. Cerrar dropdowns abiertos
+    const dropdowns = document.querySelectorAll('.dropdown-menu');
+    let closedAny = false;
+    dropdowns.forEach(d => {
+        if (d.style.display === 'flex' || d.style.display === 'block') {
+            d.style.display = 'none';
+            closedAny = true;
+        }
+    });
+    if (closedAny) {
+        document.querySelectorAll('.menu-tab').forEach(t => { t.style.background = ''; t.style.color = ''; });
+        setInfoDisplay('CANCEL: Menú cerrado');
+        return;
+    }
+
+    // 4. Cancelar operaciones de edición activas
+    if (DxState.activeEditAction || DxState.isInserting || DxState.isDeleting || DxState.isModifying) {
+        cancelEdit();
+        setInfoDisplay('CANCEL: Operación de edición cancelada');
+        if (DxState.view === 'JOB') renderJob();
+        return;
+    }
+
+    // 5. Si hay pantalla secundaria abierta → volver a JOB
+    if (DxState.activeDialog !== null && DxState.view !== 'JOB') {
+        const robotSubViews = ['ROBOT-CURRENT', 'TOOL', 'HOME-POSITION', 'WGRAV'];
+        const sysInfoSubViews = ['SECURITY'];
+
+        if (robotSubViews.includes(DxState.view)) {
+            setView('ROBOT');
+            setInfoDisplay('CANCEL: Volver a menú ROBOT');
+        } else if (sysInfoSubViews.includes(DxState.view)) {
+            setView('SYSTEM-INFO');
+            setInfoDisplay('CANCEL: Volver a SYSTEM INFO');
+        } else {
+            setView('JOB');
+            setInfoDisplay('CANCEL: Volver a pantalla JOB');
+        }
+        return;
+    }
+
+    // 6. Nada activo → no hacer nada
+}
+
 function goToTop() {
     DxState.selectedLineIndex = 0;
     if (DxState.view !== 'JOB') setView('JOB');
@@ -749,8 +830,9 @@ export {
     updateKeySwitchDisplay, emergencyStop, handleFunc, showMsg, setInfoDisplay,
     moveAxis, updateDisplay, checkTeachMode, handleDir, handleEditAction,
     pressSelect, toggleDropdown, closeHomeConfirm, pressModify, pressInsert,
-    pressDelete, goToTop, resetToZero, toggleCoordSystem, keyPositions, keyPosition,
-    setMenuMode, navigateSidebar, toggleLanguage, handleLanguageBtn
+    pressDelete, cancelEdit, pressCancel, goToTop, resetToZero, toggleCoordSystem,
+    keyPositions, keyPosition, setMenuMode, navigateSidebar, toggleLanguage,
+    handleLanguageBtn
 };
 
 window.updateDisplay = updateDisplay;
@@ -760,3 +842,4 @@ window.setMenuMode = setMenuMode;
 window.navigateSidebar = navigateSidebar;
 window.toggleLanguage = toggleLanguage;
 window.handleLanguageBtn = handleLanguageBtn;
+window.pressCancel = pressCancel;

@@ -172,8 +172,8 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
 
 .cursor-blink { animation: cursor-blink-anim 1s step-end infinite; color: #fff; font-weight: bold; }
 @keyframes cursor-blink-anim { 50% { opacity: 0; } }
-.blink-active { animation: blink-active-anim 0.8s ease-in-out infinite !important; background: #ffea00 !important; color: #000 !important; border: 2px solid #fff !important; box-shadow: 0 0 15px #ffea00 !important; z-index: 10; }
-@keyframes blink-active-anim { 0%, 100% { background: #ffea00 !important; color: #000 !important; } 50% { background: #000 !important; color: #ffea00 !important; } }
+.blink-active { animation: blink-active-anim 0.8s ease-in-out infinite; background: #ffea00; color: #000; border: 2px solid #fff !important; box-shadow: 0 0 15px #ffea00; z-index: 10; }
+@keyframes blink-active-anim { 0%, 100% { background: #ffea00; color: #000; box-shadow: 0 0 15px #ffea00; } 50% { background: #111; color: #ffea00; box-shadow: 0 0 8px #ffea00; } }
 
 .multi-selected { background: #dda0dd !important; color: #000 !important; border-left: 3px solid #800080; }
 .menu-tab.active { background: #2b4b9b !important; color: white !important; border-bottom-color: #2b4b9b !important; }
@@ -955,7 +955,9 @@ const DxState = {
     focusedWindowIndex: 0,
     isSimpleMenu: false,
     language: 'en',
-    coordSystem: 'JOINT'
+    coordSystem: 'JOINT',
+    activeDialog: null,     // Nombre del diálogo/pantalla secundaria abierta (ej: 'SYSTEM-INFO', 'ROBOT', etc.)
+    _previousView: 'JOB'   // Vista anterior para poder retornar con CANCEL
 };
 
 let robotJobs = {
@@ -2371,7 +2373,15 @@ function updateRobotDisplay() {
 }
 
 function setView(viewName) {
+    // Guardar la vista anterior para que CANCEL pueda retornar
+    if (DxState.view !== viewName) {
+        DxState._previousView = DxState.view;
+    }
     DxState.view = viewName;
+
+    // Actualizar activeDialog: null si es JOB, nombre de vista si es otra pantalla
+    DxState.activeDialog = (viewName === 'JOB') ? null : viewName;
+
     document.querySelectorAll('.lcd-sidebar-btn').forEach(b => b.classList.remove('active'));
     let baseView = viewName.startsWith('ROBOT') ? 'ROBOT' : viewName;
     if (baseView === 'SECURITY') baseView = 'SYSINFO';
@@ -2603,6 +2613,11 @@ function handleFunc(func) {
 }
 
 function pressCancel() {
+    // ═══════════════════════════════════════════════════════════════
+    // CANCEL BUTTON — PRIORIDAD INDUSTRIAL DX200
+    // Cierra el elemento más "al frente" primero, luego retrocede.
+    // ═══════════════════════════════════════════════════════════════
+
     // Feedback visual tecla
     const btn = Array.from(document.querySelectorAll('.kb-btn-sq')).find(b => b.textContent.includes('CANCEL'));
     if (btn) {
@@ -2611,7 +2626,17 @@ function pressCancel() {
         setTimeout(() => btn.style.background = oldBg, 150);
     }
 
-    // 1. Cerrar ventana de ASSIST
+    // ── 1. Cerrar el panel INSERT INSTRUCTION (overlay modal) ──
+    const insertOverlay = document.getElementById('insert-overlay');
+    const insertInst = document.getElementById('insert-inst-screen');
+    if (insertOverlay && insertOverlay.style.display !== 'none') {
+        insertOverlay.style.display = 'none';
+        if (insertInst) insertInst.style.display = 'none';
+        setInfoDisplay('CANCEL: Panel de inserción cerrado');
+        return;
+    }
+
+    // ── 2. Cerrar ventana de ASSIST ──
     const assist = document.getElementById('assist-screen');
     if (assist && assist.style.display !== 'none') {
         assist.style.display = 'none';
@@ -2619,7 +2644,15 @@ function pressCancel() {
         return;
     }
 
-    // 2. Cerrar dropdowns abiertos
+    // ── 3. Cerrar diálogo HOME CONFIRM ──
+    const homeConfirm = document.getElementById('home-confirm-dialog');
+    if (homeConfirm && homeConfirm.style.display !== 'none' && homeConfirm.style.display !== '') {
+        homeConfirm.style.display = 'none';
+        setInfoDisplay('CANCEL: Confirmación cancelada');
+        return;
+    }
+
+    // ── 4. Cerrar dropdowns abiertos (menús JOB/EDIT/DISPLAY etc.) ──
     const dropdowns = document.querySelectorAll('.dropdown-menu');
     let closedAny = false;
     dropdowns.forEach(d => {
@@ -2629,23 +2662,61 @@ function pressCancel() {
         }
     });
     if (closedAny) {
+        document.querySelectorAll('.menu-tab').forEach(t => { t.style.background = ''; t.style.color = ''; t.classList.remove('active'); });
+        if (typeof openDropdownId !== 'undefined') openDropdownId = null;
         setInfoDisplay('CANCEL: Menú cerrado');
         return;
     }
 
-    // 3. Cancelar operaciones de edición
-    if (DxState.isInserting || DxState.isDeleting || DxState.isModifying) {
-        DxState.isInserting = false;
-        DxState.isDeleting = false;
-        DxState.isModifying = false;
-        document.getElementById('insert-view').style.display = 'none';
-        document.getElementById('job-content-area').style.display = 'block';
-        if (document.getElementById('job-mode-indicator')) document.getElementById('job-mode-indicator').style.display = 'none';
-        setInfoDisplay('CANCEL: Operación cancelada');
-        renderJob();
-    } else {
-        setInfoDisplay('CANCEL');
+    // ── 5. Cerrar pantalla DIRECT OPEN CONFIG ──
+    if (typeof directOpenConfigMode !== 'undefined' && directOpenConfigMode) {
+        directOpenConfigMode = false;
+        setView('JOB');
+        setInfoDisplay('CANCEL: Configuración cancelada');
+        return;
     }
+
+    // ── 6. Cancelar operaciones de edición activas (INSERT/DELETE/MODIFY) ──
+    if (DxState.activeEditAction || DxState.isInserting || DxState.isDeleting || DxState.isModifying) {
+        cancelEdit();
+        // Ocultar panel de vista insert si está visible
+        const insertView = document.getElementById('insert-view');
+        if (insertView) insertView.style.display = 'none';
+        const jobArea = document.getElementById('job-content-area');
+        if (jobArea) jobArea.style.display = 'block';
+        const modeIndicator = document.getElementById('job-mode-indicator');
+        if (modeIndicator) modeIndicator.style.display = 'none';
+        setInfoDisplay('CANCEL: Operación de edición cancelada');
+        if (DxState.view === 'JOB') renderJob();
+        return;
+    }
+
+    // ── 7. Si hay un diálogo/pantalla secundaria abierta → volver a JOB ──
+    if (DxState.activeDialog !== null && DxState.view !== 'JOB') {
+        // Navegación jerárquica: sub-pantallas de ROBOT → volver a ROBOT menu
+        const robotSubViews = ['ROBOT-CURRENT', 'TOOL', 'HOME-POSITION', 'WGRAV'];
+        const utilitySubViews = ['ALARM', 'CALIBRATION', 'MASTER-REZERO', 'PARAMETER', 'CLOCK', 'FILE', 'INTERFERENCE', 'AMPLITUDE', 'DATA'];
+        const sysInfoSubViews = ['SECURITY'];
+
+        if (robotSubViews.includes(DxState.view)) {
+            setView('ROBOT');
+            setInfoDisplay('CANCEL: Volver a menú ROBOT');
+        } else if (utilitySubViews.includes(DxState.view)) {
+            setView('UTILITY');
+            setInfoDisplay('CANCEL: Volver a UTILIDADES');
+        } else if (sysInfoSubViews.includes(DxState.view)) {
+            setView('SYSTEM-INFO');
+            setInfoDisplay('CANCEL: Volver a SYSTEM INFO');
+        } else {
+            // Cualquier otra pantalla secundaria → volver al JOB principal
+            setView('JOB');
+            setInfoDisplay('CANCEL: Volver a pantalla JOB');
+        }
+        return;
+    }
+
+    // ── 8. Nada activo → no hacer nada (comportamiento auténtico DX200) ──
+    // No se muestra feedback porque el controlador real tampoco lo hace.
 }
 
 function showMsg(msg) {
