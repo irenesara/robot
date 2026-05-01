@@ -24,13 +24,14 @@ function setView(viewName) {
     document.querySelectorAll('.lcd-sidebar-btn').forEach(b => b.classList.remove('active'));
     let baseView = viewName.startsWith('ROBOT') ? 'ROBOT' : viewName;
     if (baseView === 'SECURITY') baseView = 'SYSINFO';
+    if (baseView === 'EX-MEMORY') baseView = 'EXMEMORY';
 
     const btn = document.getElementById('btn-view-' + baseView.toLowerCase());
     if (btn) btn.classList.add('active');
 
     const screens = ['job-screen', 'robot-menu-screen', 'robot-screen', 'list-screen',
         'security-screen', 'home-position-screen', 'system-info-menu-screen',
-        'tool-screen', 'wgrav-screen', 'arc-screen'];
+        'tool-screen', 'wgrav-screen', 'arc-screen', 'ex-memory-screen'];
     screens.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
@@ -46,7 +47,8 @@ function setView(viewName) {
         'SYSTEM-INFO': ['system-info-menu-screen', null],
         'TOOL': ['tool-screen', null],
         'WGRAV': ['wgrav-screen', null],
-        'ARC': ['arc-screen', null]
+        'ARC': ['arc-screen', null],
+        'EX-MEMORY': ['ex-memory-screen', null]
     };
 
     const mapping = viewMap[viewName];
@@ -783,7 +785,7 @@ function setMenuMode(mode) {
             <div class="lcd-sidebar-btn" id="btn-view-inout" onclick="setView('INOUT')"><div class="sidebar-icon" style="background:#4a4a8a;"></div>${t['sidebar-inout']}</div>
             <div class="lcd-sidebar-btn" id="btn-view-robot" onclick="setView('ROBOT')"><div class="sidebar-icon" style="background:#8a2be2;"></div>${t['sidebar-robot']}</div>
             <div class="lcd-sidebar-btn" id="btn-view-sysinfo" onclick="setView('SYSTEM-INFO')"><div class="sidebar-icon" style="background:#555;"></div>${t['sidebar-sysinfo']}</div>
-            <div class="lcd-sidebar-btn" id="btn-view-exmemory" onclick="showMsg('EX MEMORY MENU')"><div class="sidebar-icon" style="background:#444;"></div>EX MEMORY</div>
+            <div class="lcd-sidebar-btn" id="btn-view-exmemory" onclick="setView('EX-MEMORY')"><div class="sidebar-icon" style="background:#444;"></div>EX MEMORY</div>
             <div class="lcd-sidebar-btn" id="btn-view-setup" onclick="showMsg('SETUP MENU')"><div class="sidebar-icon" style="background:#666;"></div>SETUP</div>
             <div class="lcd-sidebar-btn" id="btn-view-displaysetup" onclick="showMsg('DISPLAY SETUP MENU')"><div class="sidebar-icon" style="background:#888;"></div>DISPLAY SETUP</div>
         `;

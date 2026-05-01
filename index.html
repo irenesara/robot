@@ -288,9 +288,9 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                             <div class="lcd-sidebar-btn" id="btn-view-inout" onclick="setView('INOUT')"><div class="sidebar-icon" style="background:#4a4a8a;"></div>IN/OUT</div>
                             <div class="lcd-sidebar-btn" id="btn-view-robot" onclick="setView('ROBOT')"><div class="sidebar-icon" style="background:#8a2be2;"></div>ROBOT</div>
                             <div class="lcd-sidebar-btn" id="btn-view-sysinfo" onclick="setView('SYSTEM-INFO')"><div class="sidebar-icon" style="background:#555;"></div>SYSTEM INFO</div>
-                            <div class="lcd-sidebar-btn" id="btn-view-exmemory" onclick="showMsg('EX MEMORY MENU')"><div class="sidebar-icon" style="background:#444;"></div>EX MEMORY</div>
+                            <div class="lcd-sidebar-btn" id="btn-view-exmemory" onclick="setView('EX-MEMORY')"><div class="sidebar-icon" style="background:#444;"></div>EX MEMORY</div>
                             <div class="lcd-sidebar-btn" id="btn-view-setup" onclick="showMsg('SETUP MENU')"><div class="sidebar-icon" style="background:#666;"></div>SETUP</div>
-                            <div class="lcd-sidebar-btn" id="btn-view-displaysetup" onclick="showMsg('DISPLAY SETUP MENU')"><div class="sidebar-icon" style="background:#888;"></div>DISPLAY SETUP</div>
+                            <div class="lcd-sidebar-btn" id="btn-view-displaysetup" onclick="showDisplaySetup()"><div class="sidebar-icon" style="background:#888;"></div>DISPLAY SETUP</div>
                         </div>
                         <div class="lcd-main">
                             <div id="data-screen" style="display: none; flex-direction: column; background: #eaeff2; height: 100%;">
@@ -354,15 +354,7 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                             </div>
                             <div id="variable-screen" style="display: none; flex-direction: column; background: #eaeff2; min-height: 100%;">
                                 <div style="background: #1a3a6a; color: white; padding: 4px 8px; font-size: 8px; font-weight: bold;">VARIABLE</div>
-                                <div style="padding: 8px; font-family: 'Courier New', monospace; font-size: 8px; color: #000;">
-                                    <div style="display: flex; gap: 4px; margin-bottom: 6px;">
-                                        <button onclick="setVarType('B')" id="var-btn-b" style="flex:1; padding:3px; font-size:7px; font-weight:bold; background:#2b4b9b; color:#fff; border:1px solid #777;">B</button>
-                                        <button onclick="setVarType('I')" id="var-btn-i" style="flex:1; padding:3px; font-size:7px; font-weight:bold; background:#dcdcdc; border:1px solid #777;">I</button>
-                                        <button onclick="setVarType('D')" id="var-btn-d" style="flex:1; padding:3px; font-size:7px; font-weight:bold; background:#dcdcdc; border:1px solid #777;">D</button>
-                                        <button onclick="setVarType('R')" id="var-btn-r" style="flex:1; padding:3px; font-size:7px; font-weight:bold; background:#dcdcdc; border:1px solid #777;">R</button>
-                                    </div>
-                                    <div id="variable-content" style="background: #f0f0f0; border: 1px solid #888; padding: 4px; flex: 1; overflow-y: auto;"></div>
-                                </div>
+                                <div id="variable-content" style="padding: 2px; font-family: 'Courier New', monospace; font-size: 7px; color: #000; flex: 1; overflow-y: auto;"></div>
                             </div>
                             <div id="inout-screen" style="display: none; flex-direction: column; background: #eaeff2; min-height: 100%;">
                                 <div style="background: #1a3a6a; color: white; padding: 4px 8px; font-size: 8px; font-weight: bold;">UNIVERSAL IN/OUT</div>
@@ -689,14 +681,21 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                                 </div>
                             </div>
                             <div id="system-info-menu-screen" style="display: none; flex-direction: column; height: 100%; padding: 2px; background: #e0e0e0;">
-                                <div style="display: flex; flex-direction: column; gap: 2px; padding: 2px; background: #2b4b9b; width: 160px;">
-                                    <button class="r-menu-btn" onclick="showSystemVersion()"><div class="r-menu-icon" style="border-radius:2px;background:#333;"></div>VERSION</button>
-                                    <button class="r-menu-btn" onclick="showMonitoringTime()"><div class="r-menu-icon" style="border-radius:50%;background:#ccc;"></div>MONITORING TIME</button>
-                                    <button class="r-menu-btn" onclick="showAlarmHistory()"><div class="r-menu-icon" style="background:#fcc;"></div>ALARM HISTORY</button>
-                                    <button class="r-menu-btn" onclick="showMsg('I/O MSG HISTORY')"><div class="r-menu-icon"></div>I/O MSG HISTORY</button>
-                                    <button class="r-menu-btn" onclick="showMsg('USER DEFINITION MENU')"><div class="r-menu-icon"></div>USER DEFINITION<br>MENU</button>
-                                    <button class="r-menu-btn" onclick="setView('SECURITY')" style="margin-top:2px;"><div class="r-menu-icon" style="background:transparent;border-color:transparent;font-size:10px;">🗝️</div>SECURITY</button>
+                                <div style="display: flex; flex-direction: column; gap: 2px; padding: 2px; background: #2b4b9b; width: 100%; overflow-y: auto;">
+                                    <button class="r-menu-btn" onclick="showSystemVersion()"><div class="r-menu-icon" style="border-radius:2px;background:#333;"></div>VERSION<br><span style="font-size:4px;color:#666;font-weight:normal;">Monitoring</span></button>
+                                    <button class="r-menu-btn" onclick="showTimeOperation()"><div class="r-menu-icon" style="border-radius:50%;background:#ccc;"></div>TIME<br><span style="font-size:4px;color:#666;font-weight:normal;">Management</span></button>
+                                    <button class="r-menu-btn" onclick="showControllerInfo()"><div class="r-menu-icon" style="background:#9cf;"></div>CONTROLLER<br>INFORMATION<br><span style="font-size:4px;color:#666;font-weight:normal;">Monitoring</span></button>
+                                    <button class="r-menu-btn" onclick="showAlarmHistory()"><div class="r-menu-icon" style="background:#fcc;"></div>ALARM HISTORY<br><span style="font-size:4px;color:#666;font-weight:normal;">Management</span></button>
+                                    <button class="r-menu-btn" onclick="showIOmsgHistory()"><div class="r-menu-icon" style="background:#ffc;"></div>I/O MSG HISTORY<br><span style="font-size:4px;color:#666;font-weight:normal;">Management</span></button>
+                                    <button class="r-menu-btn" onclick="showLogDataOperation()"><div class="r-menu-icon" style="background:#cfc;"></div>LOGDATA<br><span style="font-size:4px;color:#666;font-weight:normal;">Management</span></button>
+                                    <button class="r-menu-btn" onclick="showUserDefinitionMenu()"><div class="r-menu-icon" style="background:#ccf;"></div>USER DEFINITION<br>MENU<br><span style="font-size:4px;color:#666;font-weight:normal;">Edit</span></button>
+                                    <button class="r-menu-btn" onclick="showQRCodeOperation()"><div class="r-menu-icon" style="background:#fff;border-color:#333;font-size:6px;display:flex;align-items:center;justify-content:center;">▣</div>QR CODE<br><span style="font-size:4px;color:#666;font-weight:normal;">Operation</span></button>
+                                    <button class="r-menu-btn" onclick="setView('SECURITY')"><div class="r-menu-icon" style="background:transparent;border-color:transparent;font-size:10px;">🗝️</div>SECURITY<br><span style="font-size:4px;color:#666;font-weight:normal;">Operation</span></button>
                                 </div>
+                            </div>
+                            <div id="ex-memory-screen" style="display: none; flex-direction: column; height: 100%; background: #eaeff2; overflow: hidden;">
+                                <div style="background: #1a3a6a; color: white; padding: 3px 8px; font-size: 7px; font-weight: bold; flex-shrink: 0;">EX MEMORY</div>
+                                <div id="ex-memory-content" style="flex: 1; overflow-y: auto; padding: 2px; font-family: 'Courier New', monospace; font-size: 6px; color: #000;"></div>
                             </div>
                             <div id="security-screen" style="display: none; flex-direction: column; height: 100%; background: #eaeff2;">
                                 <div class="lcd-header" style="background: #1a3a6a; color: white; border-bottom: 2px solid #000; padding: 2px 8px; justify-content: flex-start;">SECURITY</div>
@@ -1568,11 +1567,11 @@ function buildRobot() {
     scene.add(floorPlate);
 
     // ===============================================
-    // BASE — Estilo GP7 (forma escalonada)
+    // BASE — Estilo Motoman GP (cilíndrica alta)
     // ===============================================
     // Placa de anclaje con tornillos
     const basePlate = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.16, 0.16, 0.02, 8),
+        new THREE.CylinderGeometry(0.16, 0.16, 0.02, 32),
         yDarkMat.clone()
     );
     basePlate.castShadow = true;
@@ -1582,7 +1581,7 @@ function buildRobot() {
     // Tornillos de anclaje (8 unidades)
     for (let i = 0; i < 8; i++) {
         const bolt = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.008, 0.008, 0.012, 8),
+            new THREE.CylinderGeometry(0.008, 0.008, 0.012, 6),
             yGreyMat
         );
         const angle = (i / 8) * Math.PI * 2;
@@ -1590,56 +1589,74 @@ function buildRobot() {
         robotGroup.add(bolt);
     }
 
-    // Base inferior — cuerpo ancho
+    // Base inferior — cuerpo cilíndrico ancho (carenado)
     const baseBody = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.12, 0.15, 0.10, 32),
+        new THREE.CylinderGeometry(0.13, 0.15, 0.12, 32),
         yBlueMat.clone()
     );
     baseBody.castShadow = true;
-    baseBody.position.y = 0.10;
+    baseBody.position.y = 0.11;
     robotGroup.add(baseBody);
 
-    // Línea decorativa naranja (franja Yaskawa)
+    // Anillo decorativo naranja (franja Yaskawa)
     const baseStripe = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.122, 0.122, 0.008, 32),
+        new THREE.CylinderGeometry(0.132, 0.132, 0.012, 32),
         yOrangeMat
     );
-    baseStripe.position.y = 0.12;
+    baseStripe.position.y = 0.14;
     robotGroup.add(baseStripe);
 
-    // Base superior — torre S
+    // Base superior — torre S más alta
     const baseTower = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.13, 0.16, 0.18, 32),
+        new THREE.CylinderGeometry(0.14, 0.16, 0.22, 32),
         yBlueMat.clone()
     );
     baseTower.castShadow = true;
-    baseTower.position.y = 0.24;
+    baseTower.position.y = 0.28;
     robotGroup.add(baseTower);
 
-    // Placa del logo (frontal blanca)
-    const logoPlate = new THREE.Mesh(
-        new THREE.BoxGeometry(0.10, 0.06, 0.005),
-        yWhiteMat
+    // Segundo anillo de la torre
+    const towerRing = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.142, 0.142, 0.008, 32),
+        yOrangeMat
     );
-    logoPlate.position.set(0, 0.24, 0.145);
-    robotGroup.add(logoPlate);
+    towerRing.position.y = 0.33;
+    robotGroup.add(towerRing);
+
+    // Tapa superior de la base
+    const baseTopCap = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.12, 0.14, 0.04, 32),
+        yGreyMat.clone()
+    );
+    baseTopCap.position.y = 0.41;
+    robotGroup.add(baseTopCap);
 
     // Motor S — housing lateral
     const sMotorHousing = new THREE.Mesh(
-        new THREE.BoxGeometry(0.14, 0.14, 0.10),
+        new THREE.CylinderGeometry(0.045, 0.050, 0.12, 24),
         yDarkMat.clone()
     );
     sMotorHousing.castShadow = true;
-    sMotorHousing.position.set(-0.13, 0.20, 0);
+    sMotorHousing.rotation.z = Math.PI / 2;
+    sMotorHousing.position.set(0, 0.26, 0.10);
     robotGroup.add(sMotorHousing);
 
-    // Ventilación motor S
-    for (let i = 0; i < 5; i++) {
+    // Tapa del motor S
+    const sMotorCap = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.046, 0.046, 0.015, 24),
+        yGreyMat.clone()
+    );
+    sMotorCap.rotation.z = Math.PI / 2;
+    sMotorCap.position.set(0, 0.26, 0.165);
+    robotGroup.add(sMotorCap);
+
+    // Ventilación motor S (slots horizontales)
+    for (let i = 0; i < 4; i++) {
         const vent = new THREE.Mesh(
-            new THREE.BoxGeometry(0.10, 0.004, 0.08),
+            new THREE.BoxGeometry(0.06, 0.003, 0.025),
             yGreyMat
         );
-        vent.position.set(-0.13, 0.16 + i * 0.02, 0);
+        vent.position.set(0, 0.22 + i * 0.018, 0.10);
         robotGroup.add(vent);
     }
 
@@ -1647,130 +1664,138 @@ function buildRobot() {
     // JOINT 0 — Eje S (Base Rotation)
     // ===============================================
     const joint0 = new THREE.Group();
-    joint0.position.y = 0.30;
+    joint0.position.y = 0.43;
     robotGroup.add(joint0);
 
-    // Hombro — Horquilla doble (Yoke) estilo GP7
-    // Placa izquierda
+    // Hombro — Horquilla doble (Yoke) estiloMotoman GP
+    // Placa izquierda del yoke (carenada)
     const yokeL = new THREE.Mesh(
-        new THREE.BoxGeometry(0.06, 0.14, 0.025),
+        new THREE.BoxGeometry(0.065, 0.16, 0.028),
         yBlueMat.clone()
     );
     yokeL.castShadow = true;
-    yokeL.position.set(0.03, 0, -0.065);
+    yokeL.position.set(0.035, 0, -0.070);
     joint0.add(yokeL);
 
-    // Placa derecha
+    // Placa derecha del yoke
     const yokeR = new THREE.Mesh(
-        new THREE.BoxGeometry(0.06, 0.14, 0.025),
+        new THREE.BoxGeometry(0.065, 0.16, 0.028),
         yBlueMat.clone()
     );
     yokeR.castShadow = true;
-    yokeR.position.set(0.03, 0, 0.065);
+    yokeR.position.set(0.035, 0, 0.070);
     joint0.add(yokeR);
 
     // Puente superior del yoke
     const yokeTop = new THREE.Mesh(
-        new THREE.BoxGeometry(0.08, 0.04, 0.16),
+        new THREE.BoxGeometry(0.085, 0.045, 0.155),
         yBlueMat.clone()
     );
     yokeTop.castShadow = true;
-    yokeTop.position.set(0.02, 0.06, 0);
+    yokeTop.position.set(0.035, 0.07, 0);
     joint0.add(yokeTop);
 
-    // Tapa trasera del hombro
+    // Tapa trasera del hombro (carenado)
     const shoulderBack = new THREE.Mesh(
-        new THREE.BoxGeometry(0.04, 0.12, 0.12),
+        new THREE.CylinderGeometry(0.05, 0.05, 0.14, 24),
         yBlueMat.clone()
     );
     shoulderBack.castShadow = true;
-    shoulderBack.position.set(-0.04, 0, 0);
+    shoulderBack.rotation.x = Math.PI / 2;
+    shoulderBack.position.set(-0.03, 0, 0);
     joint0.add(shoulderBack);
 
-    // Drum motor L (entre las placas del yoke)
+    // Motor L — drum visible entre las placas
     const lMotorDrum = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.055, 0.055, 0.10, 24),
+        new THREE.CylinderGeometry(0.060, 0.060, 0.11, 24),
         yDarkMat.clone()
     );
     lMotorDrum.castShadow = true;
-    lMotorDrum.position.set(0.0, 0, 0);
+    lMotorDrum.rotation.x = Math.PI / 2;
+    lMotorDrum.position.set(0.03, 0, 0);
     joint0.add(lMotorDrum);
 
-    // Eje del motor L visible
-    const lAxle = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.02, 0.02, 0.16, 16),
-        yGreyMat
+    // Anillo decorativo del motor L
+    const lMotorRing = new THREE.Mesh(
+        new THREE.TorusGeometry(0.062, 0.006, 8, 32),
+        yOrangeMat
     );
-    lAxle.position.set(0.0, 0, 0);
-    joint0.add(lAxle);
+    lMotorRing.position.set(0.03, 0.055, 0);
+    joint0.add(lMotorRing);
 
     // ===============================================
     // JOINT 1 — Eje L (Shoulder Pitch)
     // ===============================================
     const joint1 = new THREE.Group();
-    joint1.position.y = 0.05;
+    joint1.position.y = 0.055;
     joint0.add(joint1);
 
-    // Brazo superior — Cover angular estilo GP7
-    // Cuerpo principal del brazo (forma trapezoidal)
+    // Brazo principal — Cover curvo estilo GP7
+    // Cuerpo principal (forma trapezoidal redondeada)
     const armShape = new THREE.Shape();
-    armShape.moveTo(0, -0.045);
-    armShape.lineTo(0.32, -0.030);
-    armShape.lineTo(0.32, 0.030);
-    armShape.lineTo(0, 0.045);
-    armShape.lineTo(0, -0.045);
+    armShape.moveTo(0, -0.050);
+    armShape.lineTo(0.34, -0.035);
+    armShape.lineTo(0.34, 0.035);
+    armShape.lineTo(0, 0.050);
+    armShape.lineTo(0, -0.050);
 
-    const armExtrude = { depth: 0.09, bevelEnabled: true, bevelThickness: 0.005, bevelSize: 0.005, bevelSegments: 2 };
+    const armExtrude = { depth: 0.095, bevelEnabled: true, bevelThickness: 0.006, bevelSize: 0.008, bevelSegments: 3 };
     const armGeom = new THREE.ExtrudeGeometry(armShape, armExtrude);
     const armCover = new THREE.Mesh(armGeom, yBlueMat.clone());
     armCover.castShadow = true;
-    armCover.position.z = -0.045;
+    armCover.position.z = -0.0475;
     joint1.add(armCover);
 
-    // Línea decorativa superior del brazo (borde de la carcasa)
+    // Borde superior del brazo (carcasa)
     const armEdge = new THREE.Mesh(
-        new THREE.BoxGeometry(0.30, 0.004, 0.094),
+        new THREE.BoxGeometry(0.32, 0.006, 0.098),
         yDarkMat.clone()
     );
-    armEdge.position.set(0.15, 0.048, 0);
+    armEdge.position.set(0.16, 0.053, 0);
     joint1.add(armEdge);
 
-    // Canal de cables a lo largo del brazo
+    // Canal de cables a lo largo del brazo (volumen)
     const cableChannel = new THREE.Mesh(
-        new THREE.BoxGeometry(0.25, 0.015, 0.020),
+        new THREE.BoxGeometry(0.28, 0.018, 0.022),
         yDarkMat.clone()
     );
-    cableChannel.position.set(0.15, -0.038, 0.04);
+    cableChannel.position.set(0.15, -0.042, 0.045);
     joint1.add(cableChannel);
 
-    // Articulación del codo — housing
+    // Segunda banana de cables (otro lado)
+    const cableChannel2 = cableChannel.clone();
+    cableChannel2.position.z = -0.045;
+    joint1.add(cableChannel2);
+
+    // Articulación del codo — housing cilíndrico
     const elbowHousing = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.058, 0.058, 0.12, 24),
+        new THREE.CylinderGeometry(0.065, 0.065, 0.13, 24),
         yGreyMat.clone()
     );
     elbowHousing.castShadow = true;
     elbowHousing.rotation.x = Math.PI / 2;
-    elbowHousing.position.x = 0.32;
+    elbowHousing.position.x = 0.34;
     joint1.add(elbowHousing);
 
-    // Anillos del codo
+    // Anillos decorativos del codo
     const elbowRing1 = new THREE.Mesh(
-        new THREE.TorusGeometry(0.06, 0.005, 8, 32),
-        yDarkMat
+        new THREE.TorusGeometry(0.068, 0.006, 8, 32),
+        yOrangeMat
     );
-    elbowRing1.position.set(0.32, 0, 0.04);
+    elbowRing1.position.set(0.34, 0, 0.045);
     joint1.add(elbowRing1);
     const elbowRing2 = elbowRing1.clone();
-    elbowRing2.position.set(0.32, 0, -0.04);
+    elbowRing2.position.set(0.34, 0, -0.045);
     joint1.add(elbowRing2);
 
     // Motor U — lateral al codo
     const uMotorBox = new THREE.Mesh(
-        new THREE.BoxGeometry(0.07, 0.07, 0.06),
+        new THREE.CylinderGeometry(0.038, 0.040, 0.065, 24),
         yDarkMat.clone()
     );
     uMotorBox.castShadow = true;
-    uMotorBox.position.set(0.32, 0, 0.09);
+    uMotorBox.rotation.x = Math.PI / 2;
+    uMotorBox.position.set(0.34, 0, 0.095);
     joint1.add(uMotorBox);
 
     joints.push(joint0);
@@ -1800,14 +1825,23 @@ function buildRobot() {
     forearm.position.z = -0.0325;
     joint2.add(forearm);
 
-    // Transición al muñeca
+    // Transición al muñeca — esfera de articulación
     const wristTransition = new THREE.Mesh(
-        new THREE.SphereGeometry(0.035, 20, 20),
+        new THREE.SphereGeometry(0.040, 20, 20),
         yGreyMat.clone()
     );
     wristTransition.castShadow = true;
-    wristTransition.position.x = 0.15;
+    wristTransition.position.x = 0.16;
     joint2.add(wristTransition);
+
+    // Anillo de transición
+    const wristRing = new THREE.Mesh(
+        new THREE.TorusGeometry(0.042, 0.005, 8, 32),
+        yOrangeMat
+    );
+    wristRing.rotation.y = Math.PI / 2;
+    wristRing.position.x = 0.16;
+    joint2.add(wristRing);
 
     joints.push(joint2);
 
@@ -1815,29 +1849,28 @@ function buildRobot() {
     // JOINT 3 — Eje R (Wrist Roll)
     // ===============================================
     const joint3 = new THREE.Group();
-    joint3.position.x = 0.15;
+    joint3.position.x = 0.16;
     joint2.add(joint3);
 
-    // Tubo de rotación R — cilindro compacto
+    // Tubo de rotación R — cilindro con carenado
     const rTube = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.032, 0.036, 0.10, 20),
+        new THREE.CylinderGeometry(0.035, 0.040, 0.11, 24),
         yBlueMat.clone()
     );
     rTube.castShadow = true;
     rTube.rotation.z = Math.PI / 2;
-    rTube.position.x = 0.05;
+    rTube.position.x = 0.055;
     joint3.add(rTube);
 
-    // Líneas en la superficie del R para visualizar la rotación
-    for (let i = 0; i < 8; i++) {
+    // Líneas verticales para visualizar la rotación del R
+    for (let i = 0; i < 6; i++) {
         const stripe = new THREE.Mesh(
-            new THREE.BoxGeometry(0.09, 0.008, 0.002),
+            new THREE.BoxGeometry(0.095, 0.012, 0.003),
             yDarkMat
         );
-        const a = (i / 8) * Math.PI * 2;
-        const r = 0.036; // justo en la superficie del tubo
-        stripe.position.set(0.05, Math.cos(a) * r, Math.sin(a) * r);
-        stripe.rotation.x = a; // orientar tangente a la superficie
+        const angle = (i / 6) * Math.PI * 2;
+        stripe.position.set(0.055, Math.cos(angle) * 0.038, Math.sin(angle) * 0.038);
+        stripe.rotation.x = angle;
         joint3.add(stripe);
     }
 
@@ -1847,25 +1880,34 @@ function buildRobot() {
     // JOINT 4 — Eje B (Wrist Bend)
     // ===============================================
     const joint4 = new THREE.Group();
-    joint4.position.x = 0.12;
+    joint4.position.x = 0.13;
     joint3.add(joint4);
 
-    // Housing del B — pieza compacta angular
+    // Housing del B — pieza angular carenada
     const bHousing = new THREE.Mesh(
-        new THREE.BoxGeometry(0.05, 0.042, 0.042),
+        new THREE.CylinderGeometry(0.044, 0.048, 0.050, 24),
         yBlueMat.clone()
     );
     bHousing.castShadow = true;
-    bHousing.position.x = 0.018;
+    bHousing.rotation.z = Math.PI / 2;
+    bHousing.position.x = 0.022;
     joint4.add(bHousing);
 
     // Eje visible del B
     const bAxle = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.022, 0.022, 0.052, 16),
+        new THREE.CylinderGeometry(0.024, 0.024, 0.058, 16),
         yDarkMat.clone()
     );
     bAxle.rotation.x = Math.PI / 2;
     joint4.add(bAxle);
+
+    // Anillo decorativo B
+    const bRing = new THREE.Mesh(
+        new THREE.TorusGeometry(0.026, 0.004, 8, 32),
+        yOrangeMat
+    );
+    bRing.position.x = 0.022;
+    joint4.add(bRing);
 
     joints.push(joint4);
 
@@ -1873,43 +1915,53 @@ function buildRobot() {
     // JOINT 5 — Eje T (Tool Twist)
     // ===============================================
     const joint5 = new THREE.Group();
-    joint5.position.x = 0.04;
+    joint5.position.x = 0.045;
     joint4.add(joint5);
 
-    // Brida de herramienta — disco metálico con patrón de tornillos
+    // Brida de herramienta — disco metálico estilo Motoman
     const flange = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.028, 0.028, 0.015, 24),
+        new THREE.CylinderGeometry(0.032, 0.032, 0.018, 32),
         yGreyMat.clone()
     );
     flange.castShadow = true;
     flange.rotation.z = Math.PI / 2;
-    flange.position.x = 0.008;
+    flange.position.x = 0.010;
     joint5.add(flange);
+
+    // Borde de la brida
+    const flangeRing = new THREE.Mesh(
+        new THREE.TorusGeometry(0.034, 0.004, 8, 32),
+        yOrangeMat
+    );
+    flangeRing.rotation.y = Math.PI / 2;
+    flangeRing.position.x = 0.010;
+    joint5.add(flangeRing);
 
     // Tornillos de la brida (6)
     for (let i = 0; i < 6; i++) {
         const fBolt = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.003, 0.003, 0.018, 6),
+            new THREE.CylinderGeometry(0.003, 0.003, 0.020, 6),
             yDarkMat
         );
         fBolt.rotation.z = Math.PI / 2;
         const a = (i / 6) * Math.PI * 2;
-        fBolt.position.set(0.008, Math.cos(a) * 0.022, Math.sin(a) * 0.022);
+        fBolt.position.set(0.010, Math.cos(a) * 0.026, Math.sin(a) * 0.026);
         joint5.add(fBolt);
     }
 
     // Centro de la brida (marca de orientación)
     const flangeCenter = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.008, 0.008, 0.018, 12),
+        new THREE.CylinderGeometry(0.010, 0.010, 0.022, 16),
         yOrangeMat
     );
     flangeCenter.rotation.z = Math.PI / 2;
-    flangeCenter.position.x = 0.008;
+    flangeCenter.position.x = 0.010;
     joint5.add(flangeCenter);
 
     joints.push(joint5);
 
-    // === CILINDRO NEUMÁTICO 1 ===
+    // === HERRAMIENTA (GRIPPER con pinas) ===
+    // Se mantiene exactamente igual para no romper la lógica existente
     gripperGroup = new THREE.Group();
     gripperGroup.position.x = 0.04;
     gripperGroup.position.z = 0.025;
@@ -2388,6 +2440,7 @@ function setView(viewName) {
     if (baseView === 'SYSTEM-INFO') baseView = 'SYSINFO';
     if (baseView === 'INFORM.SISTEMA') baseView = 'SYSINFO';
     if (baseView === 'EX.SISTEMA') baseView = 'UTILITY';
+    if (baseView === 'EX-MEMORY') baseView = 'EXMEMORY';
 
     const btn = document.getElementById('btn-view-' + baseView.toLowerCase().replace(/\./g, ''));
     if (btn) btn.classList.add('active');
@@ -2395,10 +2448,10 @@ function setView(viewName) {
     const screens = ['job-screen', 'robot-menu-screen', 'robot-screen', 'list-screen',
         'security-screen', 'home-position-screen', 'system-info-menu-screen',
         'tool-screen', 'wgrav-screen', 'variable-screen', 'inout-screen', 
-        'alarm-screen', 'utility-screen', 'amplitude-screen', 'general-screen', 'data-screen', 'calibration-screen', 'master-rezero-screen', 'parameter-screen', 'clock-screen', 'file-screen', 'directopen-config-screen', 'interference-screen'];
+        'alarm-screen', 'utility-screen', 'amplitude-screen', 'general-screen', 'data-screen', 'calibration-screen', 'master-rezero-screen', 'parameter-screen', 'clock-screen', 'file-screen', 'directopen-config-screen', 'interference-screen', 'ex-memory-screen'];
     screens.forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.style.display = 'none';
+        if (el && id !== 'data-screen') el.style.display = 'none';
     });
 
     const viewMap = {
@@ -2418,7 +2471,8 @@ function setView(viewName) {
         'AMPLITUDE': ['amplitude-screen', null],
         'GENERAL': ['general-screen', renderGeneralScreen],
         'DATA': ['data-screen', null],
-        'INTERFERENCE': ['interference-screen', renderInterferenceScreen]
+        'INTERFERENCE': ['interference-screen', renderInterferenceScreen],
+        'EX-MEMORY': ['ex-memory-screen', renderExMemoryMenu]
     };
 
     const mapping = viewMap[viewName];
@@ -2719,8 +2773,214 @@ function pressCancel() {
     // No se muestra feedback porque el controlador real tampoco lo hace.
 }
 
-function showMsg(msg) {
-    setInfoDisplay('ℹ️ ' + msg);
+function showLogDataOperation() {
+    var screen = document.getElementById('data-screen');
+    var title = document.getElementById('data-screen-title');
+    var content = document.getElementById('data-screen-content');
+    if (!screen || !title || !content) return;
+    var logData = [
+        { date: '2026/04/28', type: 'ERROR', msg: 'Servo Power OFF', val: '-' },
+        { date: '2026/04/28', type: 'INFO', msg: 'Job START', val: 'JOB001' },
+        { date: '2026/04/28', type: 'DATA', msg: 'Axis S', val: '45.2°' },
+        { date: '2026/04/27', type: 'DATA', msg: 'Axis L', val: '-12.5°' },
+        { date: '2026/04/27', type: 'INFO', msg: 'System Start', val: '-' }
+    ];
+    screen.style.display = 'flex';
+    title.textContent = 'LOGDATA - Management';
+    var html = '<div style="font-family: \'Courier New\', monospace; font-size: 9px; color: #000;">' +
+        '<div style="background: #e8f0f8; padding: 4px; border: 1px solid #888; margin-bottom: 4px;">' +
+            '<span style="cursor: pointer; padding: 2px 8px; background: #4CAF50; color: white; margin-right: 4px;" onclick="showLogDataOperation()">All</span>' +
+            '<span style="cursor: pointer; padding: 2px 8px; background: #f44336; color: white; margin-right: 4px;">Error</span>' +
+            '<span style="cursor: pointer; padding: 2px 8px; background: #2196F3; color: white;">Info</span>' +
+        '</div>' +
+        '<div style="background: #f8f8f8; border: 1px solid #888;">' +
+        '<div style="padding: 4px; border-bottom: 2px solid #333; display: flex; font-weight: bold; background: #e0e0e0;">' +
+            '<div style="width: 70px;">DATE</div><div style="width: 50px;">TYPE</div><div style="flex: 1;">MESSAGE</div><div style="width: 60px;">VALUE</div></div>';
+    logData.forEach(function(l) {
+        var color = '#333';
+        if (l.type === 'ERROR') color = '#d00';
+        else if (l.type === 'INFO') color = '#00a';
+        html += '<div style="padding: 4px; border-bottom: 1px solid #ddd; display: flex;">' +
+            '<div style="width: 70px;">' + l.date + '</div>' +
+            '<div style="width: 50px; color: ' + color + ';">' + l.type + '</div>' +
+            '<div style="flex: 1;">' + l.msg + '</div>' +
+            '<div style="width: 60px;">' + l.val + '</div>' +
+        '</div>';
+    });
+    html += '</div>' +
+        '<div style="margin-top: 8px; cursor: pointer; color: #00f; font-size: 8px;" onclick="setView(\'SYSTEM-INFO\')">← Back to SYSTEM INFO</div>' +
+    '</div>';
+    content.innerHTML = html;
+}
+
+function showUserDefinitionMenu() {
+    var screen = document.getElementById('data-screen');
+    var title = document.getElementById('data-screen-title');
+    var content = document.getElementById('data-screen-content');
+    if (!screen || !title || !content) return;
+    screen.style.display = 'flex';
+    title.textContent = 'USER DEFINITION MENU - Edit';
+    content.innerHTML = '<div style="font-family: \'Courier New\', monospace; font-size: 9px; color: #000;">' +
+        '<div style="background: #e8f0f8; padding: 8px; border: 1px solid #888; margin-bottom: 8px;">' +
+            '<div style="font-weight: bold; margin-bottom: 6px; color: #1a3a6a;">REGISTERED LAYOUTS</div>' +
+            '<div style="cursor: pointer; padding: 6px; border: 1px solid #888; margin-bottom: 4px; background: #fff;" onclick="setInfoDisplay(\'Layout: SIMPLE - 4 buttons\')">' +
+                '<b>SIMPLE</b> - Simple Layout<br>' +
+                '<span style="color: #666;">4 buttons, basic view</span>' +
+            '</div>' +
+            '<div style="cursor: pointer; padding: 6px; border: 1px solid #888; margin-bottom: 4px; background: #fff;" onclick="setInfoDisplay(\'Layout: STANDARD - 8 buttons\')">' +
+                '<b>STANDARD</b> - Standard Layout<br>' +
+                '<span style="color: #666;">8 buttons, default view</span>' +
+            '</div>' +
+            '<div style="cursor: pointer; padding: 6px; border: 1px solid #888; margin-bottom: 4px; background: #fff;" onclick="setInfoDisplay(\'Layout: ADVANCED - 12 buttons\')">' +
+                '<b>ADVANCED</b> - Advanced Layout<br>' +
+                '<span style="color: #666;">12 buttons, full access</span>' +
+            '</div>' +
+        '</div>' +
+        '<div style="display: flex; gap: 8px; margin-bottom: 8px;">' +
+            '<div style="cursor: pointer; padding: 6px 12px; background: #4CAF50; color: white;" onclick="setInfoDisplay(\'New layout registered\')">+ NEW</div>' +
+            '<div style="cursor: pointer; padding: 6px 12px; background: #FF9800; color: white;" onclick="setInfoDisplay(\'Layout renamed\')">RENAME</div>' +
+            '<div style="cursor: pointer; padding: 6px 12px; background: #f44336; color: white;" onclick="setInfoDisplay(\'Layout deleted\')">DELETE</div>' +
+        '</div>' +
+        '<div style="cursor: pointer; color: #00f; font-size: 8px;" onclick="setView(\'SYSTEM-INFO\')">← Back to SYSTEM INFO</div>' +
+    '</div>';
+}
+
+function showQRCodeOperation() {
+    var screen = document.getElementById('data-screen');
+    var title = document.getElementById('data-screen-title');
+    var content = document.getElementById('data-screen-content');
+    if (!screen || !title || !content) return;
+    var qrData = 'DX200|SN:DX200L-2024-00847|GP7|Ver:DN1.53-04';
+    screen.style.display = 'flex';
+    title.textContent = 'QR CODE - Operation';
+    content.innerHTML = '<div style="font-family: \'Courier New\', monospace; font-size: 9px; color: #000; text-align: center;">' +
+        '<div style="background: #e8f0f8; padding: 8px; border: 1px solid #888; margin-bottom: 8px;">' +
+            '<div style="font-weight: bold; margin-bottom: 6px; color: #1a3a6a;">SYSTEM QR CODE</div>' +
+            '<div style="background: white; border: 2px solid #000; padding: 10px; display: inline-block; margin: 8px auto;">' +
+                '<div style="width: 100px; height: 100px; background: repeating-conic-gradient(#000 0% 25%, #fff 0% 50%) 50% / 8px 8px; border: 1px solid #000;">' +
+                    '<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.95);">' +
+                        '<div style="font-size: 7px; color: #000; text-align: center; line-height: 1.3;">' +
+                            '▒▒▒▒▒<br>▒ ▒ ▒<br>▒▒▒▒▒<br>▒ ▒ ▒<br>▒▒▒▒▒<br>▒ ▒<br>▒▒▒▒▒<br>▒ ▒<br>▒▒▒▒▒' +
+                        '</div>' +
+                    '</div>' +
+                '</div>' +
+            '</div>' +
+            '<div style="font-size: 7px; color: #666; margin-top: 8px;">Scan with mobile device</div>' +
+            '<div style="font-size: 7px; color: #333; margin-top: 4px; word-break: break-all;">' + qrData + '</div>' +
+        '</div>' +
+        '<div style="cursor: pointer; color: #00f; font-size: 8px;" onclick="setView(\'SYSTEM-INFO\')">← Back to SYSTEM INFO</div>' +
+    '</div>';
+}
+
+function showDisplaySetup() {
+    const screen = document.getElementById('data-screen');
+    const title = document.getElementById('data-screen-title');
+    const content = document.getElementById('data-screen-content');
+    if (!screen || !title || !content) return;
+    
+    title.textContent = 'DISPLAY SETUP';
+    screen.style.display = 'flex';
+    
+    content.innerHTML = `
+        <div style="margin-bottom:8px; cursor:pointer; padding:4px; border-bottom:1px solid #ccc;" onclick="displaySetupAction('CHANGE FONT')">
+            <b>CHANGE FONT</b> Operation<br>
+            <span style="font-size:8px; color:#333;">Cambiar el tipo/tamaño de fuente utilizada en la pantalla LCD</span>
+        </div>
+        <div style="margin-bottom:8px; cursor:pointer; padding:4px; border-bottom:1px solid #ccc;" onclick="displaySetupAction('CHANGE BUTTON')">
+            <b>CHANGE BUTTON</b> Operation<br>
+            <span style="font-size:8px; color:#333;">Modificar la asignación o función de los botones de la pantalla</span>
+        </div>
+        <div style="margin-bottom:8px; cursor:pointer; padding:4px; border-bottom:1px solid #ccc;" onclick="displaySetupAction('INITIALIZE LAYOUT')">
+            <b>INITIALIZE LAYOUT</b> Operation<br>
+            <span style="font-size:8px; color:#333;">Restaurar el layout de pantalla y botones a la configuración inicial</span>
+        </div>
+        <div style="margin-bottom:8px; cursor:pointer; padding:4px; border-bottom:1px solid #ccc;" onclick="displaySetupAction('CHANGE WINDOW PATTERN')">
+            <b>CHANGE WINDOW PATTERN</b> Operation<br>
+            <span style="font-size:8px; color:#333;">Cambiar el patrón o distribución de ventanas de la pantalla LCD</span>
+        </div>
+    `;
+}
+
+let displayFontSize = 10;
+let displayFont = "'Courier New', monospace";
+
+function displaySetupAction(action) {
+    const content = document.getElementById('data-screen-content');
+    if (!content) return;
+    
+    if (action === 'CHANGE FONT') {
+        content.innerHTML = `
+            <div style="margin-bottom:8px;"><b>CHANGE FONT</b> - Seleccione tamaño:</div>
+            <div style="cursor:pointer; padding:4px; border-bottom:1px solid #ccc;" onclick="setDisplayFont(8)">Small (8px)</div>
+            <div style="cursor:pointer; padding:4px; border-bottom:1px solid #ccc;" onclick="setDisplayFont(10)">Normal (10px)</div>
+            <div style="cursor:pointer; padding:4px; border-bottom:1px solid #ccc;" onclick="setDisplayFont(12)">Large (12px)</div>
+            <div style="cursor:pointer; padding:4px; border-bottom:1px solid #ccc;" onclick="setDisplayFont(14)">Extra Large (14px)</div>
+            <div style="margin-top:12px; cursor:pointer; color:#00f;" onclick="showDisplaySetup()">← Back</div>
+        `;
+    } else if (action === 'CHANGE BUTTON') {
+        content.innerHTML = `
+            <div style="margin-bottom:8px;"><b>CHANGE BUTTON</b> - Configuración de botones</div>
+            <div style="font-size:8px; margin-bottom:8px;">Esta función permite personalizar las teclas de función (softkeys) según sus necesidades.</div>
+            <div style="padding:8px; background:#f0f0f0; border:1px solid #999; margin-bottom:8px;">
+                <div style="margin-bottom:4px;">Botón 1: <span id="btn-assign-1">JOB</span> <span style="cursor:pointer; color:#00f;" onclick="setInfoDisplay('Botón 1 asignado a JOB')">[Cambiar]</span></div>
+                <div style="margin-bottom:4px;">Botón 2: <span id="btn-assign-2">EDIT</span> <span style="cursor:pointer; color:#00f;" onclick="setInfoDisplay('Botón 2 asignado a EDIT')">[Cambiar]</span></div>
+                <div style="margin-bottom:4px;">Botón 3: <span id="btn-assign-3">DISPLAY</span> <span style="cursor:pointer; color:#00f;" onclick="setInfoDisplay('Botón 3 asignado a DISPLAY')">[Cambiar]</span></div>
+            </div>
+            <div style="margin-top:12px; cursor:pointer; color:#00f;" onclick="showDisplaySetup()">← Back</div>
+        `;
+    } else if (action === 'INITIALIZE LAYOUT') {
+        content.innerHTML = `
+            <div style="margin-bottom:8px;"><b>INITIALIZE LAYOUT</b></div>
+            <div style="padding:12px; background:#fff3cd; border:2px solid #ffc107; margin-bottom:12px;">
+                <div style="color:#856404; font-weight:bold; margin-bottom:8px;">⚠️ ADVERTENCIA</div>
+                <div style="font-size:8px; color:#856404;">
+                    Se perderán todas las personalizaciones de layout y botones.<br>
+                    ¿Está seguro de que desea restaurar la configuración de fábrica?
+                </div>
+            </div>
+            <div style="display:flex; gap:8px;">
+                <div style="cursor:pointer; padding:6px 12px; background:#d4edda; border:1px solid #28a745; color:#155724;" onclick="initializeLayoutConfirmed()">SÍ - Inicializar</div>
+                <div style="cursor:pointer; padding:6px 12px; background:#f8d7da; border:1px solid #dc3545; color:#721c24;" onclick="showDisplaySetup()">NO - Cancelar</div>
+            </div>
+        `;
+    } else if (action === 'CHANGE WINDOW PATTERN') {
+        content.innerHTML = `
+            <div style="margin-bottom:8px;"><b>CHANGE WINDOW PATTERN</b> - Seleccione patrón:</div>
+            <div style="cursor:pointer; padding:6px; border:2px solid #28a745; background:#d4edda; margin-bottom:4px;" onclick="setWindowPattern('Standard')">
+                <b>Standard</b><br><span style="font-size:7px;">JOB + Mensajes</span>
+            </div>
+            <div style="cursor:pointer; padding:6px; border:1px solid #999; margin-bottom:4px;" onclick="setWindowPattern('Dual')">
+                <b>Dual</b><br><span style="font-size:7px;">JOB + EDIT lado a lado</span>
+            </div>
+            <div style="cursor:pointer; padding:6px; border:1px solid #999; margin-bottom:4px;" onclick="setWindowPattern('Full Job')">
+                <b>Full Job</b><br><span style="font-size:7px;">Solo JOB a pantalla completa</span>
+            </div>
+            <div style="cursor:pointer; padding:6px; border:1px solid #999; margin-bottom:4px;" onclick="setWindowPattern('Status')">
+                <b>Status</b><br><span style="font-size:7px;">SYS INFO + Alarmas</span>
+            </div>
+            <div style="margin-top:12px; cursor:pointer; color:#00f;" onclick="showDisplaySetup()">← Back</div>
+        `;
+    }
+}
+
+function setDisplayFont(size) {
+    displayFontSize = size;
+    const elements = document.querySelectorAll('#job-content-area, #data-screen-content, #alarm-content, #variable-content, #inout-content');
+    elements.forEach(el => {
+        if (el) el.style.fontSize = size + 'px';
+    });
+    setInfoDisplay('Fuente cambiada a ' + size + 'px');
+    showDisplaySetup();
+}
+
+function initializeLayoutConfirmed() {
+    setInfoDisplay('✓ Layout restaurado a configuración de fábrica');
+    showDisplaySetup();
+}
+
+function setWindowPattern(pattern) {
+    setInfoDisplay('✓ Patrón de ventana: ' + pattern);
+    showDisplaySetup();
 }
 
 function setInfoDisplay(msg) {
@@ -4439,10 +4699,6 @@ function setIOType(type) {
 
 function setVarType(type) {
     currentVarType = type;
-    document.querySelectorAll('#variable-screen button').forEach(b => b.style.background = '#dcdcdc');
-    document.querySelectorAll('#variable-screen button').forEach(b => b.style.color = '#000');
-    document.getElementById('var-btn-' + type.toLowerCase()).style.background = '#2b4b9b';
-    document.getElementById('var-btn-' + type.toLowerCase()).style.color = '#fff';
     renderVariable();
 }
 
@@ -4450,15 +4706,55 @@ function renderVariable() {
     const container = document.getElementById('variable-content');
     if (!container) return;
     
-    const colors = { B: '#006', I: '#600', D: '#060', R: '#a00' };
-    const format = { B: v => v, I: v => v, D: v => v.toFixed(3), R: v => v.toFixed(2) };
-    
-    container.innerHTML = robotVariables[currentVarType].map((v, i) => 
-        `<div style="display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #ddd;">
-            <span style="color:${colors[currentVarType]}">${currentVarType}${String(i).padStart(3,'0')}=</span>
-            <span>${format[currentVarType](v)}</span>
-        </div>`
+    const variableMenuItems = [
+        { label: 'BYTE Operation Edit',           icon: 'B' },
+        { label: 'INTEGER Operation Edit',        icon: 'I' },
+        { label: 'DOUBLE Operation Edit',         icon: 'D' },
+        { label: 'REAL Operation Edit',           icon: 'R' },
+        { label: 'STRING Operation Edit',         icon: 'S' },
+        { label: 'POSITION (ROBOT) Operation Edit', icon: 'P' },
+        { label: 'POSITION (BASE) Operation Edit',  icon: 'BP' },
+        { label: 'POSITION (ST) Operation Edit',    icon: 'EX' },
+        { label: 'LOCAL VARIABLE Operation',        icon: 'LV' },
+        { label: 'TIMER Operation Edit',            icon: 'T' }
+    ];
+
+    container.innerHTML = variableMenuItems.map((item, i) =>
+        `<div onclick="openVariableSubMenu('${item.icon}')" style="display: flex; align-items: center; gap: 4px; padding: 3px 4px; margin: 1px 2px; background: #dcdcdc; border: 1px solid #777; border-radius: 2px; cursor: pointer; box-shadow: inset 1px 1px 1px #fff, inset -1px -1px 1px #aaa; min-height: 16px; font-size: 6px; font-weight: bold; line-height: 1.2;" onmouseover="this.style.background='#e0e0e0'" onmouseout="this.style.background='#dcdcdc'">`
+        + `<div style="width: 14px; height: 12px; background: #fff; border: 1px solid #999; border-radius: 1px; display: flex; align-items: center; justify-content: center; font-size: 5px; font-weight: bold; color: #1a3a6a; flex-shrink: 0;">${item.icon}</div>`
+        + `<span>${item.label}</span>`
+        + `</div>`
     ).join('');
+}
+
+function openVariableSubMenu(varType) {
+    setInfoDisplay('VARIABLE: ' + varType + ' Operation Edit — Vista de datos');
+    const container = document.getElementById('variable-content');
+    if (!container) return;
+
+    const typeMap = { B: 'BYTE', I: 'INTEGER', D: 'DOUBLE', R: 'REAL', S: 'STRING', P: 'POSITION (ROBOT)', BP: 'POSITION (BASE)', EX: 'POSITION (ST)', LV: 'LOCAL VARIABLE', T: 'TIMER' };
+    const typeName = typeMap[varType] || varType;
+
+    let rows = '';
+    for (let i = 0; i < 10; i++) {
+        let val = '0';
+        if (varType === 'B' && robotVariables.B) val = robotVariables.B[i] !== undefined ? robotVariables.B[i] : 0;
+        else if (varType === 'I' && robotVariables.I) val = robotVariables.I[i] !== undefined ? robotVariables.I[i] : 0;
+        else if (varType === 'D' && robotVariables.D) val = robotVariables.D[i] !== undefined ? robotVariables.D[i].toFixed(3) : '0.000';
+        else if (varType === 'R' && robotVariables.R) val = robotVariables.R[i] !== undefined ? robotVariables.R[i].toFixed(2) : '0.00';
+        else if (varType === 'S') val = '""';
+        else if (varType === 'P') val = '(0.000, 0.000, 0.000, 0.00, 0.00, 0.00)';
+        else if (varType === 'BP') val = '(0.000, 0.000, 0.000, 0.00, 0.00, 0.00)';
+        else if (varType === 'EX') val = '(0.000, 0.000, 0.000, 0.00, 0.00, 0.00)';
+        else if (varType === 'LV') val = '0';
+        else if (varType === 'T') val = '0.00 sec';
+        rows += `<div style="display: flex; justify-content: space-between; padding: 2px 4px; border-bottom: 1px solid #ddd; font-size: 6px;"><span style="color:#1a3a6a; font-weight:bold;">${varType}${String(i).padStart(3,'0')} =</span><span>${val}</span></div>`;
+    }
+
+    container.innerHTML =
+        `<div style="background: #1a3a6a; color: #fff; padding: 3px 6px; font-size: 7px; font-weight: bold; margin-bottom: 2px;">${typeName} Operation Edit</div>`
+        + `<div style="background: #f0f0f0; border: 1px solid #888; padding: 2px; flex: 1; overflow-y: auto;">${rows}</div>`
+        + `<div onclick="renderVariable()" style="margin-top: 3px; padding: 3px 6px; background: #ccc; border: 1px solid #888; text-align: center; font-size: 6px; font-weight: bold; cursor: pointer; box-shadow: inset 1px 1px 0 #fff;">← BACK</div>`;
 }
 
 function renderInout() {
@@ -4515,21 +4811,373 @@ function renderAlarm() {
 }
 
 function showSystemVersion() {
-    setInfoDisplay(`VER: ${systemInfo.version} | DX200 Controller`);
+    var screen = document.getElementById('data-screen');
+    var title = document.getElementById('data-screen-title');
+    var content = document.getElementById('data-screen-content');
+    if (!screen || !title || !content) return;
+    screen.style.display = 'flex';
+    title.textContent = 'VERSION - Monitoring';
+    content.innerHTML = '<div style="font-family: \'Courier New\', monospace; font-size: 9px; color: #000;">' +
+        '<div style="background: #e8f0f8; padding: 8px; border: 1px solid #888; margin-bottom: 8px;">' +
+            '<div style="font-weight: bold; margin-bottom: 6px; color: #1a3a6a;">VERSION INFORMATION</div>' +
+            '<div style="display: flex; justify-content: space-between; padding: 2px 0;"><span>Software Ver:</span><span><b>DN1.53-04</b></span></div>' +
+            '<div style="display: flex; justify-content: space-between; padding: 2px 0;"><span>Firmware Ver:</span><span><b>RC2.53P-03</b></span></div>' +
+            '<div style="display: flex; justify-content: space-between; padding: 2px 0;"><span>Boot ROM:</span><span><b>1.02-00</b></span></div>' +
+            '<div style="display: flex; justify-content: space-between; padding: 2px 0;"><span>FPGA Ver:</span><span><b>2.01</b></span></div>' +
+        '</div>' +
+        '<div style="background: #e8f0f8; padding: 8px; border: 1px solid #888;">' +
+            '<div style="font-weight: bold; margin-bottom: 6px; color: #1a3a6a;">INSTALLED OPTIONS</div>' +
+            '<div style="padding: 2px 0;">[1] ROBOT CONTROL OPTION</div>' +
+            '<div style="padding: 2px 0;">[2] JOB FUNCTION EXTENSION</div>' +
+            '<div style="padding: 2px 0;">[3] EXTERNAL MEMORY</div>' +
+            '<div style="padding: 2px 0;">[4] I/O EXPANSION 64/64</div>' +
+            '<div style="padding: 2px 0;">[5] USER DEFINITION MENU</div>' +
+        '</div>' +
+        '<div style="margin-top: 8px; cursor: pointer; color: #00f; font-size: 8px;" onclick="setView(\'SYSTEM-INFO\')">← Back to SYSTEM INFO</div>' +
+    '</div>';
 }
 
-function showMonitoringTime() {
-    setInfoDisplay(`POWER: ${systemInfo.totalPowerOnTime.toFixed(1)}h | PLAYBACK: ${systemInfo.totalPlaybackTime.toFixed(1)}h`);
+function showTimeOperation() {
+    var screen = document.getElementById('data-screen');
+    var title = document.getElementById('data-screen-title');
+    var content = document.getElementById('data-screen-content');
+    if (!screen || !title || !content) return;
+    var now = new Date();
+    var dateStr = now.getFullYear() + '/' + String(now.getMonth()+1).padStart(2,'0') + '/' + String(now.getDate()).padStart(2,'0');
+    var timeStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0') + ':' + String(now.getSeconds()).padStart(2,'0');
+    screen.style.display = 'flex';
+    title.textContent = 'TIME - Management';
+    content.innerHTML = '<div style="font-family: \'Courier New\', monospace; font-size: 9px; color: #000;">' +
+        '<div style="background: #e8f0f8; padding: 8px; border: 1px solid #888; margin-bottom: 8px;">' +
+            '<div style="font-weight: bold; margin-bottom: 6px; color: #1a3a6a;">CURRENT DATE/TIME</div>' +
+            '<div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dotted #888;"><span>Date:</span><span><b>' + dateStr + '</b></span></div>' +
+            '<div style="display: flex; justify-content: space-between; padding: 4px 0;"><span>Time:</span><span><b>' + timeStr + '</b></span></div>' +
+        '</div>' +
+        '<div style="background: #e8f0f8; padding: 8px; border: 1px solid #888; margin-bottom: 8px;">' +
+            '<div style="font-weight: bold; margin-bottom: 6px; color: #1a3a6a;">SET NEW DATE/TIME</div>' +
+            '<div style="margin-bottom: 6px;">New Date: <input type="date" id="new-date" value="' + now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0') + '" style="padding: 2px; font-size: 9px;"></div>' +
+            '<div style="margin-bottom: 6px;">New Time: <input type="time" id="new-time" value="' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0') + '" style="padding: 2px; font-size: 9px;"></div>' +
+            '<div style="cursor: pointer; padding: 4px 12px; background: #4CAF50; color: white; display: inline-block; font-weight: bold;" onclick="confirmTimeChange()">SET</div>' +
+        '</div>' +
+        '<div style="margin-top: 8px; cursor: pointer; color: #00f; font-size: 8px;" onclick="setView(\'SYSTEM-INFO\')">← Back to SYSTEM INFO</div>' +
+    '</div>';
+}
+
+function confirmTimeChange() {
+    var dateInput = document.getElementById('new-date');
+    var timeInput = document.getElementById('new-time');
+    if (dateInput && timeInput) {
+        showTimeOperation();
+        setInfoDisplay('DATE/TIME updated: ' + dateInput.value + ' ' + timeInput.value);
+    }
+}
+
+function showControllerInfo() {
+    var screen = document.getElementById('data-screen');
+    var title = document.getElementById('data-screen-title');
+    var content = document.getElementById('data-screen-content');
+    if (!screen || !title || !content) return;
+    screen.style.display = 'flex';
+    title.textContent = 'CONTROLLER INFORMATION - Monitoring';
+    content.innerHTML = '<div style="font-family: \'Courier New\', monospace; font-size: 9px; color: #000;">' +
+        '<div style="background: #e8f0f8; padding: 8px; border: 1px solid #888; margin-bottom: 8px;">' +
+            '<div style="font-weight: bold; margin-bottom: 6px; color: #1a3a6a;">CONTROLLER SPECIFICATION</div>' +
+            '<div style="display: flex; justify-content: space-between; padding: 2px 0;"><span>Controller:</span><span><b>DX200</b></span></div>' +
+            '<div style="display: flex; justify-content: space-between; padding: 2px 0;"><span>Type:</span><span><b>Motoman DX200</b></span></div>' +
+            '<div style="display: flex; justify-content: space-between; padding: 2px 0;"><span>Serial No:</span><span><b>DX200L-2024-00847</b></span></div>' +
+            '<div style="display: flex; justify-content: space-between; padding: 2px 0;"><span>Mfg Date:</span><span><b>2024/02</b></span></div>' +
+        '</div>' +
+        '<div style="background: #e8f0f8; padding: 8px; border: 1px solid #888; margin-bottom: 8px;">' +
+            '<div style="font-weight: bold; margin-bottom: 6px; color: #1a3a6a;">ROBOT CONFIGURATION</div>' +
+            '<div style="display: flex; justify-content: space-between; padding: 2px 0;"><span>Robot Model:</span><span><b>GP7</b></span></div>' +
+            '<div style="display: flex; justify-content: space-between; padding: 2px 0;"><span>Axes:</span><span><b>6-Axis</b></span></div>' +
+            '<div style="display: flex; justify-content: space-between; padding: 2px 0;"><span>Payload:</span><span><b>7.0 kg</b></span></div>' +
+            '<div style="display: flex; justify-content: space-between; padding: 2px 0;"><span>Reach:</span><span><b>1440 mm</b></span></div>' +
+        '</div>' +
+        '<div style="background: #e8f0f8; padding: 8px; border: 1px solid #888;">' +
+            '<div style="font-weight: bold; margin-bottom: 6px; color: #1a3a6a;">INSTALLED OPTIONS</div>' +
+            '<div>[1] ROBOT CONTROL OPTION</div>' +
+            '<div>[2] JOB FUNCTION EXTENSION</div>' +
+            '<div>[3] EXTERNAL MEMORY</div>' +
+            '<div>[4] I/O EXPANSION</div>' +
+            '<div>[5] USER DEFINITION</div>' +
+        '</div>' +
+        '<div style="margin-top: 8px; cursor: pointer; color: #00f; font-size: 8px;" onclick="setView(\'SYSTEM-INFO\')">← Back to SYSTEM INFO</div>' +
+    '</div>';
 }
 
 function showAlarmHistory() {
-    if (systemInfo.alarms.length === 0) {
-        setInfoDisplay('No hay historial de alarmas');
-    } else {
-        const last = systemInfo.alarms[systemInfo.alarms.length - 1];
-        setInfoDisplay(`[${last.code}] ${last.msg}`);
+    var screen = document.getElementById('data-screen');
+    var title = document.getElementById('data-screen-title');
+    var content = document.getElementById('data-screen-content');
+    if (!screen || !title || !content) return;
+    var alarms = [
+        { code: '4110', msg: 'Deadman Switch Released', time: '2026/04/28 14:35:22' },
+        { code: '4106', msg: 'Servo Power OFF', time: '2026/04/28 14:35:18' },
+        { code: '0000', msg: 'Alarm Cancelled', time: '2026/04/28 14:34:55' },
+        { code: '4203', msg: 'Approach Zone Limit', time: '2026/04/27 10:22:41' },
+        { code: '4105', msg: 'Emergency Stop', time: '2026/04/27 10:15:33' }
+    ];
+    screen.style.display = 'flex';
+    title.textContent = 'ALARM HISTORY - Management';
+    var html = '<div style="font-family: \'Courier New\', monospace; font-size: 9px; color: #000;">' +
+        '<div style="background: #e8f0f8; padding: 4px; border: 1px solid #888; margin-bottom: 4px; font-weight: bold;">ALARM HISTORY (' + alarms.length + ' records)</div>' +
+        '<div style="background: #f8f8f8; border: 1px solid #888; max-height: 200px; overflow-y: auto;">';
+    alarms.forEach(function(a) {
+        html += '<div style="padding: 4px; border-bottom: 1px solid #ddd; display: flex;">' +
+            '<div style="color: #d00; font-weight: bold; width: 60px;">[' + a.code + ']</div>' +
+            '<div style="flex: 1;">' + a.msg + '</div>' +
+            '<div style="color: #666; width: 100px; text-align: right;">' + a.time + '</div>' +
+        '</div>';
+    });
+    html += '</div>' +
+        '<div style="margin-top: 8px; cursor: pointer; padding: 4px 12px; background: #f44336; color: white; display: inline-block;" onclick="clearAlarmHistory()">CLEAR HISTORY</div>' +
+        '<div style="margin-top: 8px; cursor: pointer; color: #00f; font-size: 8px;" onclick="setView(\'SYSTEM-INFO\')">← Back to SYSTEM INFO</div>' +
+    '</div>';
+    content.innerHTML = html;
+}
+
+function clearAlarmHistory() {
+    if (confirm('Confirm clear ALARM HISTORY? All records will be deleted.')) {
+        showAlarmHistory();
+        setInfoDisplay('ALARM HISTORY cleared');
     }
-    setView('ALARM');
+}
+
+function showIOmsgHistory() {
+    var screen = document.getElementById('data-screen');
+    var title = document.getElementById('data-screen-title');
+    var content = document.getElementById('data-screen-content');
+    if (!screen || !title || !content) return;
+    var ioMsgs = [
+        { port: 'IN#12', msg: 'ON', time: '2026/04/28 14:30:15' },
+        { port: 'OUT#24', msg: 'OFF', time: '2026/04/28 14:29:45' },
+        { port: 'IN#08', msg: 'ON', time: '2026/04/28 14:25:22' },
+        { port: 'OUT#15', msg: 'ON', time: '2026/04/28 14:20:08' },
+        { port: 'IN#03', msg: 'OFF', time: '2026/04/28 14:15:33' }
+    ];
+    screen.style.display = 'flex';
+    title.textContent = 'I/O MSG HISTORY - Management';
+    var html = '<div style="font-family: \'Courier New\', monospace; font-size: 9px; color: #000;">' +
+        '<div style="background: #e8f0f8; padding: 4px; border: 1px solid #888; margin-bottom: 4px; font-weight: bold;">I/O MSG HISTORY (' + ioMsgs.length + ' records)</div>' +
+        '<div style="background: #f8f8f8; border: 1px solid #888; max-height: 200px; overflow-y: auto;">' +
+        '<div style="padding: 4px; border-bottom: 1px solid #888; display: flex; font-weight: bold; background: #e0e0e0;">' +
+            '<div style="width: 60px;">PORT</div><div style="flex: 1;">MESSAGE</div><div style="width: 100px; text-align: right;">TIME</div></div>';
+    ioMsgs.forEach(function(m) {
+        html += '<div style="padding: 4px; border-bottom: 1px solid #ddd; display: flex;">' +
+            '<div style="font-weight: bold; width: 60px;">' + m.port + '</div>' +
+            '<div style="flex: 1;">' + m.msg + '</div>' +
+            '<div style="color: #666; width: 100px; text-align: right;">' + m.time + '</div>' +
+        '</div>';
+    });
+    html += '</div>' +
+        '<div style="margin-top: 8px; cursor: pointer; padding: 4px 12px; background: #f44336; color: white; display: inline-block;" onclick="clearIOmsgHistory()">CLEAR HISTORY</div>' +
+        '<div style="margin-top: 8px; cursor: pointer; color: #00f; font-size: 8px;" onclick="setView(\'SYSTEM-INFO\')">← Back to SYSTEM INFO</div>' +
+    '</div>';
+    content.innerHTML = html;
+}
+
+function clearIOmsgHistory() {
+    if (confirm('Confirm clear I/O MSG HISTORY?')) {
+        showIOmsgHistory();
+        setInfoDisplay('I/O MSG HISTORY cleared');
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EX MEMORY — SIMULATED EXTERNAL MEMORY SYSTEM (DX200)
+// ═══════════════════════════════════════════════════════════════
+var exMemDevice = { name: 'USB (USB0:)', connected: true, capacity: '4.00 GB', used: '0.12 GB', free: '3.88 GB' };
+var exMemFiles = [
+    { name: 'JOB_BACKUP', type: 'JOB', size: '2.4KB', date: '2026/04/28 10:15' },
+    { name: 'PARAM_01', type: 'PARAM', size: '1.1KB', date: '2026/04/20 08:30' },
+    { name: 'USERDEF', type: 'USER', size: '0.8KB', date: '2026/03/15 14:22' }
+];
+var exMemFolders = ['BACKUP', 'JOBS', 'PARAMS'];
+var exMemSelectedIdx = 0;
+
+function _exBtn(label, onclick, bg) {
+    return `<div onclick="${onclick}" style="padding:3px 4px;margin:1px;background:${bg||'#dcdcdc'};border:1px solid #777;border-radius:2px;cursor:pointer;font-size:6px;font-weight:bold;text-align:center;box-shadow:inset 1px 1px 1px #fff,inset -1px -1px 1px #aaa;min-height:14px;display:flex;align-items:center;justify-content:center;" onmouseover="this.style.background='#e8e8e8'" onmouseout="this.style.background='${bg||'#dcdcdc'}'">${label}</div>`;
+}
+function _exBack() { return _exBtn('← BACK', 'renderExMemoryMenu()', '#ccc'); }
+function _exTitle(t) { return `<div style="background:#1a3a6a;color:#fff;padding:2px 6px;font-size:7px;font-weight:bold;margin-bottom:2px;">${t}</div>`; }
+function _exDevice() { return `<div style="background:#e8f0ff;border:1px solid #aab;padding:2px 4px;font-size:5px;color:#333;margin-bottom:2px;">DEVICE: ${exMemDevice.name} | ${exMemDevice.connected?'<b style="color:#080">CONNECTED</b>':'<b style="color:#a00">NOT CONNECTED</b>'}</div>`; }
+
+function renderExMemoryMenu() {
+    var c = document.getElementById('ex-memory-content'); if(!c) return;
+    var items = [
+        { label:'LOAD', type:'Edit', icon:'#9cf', fn:'exMemLoad()' },
+        { label:'SAVE', type:'Operation', icon:'#cfc', fn:'exMemSave()' },
+        { label:'VERIFY', type:'Operation', icon:'#ffc', fn:'exMemVerify()' },
+        { label:'DELETE', type:'Operation', icon:'#fcc', fn:'exMemDelete()' },
+        { label:'DEVICE OPERATION', type:'Operation', icon:'#ccf', fn:'exMemDeviceOp()' },
+        { label:'FOLDER OPERATION', type:'Management', icon:'#fce', fn:'exMemFolderOp()' },
+        { label:'INITIALIZE (1)', type:'Operation', icon:'#eee', fn:'exMemInitialize()' }
+    ];
+    c.innerHTML = '<div style="display:flex;flex-direction:column;gap:2px;padding:2px;background:#2b4b9b;">' +
+        items.map(function(it){
+            return `<div class="r-menu-btn" onclick="${it.fn}" style="display:flex;align-items:center;gap:3px;padding:2px 3px;background:#dcdcdc;border:1px solid #777;border-radius:2px;cursor:pointer;font-size:5px;font-weight:bold;box-shadow:inset 1px 1px 1px #fff,inset -1px -1px 1px #aaa;min-height:15px;" onmouseover="this.style.background='#e8e8e8'" onmouseout="this.style.background='#dcdcdc'"><div style="width:10px;height:10px;background:${it.icon};border:1px solid #999;border-radius:1px;flex-shrink:0;"></div><span>${it.label}</span><span style="font-size:4px;color:#666;font-weight:normal;margin-left:auto;">${it.type}</span></div>`;
+        }).join('') + '</div>';
+}
+
+// --- LOAD ---
+function exMemLoad() {
+    var c = document.getElementById('ex-memory-content'); if(!c) return;
+    var dataTypes = ['JOB','PARAMETER','VARIABLE (B/I/D/R)','USER DEFINITION','TOOL DATA','ALL DATA'];
+    c.innerHTML = _exTitle('LOAD — Select Data Type') + _exDevice() +
+        '<div style="background:#f0f0f0;border:1px solid #888;padding:2px;">' +
+        dataTypes.map(function(t,i){ return `<div onclick="exMemLoadConfirm('${t}')" style="padding:2px 4px;border-bottom:1px solid #ddd;cursor:pointer;font-size:6px;display:flex;justify-content:space-between;" onmouseover="this.style.background='#d0e0ff'" onmouseout="this.style.background=''"><span>${t}</span><span style="color:#888">▶</span></div>`; }).join('') +
+        '</div>' + _exBack();
+    setInfoDisplay('LOAD: Seleccione tipo de datos a cargar desde ' + exMemDevice.name);
+}
+function exMemLoadConfirm(dtype) {
+    var c = document.getElementById('ex-memory-content'); if(!c) return;
+    var fileList = exMemFiles.filter(function(f){ return dtype==='ALL DATA' || f.type===dtype.substring(0,3).toUpperCase(); });
+    var filesHtml = fileList.length > 0 ? fileList.map(function(f){ return `<div style="padding:2px 4px;border-bottom:1px solid #ddd;font-size:5px;display:flex;justify-content:space-between;"><span style="color:#1a3a6a;font-weight:bold;">${f.name}</span><span>${f.size} | ${f.date}</span></div>`; }).join('') : '<div style="padding:4px;text-align:center;color:#888;font-size:5px;">No files found for this type</div>';
+    c.innerHTML = _exTitle('LOAD — ' + dtype) + _exDevice() +
+        '<div style="background:#f0f0f0;border:1px solid #888;padding:2px;margin-bottom:2px;">' + filesHtml + '</div>' +
+        _exBtn('EXECUTE LOAD', "exMemLoadExec('"+dtype+"')", '#9cf') + _exBtn('← BACK', 'exMemLoad()', '#ccc');
+    setInfoDisplay('LOAD: Archivos disponibles para ' + dtype);
+}
+function exMemLoadExec(dtype) {
+    var c = document.getElementById('ex-memory-content'); if(!c) return;
+    c.innerHTML = _exTitle('LOAD — EXECUTING') +
+        '<div style="padding:8px;text-align:center;"><div style="font-size:8px;font-weight:bold;color:#080;margin-bottom:4px;">✓ LOAD COMPLETE</div><div style="font-size:5px;color:#333;">Data type: '+dtype+'</div><div style="font-size:5px;color:#333;">Device: '+exMemDevice.name+'</div><div style="font-size:5px;color:#888;margin-top:4px;">Data loaded to controller successfully.</div></div>' +
+        _exBtn('OK', 'renderExMemoryMenu()', '#9cf');
+    setInfoDisplay('✓ LOAD COMPLETE: ' + dtype + ' loaded from ' + exMemDevice.name);
+}
+
+// --- SAVE ---
+function exMemSave() {
+    var c = document.getElementById('ex-memory-content'); if(!c) return;
+    var dataTypes = ['JOB','PARAMETER','VARIABLE (B/I/D/R)','USER DEFINITION','TOOL DATA','ALL DATA'];
+    c.innerHTML = _exTitle('SAVE — Select Data Type') + _exDevice() +
+        '<div style="background:#f0f0f0;border:1px solid #888;padding:2px;">' +
+        dataTypes.map(function(t){ return `<div onclick="exMemSaveConfirm('${t}')" style="padding:2px 4px;border-bottom:1px solid #ddd;cursor:pointer;font-size:6px;display:flex;justify-content:space-between;" onmouseover="this.style.background='#d0ffd0'" onmouseout="this.style.background=''"><span>${t}</span><span style="color:#888">▶</span></div>`; }).join('') +
+        '</div>' + _exBack();
+    setInfoDisplay('SAVE: Seleccione tipo de datos a guardar en ' + exMemDevice.name);
+}
+function exMemSaveConfirm(dtype) {
+    var c = document.getElementById('ex-memory-content'); if(!c) return;
+    var folderHtml = exMemFolders.map(function(f){ return `<div style="padding:2px 4px;border-bottom:1px solid #ddd;font-size:5px;cursor:pointer;display:flex;align-items:center;gap:3px;" onmouseover="this.style.background='#d0ffd0'" onmouseout="this.style.background=''"><span style="color:#c80;">📁</span><span>${f}/</span></div>`; }).join('');
+    c.innerHTML = _exTitle('SAVE — ' + dtype) + _exDevice() +
+        '<div style="font-size:5px;color:#555;padding:2px;">Destination folder:</div>' +
+        '<div style="background:#f0f0f0;border:1px solid #888;padding:2px;margin-bottom:2px;">' +
+        '<div style="padding:2px 4px;border-bottom:1px solid #ddd;font-size:5px;font-weight:bold;color:#1a3a6a;">/ (ROOT)</div>' + folderHtml + '</div>' +
+        _exBtn('EXECUTE SAVE', "exMemSaveExec('"+dtype+"')", '#cfc') + _exBtn('← BACK', 'exMemSave()', '#ccc');
+}
+function exMemSaveExec(dtype) {
+    var c = document.getElementById('ex-memory-content'); if(!c) return;
+    var d = new Date(); var dateStr = d.getFullYear()+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0')+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+    exMemFiles.push({ name: dtype.replace(/[^A-Z]/g,'')+'_'+String(exMemFiles.length).padStart(2,'0'), type: dtype.substring(0,3).toUpperCase(), size: '1.0KB', date: dateStr });
+    c.innerHTML = _exTitle('SAVE — COMPLETE') +
+        '<div style="padding:8px;text-align:center;"><div style="font-size:8px;font-weight:bold;color:#080;margin-bottom:4px;">✓ SAVE COMPLETE</div><div style="font-size:5px;color:#333;">Data type: '+dtype+'</div><div style="font-size:5px;color:#333;">Device: '+exMemDevice.name+'</div><div style="font-size:5px;color:#888;margin-top:4px;">Data saved to external memory.</div></div>' +
+        _exBtn('OK', 'renderExMemoryMenu()', '#cfc');
+    setInfoDisplay('✓ SAVE COMPLETE: ' + dtype + ' saved to ' + exMemDevice.name);
+}
+
+// --- VERIFY ---
+function exMemVerify() {
+    var c = document.getElementById('ex-memory-content'); if(!c) return;
+    c.innerHTML = _exTitle('VERIFY — Select File') + _exDevice() +
+        '<div style="background:#f0f0f0;border:1px solid #888;padding:2px;">' +
+        (exMemFiles.length > 0 ? exMemFiles.map(function(f,i){ return `<div onclick="exMemVerifyExec(${i})" style="padding:2px 4px;border-bottom:1px solid #ddd;cursor:pointer;font-size:5px;display:flex;justify-content:space-between;" onmouseover="this.style.background='#ffffd0'" onmouseout="this.style.background=''"><span style="font-weight:bold;color:#1a3a6a;">${f.name}</span><span>${f.type} | ${f.size}</span></div>`; }).join('') : '<div style="padding:4px;text-align:center;color:#888;font-size:5px;">No files on device</div>') +
+        '</div>' + _exBack();
+    setInfoDisplay('VERIFY: Seleccione archivo a comparar');
+}
+function exMemVerifyExec(idx) {
+    var c = document.getElementById('ex-memory-content'); if(!c) return;
+    var f = exMemFiles[idx]; var ok = Math.random() > 0.3;
+    c.innerHTML = _exTitle('VERIFY — RESULT') + _exDevice() +
+        '<div style="padding:6px;text-align:center;border:1px solid #888;background:#f8f8f8;margin-bottom:2px;"><div style="font-size:6px;font-weight:bold;margin-bottom:3px;">FILE: '+f.name+'</div><div style="font-size:5px;color:#555;margin-bottom:4px;">TYPE: '+f.type+' | SIZE: '+f.size+'</div><div style="font-size:10px;font-weight:bold;color:'+(ok?'#080':'#c00')+';padding:4px;border:2px solid '+(ok?'#080':'#c00')+';display:inline-block;">'+(ok?'OK — MATCH':'NG — MISMATCH')+'</div><div style="font-size:5px;color:#888;margin-top:3px;">'+(ok?'Controller data matches external file.':'Differences found between controller and file.')+'</div></div>' +
+        _exBtn('OK', 'exMemVerify()', '#ffc');
+    setInfoDisplay('VERIFY: ' + f.name + ' — ' + (ok ? 'OK (MATCH)' : 'NG (MISMATCH)'));
+}
+
+// --- DELETE ---
+function exMemDelete() {
+    var c = document.getElementById('ex-memory-content'); if(!c) return;
+    var all = exMemFolders.map(function(f,i){ return { label:'📁 '+f+'/', isFolder:true, idx:i }; }).concat(exMemFiles.map(function(f,i){ return { label:'📄 '+f.name+' ('+f.size+')', isFolder:false, idx:i }; }));
+    c.innerHTML = _exTitle('DELETE — Select Item') + _exDevice() +
+        '<div style="background:#f0f0f0;border:1px solid #888;padding:2px;">' +
+        (all.length > 0 ? all.map(function(it,i){ return `<div onclick="exMemDeleteConfirm(${it.isFolder},${it.idx})" style="padding:2px 4px;border-bottom:1px solid #ddd;cursor:pointer;font-size:5px;" onmouseover="this.style.background='#ffd0d0'" onmouseout="this.style.background=''">${it.label}</div>`; }).join('') : '<div style="padding:4px;text-align:center;color:#888;font-size:5px;">Empty</div>') +
+        '</div>' + _exBack();
+    setInfoDisplay('DELETE: Seleccione elemento a eliminar');
+}
+function exMemDeleteConfirm(isFolder, idx) {
+    var c = document.getElementById('ex-memory-content'); if(!c) return;
+    var name = isFolder ? exMemFolders[idx] : exMemFiles[idx].name;
+    c.innerHTML = _exTitle('DELETE — CONFIRM') +
+        '<div style="padding:8px;text-align:center;border:2px solid #c00;background:#fff0f0;margin-bottom:2px;"><div style="font-size:7px;font-weight:bold;color:#c00;margin-bottom:4px;">⚠ DELETE CONFIRM</div><div style="font-size:6px;color:#000;margin-bottom:2px;">Delete '+(isFolder?'folder':'file')+': <b>'+name+'</b> ?</div><div style="font-size:5px;color:#888;">This action cannot be undone.</div></div>' +
+        '<div style="display:flex;gap:2px;">' + _exBtn('YES — DELETE', "exMemDeleteExec("+isFolder+","+idx+")", '#fcc') + _exBtn('NO — CANCEL', 'exMemDelete()', '#ccc') + '</div>';
+}
+function exMemDeleteExec(isFolder, idx) {
+    if(isFolder) exMemFolders.splice(idx,1); else exMemFiles.splice(idx,1);
+    var c = document.getElementById('ex-memory-content'); if(!c) return;
+    c.innerHTML = _exTitle('DELETE — COMPLETE') +
+        '<div style="padding:8px;text-align:center;"><div style="font-size:8px;font-weight:bold;color:#080;">✓ DELETED</div><div style="font-size:5px;color:#888;margin-top:3px;">Item removed from external memory.</div></div>' +
+        _exBtn('OK', 'exMemDelete()', '#ccc');
+    setInfoDisplay('✓ DELETE COMPLETE');
+}
+
+// --- DEVICE OPERATION ---
+function exMemDeviceOp() {
+    var c = document.getElementById('ex-memory-content'); if(!c) return;
+    var devices = [
+        { name:'USB (USB0:)', sel: exMemDevice.name==='USB (USB0:)' },
+        { name:'CF (CF0:)', sel: exMemDevice.name==='CF (CF0:)' },
+        { name:'LAN (LAN:)', sel: exMemDevice.name==='LAN (LAN:)' }
+    ];
+    c.innerHTML = _exTitle('DEVICE OPERATION') +
+        '<div style="background:#f0f0f0;border:1px solid #888;padding:2px;margin-bottom:2px;"><div style="font-size:5px;font-weight:bold;padding:2px;border-bottom:1px solid #aaa;color:#1a3a6a;">SELECT DEVICE</div>' +
+        devices.map(function(d){ return `<div onclick="exMemSelectDevice('${d.name}')" style="padding:2px 4px;border-bottom:1px solid #ddd;cursor:pointer;font-size:6px;display:flex;justify-content:space-between;background:${d.sel?'#d0e0ff':''};" onmouseover="this.style.background='#d0e0ff'" onmouseout="this.style.background='${d.sel?'#d0e0ff':''}'"><span>${d.sel?'● ':'○ '}${d.name}</span><span style="color:${d.sel?'#080':'#888'}">${d.sel?'SELECTED':''}</span></div>`; }).join('') + '</div>' +
+        '<div style="background:#f8f8f8;border:1px solid #888;padding:3px;margin-bottom:2px;font-size:5px;"><div style="font-weight:bold;margin-bottom:2px;color:#1a3a6a;">DEVICE INFO</div><div>Device: <b>'+exMemDevice.name+'</b></div><div>Status: <b style="color:'+(exMemDevice.connected?'#080':'#c00')+'">'+(exMemDevice.connected?'CONNECTED':'NOT CONNECTED')+'</b></div><div>Capacity: '+exMemDevice.capacity+'</div><div>Used: '+exMemDevice.used+' | Free: '+exMemDevice.free+'</div><div>Files: '+exMemFiles.length+' | Folders: '+exMemFolders.length+'</div></div>' +
+        _exBtn('REFRESH', 'exMemDeviceOp()', '#ccf') + _exBack();
+    setInfoDisplay('DEVICE: ' + exMemDevice.name + ' — ' + (exMemDevice.connected ? 'CONNECTED' : 'NOT CONNECTED'));
+}
+function exMemSelectDevice(name) {
+    exMemDevice.name = name; exMemDevice.connected = true;
+    exMemDeviceOp();
+    setInfoDisplay('✓ DEVICE SELECTED: ' + name);
+}
+
+// --- FOLDER OPERATION ---
+function exMemFolderOp() {
+    var c = document.getElementById('ex-memory-content'); if(!c) return;
+    c.innerHTML = _exTitle('FOLDER OPERATION') + _exDevice() +
+        '<div style="background:#f0f0f0;border:1px solid #888;padding:2px;margin-bottom:2px;"><div style="font-size:5px;font-weight:bold;padding:2px;border-bottom:1px solid #aaa;color:#1a3a6a;">FOLDERS ON DEVICE</div>' +
+        (exMemFolders.length > 0 ? exMemFolders.map(function(f,i){ return `<div style="padding:2px 4px;border-bottom:1px solid #ddd;font-size:5px;display:flex;justify-content:space-between;align-items:center;"><span>📁 ${f}/</span><span onclick="exMemFolderDelete(${i})" style="color:#c00;cursor:pointer;font-size:5px;padding:1px 3px;border:1px solid #c00;border-radius:1px;" onmouseover="this.style.background='#fcc'" onmouseout="this.style.background=''">DEL</span></div>`; }).join('') : '<div style="padding:4px;text-align:center;color:#888;font-size:5px;">No folders</div>') + '</div>' +
+        _exBtn('+ CREATE NEW FOLDER', 'exMemFolderCreate()', '#cfc') + _exBack();
+    setInfoDisplay('FOLDER OPERATION: ' + exMemFolders.length + ' folders on device');
+}
+function exMemFolderCreate() {
+    var name = 'FOLDER_' + String(exMemFolders.length + 1).padStart(2, '0');
+    exMemFolders.push(name);
+    exMemFolderOp();
+    setInfoDisplay('✓ FOLDER CREATED: ' + name);
+}
+function exMemFolderDelete(idx) {
+    var name = exMemFolders[idx];
+    exMemFolders.splice(idx, 1);
+    exMemFolderOp();
+    setInfoDisplay('✓ FOLDER DELETED: ' + name);
+}
+
+// --- INITIALIZE (1) ---
+function exMemInitialize() {
+    var c = document.getElementById('ex-memory-content'); if(!c) return;
+    c.innerHTML = _exTitle('INITIALIZE (1)') + _exDevice() +
+        '<div style="padding:6px;text-align:center;border:3px solid #c00;background:#fff0f0;margin-bottom:2px;"><div style="font-size:8px;font-weight:bold;color:#c00;margin-bottom:3px;">⚠ WARNING ⚠</div><div style="font-size:6px;color:#000;margin-bottom:2px;">Initialize external memory device?</div><div style="font-size:5px;color:#c00;font-weight:bold;">ALL DATA ON THE DEVICE WILL BE ERASED!</div><div style="font-size:5px;color:#666;margin-top:2px;">Device: '+exMemDevice.name+'</div><div style="font-size:5px;color:#666;">Files: '+exMemFiles.length+' | Folders: '+exMemFolders.length+'</div></div>' +
+        '<div style="display:flex;gap:2px;">' + _exBtn('YES — INITIALIZE', 'exMemInitExec()', '#fcc') + _exBtn('NO — CANCEL', 'renderExMemoryMenu()', '#ccc') + '</div>';
+    setInfoDisplay('⚠ INITIALIZE: Confirme para formatear ' + exMemDevice.name);
+}
+function exMemInitExec() {
+    exMemFiles = []; exMemFolders = [];
+    var c = document.getElementById('ex-memory-content'); if(!c) return;
+    c.innerHTML = _exTitle('INITIALIZE — COMPLETE') +
+        '<div style="padding:8px;text-align:center;"><div style="font-size:8px;font-weight:bold;color:#080;margin-bottom:4px;">✓ INITIALIZE COMPLETE</div><div style="font-size:5px;color:#333;">Device '+exMemDevice.name+' has been initialized.</div><div style="font-size:5px;color:#888;margin-top:2px;">All data erased. Device is ready for use.</div></div>' +
+        _exBtn('OK', 'renderExMemoryMenu()', '#ccc');
+    setInfoDisplay('✓ INITIALIZE COMPLETE: ' + exMemDevice.name + ' formatted');
 }
 
 function addAlarm(code, msg, type = 'warning') {
