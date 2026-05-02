@@ -1056,9 +1056,9 @@ let gripperGroup = null;
 let scissorGroup = null;
 let guideLines = null;
 let startTime = Date.now();
-let cameraDistance = 1.2;
-let cameraAngleX = 0.25;
-let cameraAngleY = 0.5;
+let cameraDistance = 1.1;
+let cameraAngleX = 0.45;
+let cameraAngleY = 0.7;
 let cameraTargetX = 0.15;
 let cameraTargetY = 0.1;
 let cameraTargetZ = 0;
@@ -2298,8 +2298,8 @@ function setupCanvasEvents(canvas) {
 
     canvas.addEventListener('mousemove', (e) => {
         if (isDragging) {
-            cameraAngleY += (e.clientX - dragStartX) * 0.005;
-            cameraAngleX -= (e.clientY - dragStartY) * 0.005;
+            cameraAngleY -= (e.clientX - dragStartX) * 0.005;
+            cameraAngleX += (e.clientY - dragStartY) * 0.005;
             cameraAngleX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, cameraAngleX));
             updateCameraPosition();
             dragStartX = e.clientX;
@@ -2309,9 +2309,9 @@ function setupCanvasEvents(canvas) {
             const rightZ = -Math.sin(cameraAngleY);
             const dx = (e.clientX - dragStartX) * 0.002;
             const dy = (e.clientY - dragStartY) * 0.002;
-            cameraTargetX -= rightX * dx;
-            cameraTargetZ -= rightZ * dx;
-            cameraTargetY += dy;
+            cameraTargetX += rightX * dx;
+            cameraTargetZ += rightZ * dx;
+            cameraTargetY -= dy;
             updateCameraPosition();
             dragStartX = e.clientX;
             dragStartY = e.clientY;
@@ -2341,8 +2341,8 @@ function setupCanvasEvents(canvas) {
     canvas.addEventListener('touchmove', (e) => {
         e.preventDefault();
         if (e.touches.length === 1 && isDragging) {
-            cameraAngleY += (e.touches[0].clientX - dragStartX) * 0.005;
-            cameraAngleX -= (e.touches[0].clientY - dragStartY) * 0.005;
+            cameraAngleY -= (e.touches[0].clientX - dragStartX) * 0.005;
+            cameraAngleX += (e.touches[0].clientY - dragStartY) * 0.005;
             cameraAngleX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, cameraAngleX));
             updateCameraPosition();
             dragStartX = e.touches[0].clientX;
