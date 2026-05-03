@@ -1185,13 +1185,15 @@ const DxState = {
     selectedLineIndex: 0,
     selectedListIndex: 0,
     selectedTokenIndex: 0,
-    selectedLines: [],      // Líneas seleccionadas para COPY/PASTE
+    selectedLines: [],
     isInserting: false,
     isDeleting: false,
     isModifying: false,
-    activeEditAction: null, // 'MODIFY', 'INSERT', 'DELETE'
-    editingBuffer: '',      // Línea de comandos en preparación
-    securityMode: 'EDITING', // Por defecto en edición para facilitar pruebas
+    activeEditAction: null,
+    editingBuffer: '',
+    editingParam: null,      // Added: token being edited
+    editingParamValue: '',   // Added: new value being entered
+    securityMode: 'EDITING',
     clipboard: null,
     insertType: 'MOVJ',
     insertSpeed: 50,
@@ -3483,10 +3485,16 @@ function handleFunc(func) {
 }
 
 function pressCancel() {
-    // ═══════════════════════════════════════════════════════════════
-    // CANCEL BUTTON — PRIORIDAD INDUSTRIAL DX200
-    // Cierra el elemento más "al frente" primero, luego retrocede.
-    // ═══════════════════════════════════════════════════════════════
+    if (DxState.editingParam) {
+        var current = DxState.editingParamValue;
+        if (current.length > 0) {
+            DxState.editingParamValue = '';
+            setInfoDisplay('Borrado - Escribe nuevo valor');
+            return;
+        }
+        cancelParamEdit();
+        return;
+    }
 
     // Feedback visual tecla
     const btn = Array.from(document.querySelectorAll('.kb-btn-sq')).find(b => b.textContent.includes('CANCEL'));
@@ -3802,6 +3810,75 @@ function setWindowPattern(pattern) {
 function setInfoDisplay(msg) {
     const el = document.getElementById('infoDisplay');
     if (el) el.textContent = msg;
+}
+
+function handleParamInput(key) {
+    if (!DxState.editingParam) return;
+    var prefix = DxState.editingParam.split('=')[0] + '=';
+    DxState.editingParamValue = DxState.editingParamValue || '';
+    if (DxState.editingParamValue.length >= 2) {
+        DxState.editingParamValue = DxState.editingParamValue.slice(-1) + key;
+    } else {
+        DxState.editingParamValue += key;
+    }
+    setInfoDisplay(prefix + DxState.editingParamValue);
+}
+
+function cancelParamEdit() {
+    DxState.editingParam = null;
+    DxState.editingParamValue = '';
+    setInfoDisplay('Listo');
+    renderJob();
+}
+
+function applyParamEdit() {
+    if (!DxState.editingParam) return;
+    var param = DxState.editingParam;
+    var prefix = param.split('=')[0] + '=';
+    var newValue = DxState.editingParamValue;
+    if (!newValue) { cancelParamEdit(); return; }
+    var currentProgram = robotJobs[DxState.currentJobId];
+    var step = currentProgram[DxState.selectedLineIndex];
+    var tokens = (step.code || '').split(' ');
+    tokens[DxState.selectedTokenIndex] = prefix + newValue;
+    step.code = tokens.join(' ');
+    saveJobsLocally();
+    DxState.editingParam = null;
+    DxState.editingParamValue = '';
+    setInfoDisplay('Actualizado: ' + prefix + newValue);
+    renderJob();
+}
+
+function cancelParamEdit() {
+    DxState.editingParam = null;
+    DxState.editingParamValue = '';
+    setInfoDisplay('Listo');
+    renderJob();
+}
+
+function applyParamEdit() {
+    if (!DxState.editingParam) return;
+    
+    var param = DxState.editingParam;
+    var prefix = param.split('=')[0] + '=';
+    var newValue = DxState.editingParamValue;
+    
+    if (!newValue || newValue === '.') {
+        cancelParamEdit();
+        return;
+    }
+    
+    var currentProgram = robotJobs[DxState.currentJobId];
+    var step = currentProgram[DxState.selectedLineIndex];
+    var tokens = (step.code || '').split(' ');
+    tokens[DxState.selectedTokenIndex] = prefix + newValue;
+    step.code = tokens.join(' ');
+    
+    saveJobsLocally();
+    DxState.editingParam = null;
+    DxState.editingParamValue = '';
+    setInfoDisplay('✓ Actualizado: ' + prefix + newValue);
+    renderJob();
 }
 
 // ============================================================
@@ -5001,37 +5078,24 @@ function insertDout(port, onOff) {
 }
 
 function pressSelect() {
-    if (DxState.view === 'LIST') {
-        const jobKeys = Object.keys(robotJobs);
-        if (jobKeys.length > 0) {
-            DxState.currentJobId = jobKeys[DxState.selectedListIndex];
-            DxState.selectedLineIndex = 0; DxState.selectedTokenIndex = 0;
-            setView('JOB');
-            setInfoDisplay('✓ Cargado: ' + DxState.currentJobId);
+    if (DxState.view === 'JOB') {
+        if (DxState.editingParam) {
+            cancelParamEdit();
+            return;
         }
-    } else if (DxState.view === 'JOB') {
+        
         const currentProgram = robotJobs[DxState.currentJobId];
         if (currentProgram && currentProgram.length > 0) {
             let step = currentProgram[DxState.selectedLineIndex];
             let tokens = (step.code || '').split(' ');
             if (DxState.selectedTokenIndex > 0 && tokens.length > DxState.selectedTokenIndex) {
                 if (!checkTeachMode('Edición de parámetros')) return;
+                
                 let target = tokens[DxState.selectedTokenIndex];
-                if (target.startsWith('VJ=')) {
-                    const speeds = ['VJ=1.00', 'VJ=5.00', 'VJ=10.00', 'VJ=25.00', 'VJ=50.00', 'VJ=100.00'];
-                    let idx = speeds.indexOf(target);
-                    tokens[DxState.selectedTokenIndex] = speeds[(idx + 1) % speeds.length];
-                } else if (target.startsWith('T=')) {
-                    const timers = ['T=0.1', 'T=0.5', 'T=1.0', 'T=2.0', 'T=5.0'];
-                    let idx = timers.indexOf(target);
-                    tokens[DxState.selectedTokenIndex] = timers[(idx + 1) % timers.length];
-                }
-                step.code = tokens.join(' ');
-                saveJobsLocally();
+                DxState.editingParam = target;
+                DxState.editingParamValue = target.split('=')[1] || target;
+                setInfoDisplay('EDIT: ' + target + ' → Escribe valor y ENTER');
                 renderJob();
-                setInfoDisplay('✓ Parámetro actualizado');
-            } else {
-                setInfoDisplay('✓ SELECT pulsado');
             }
         }
     } else if (DxState.view === 'INTERFERENCE') {
@@ -5332,7 +5396,13 @@ function renderJob() {
             let style = 'color:inherit;';
             if (isSelected && !isCurrentStep) {
                 if (tIndex === 0) style = 'color:#ff0;font-weight:bold;';
-                else if (tIndex === DxState.selectedTokenIndex) style = 'background: #000; color: #ffea00; padding: 0 2px; border-radius: 2px; border: 1px solid #ffea00;';
+                else if (tIndex === DxState.selectedTokenIndex) {
+                if (DxState.editingParam) {
+                    style = 'background: #0f0; color: #000; padding: 0 2px; border-radius: 2px; border: 1px solid #0f0;';
+                } else {
+                    style = 'background: #000; color: #ffea00; padding: 0 2px; border-radius: 2px; border: 1px solid #ffea00;';
+                }
+            }
                 else style = 'color:#0ff;';
             } else if (isCurrentStep) {
                 if (tIndex === 0) style = 'color:#0f0;font-weight:bold;';
@@ -6581,6 +6651,10 @@ function loadJob(jobName) {
 }
 
 function pressEnter() {
+    if (DxState.editingParam) {
+        applyParamEdit();
+        return;
+    }
     if (DxState.view === 'INTERFERENCE') {
         if (interfHandleEnter()) return;
     }
@@ -7092,6 +7166,25 @@ window.pressDelete = pressDelete;
 window.handleDir = handleDir;
 window.moveAxis = moveAxis;
 window.showMsg = showMsg;
+window.handleParamInput = handleParamInput;
+
+function showMsg(msg) {
+    if (DxState.editingParam) {
+        if (msg === '0' || msg === '1' || msg === '2' || msg === '3' || msg === '4' || 
+            msg === '5' || msg === '6' || msg === '7' || msg === '8' || msg === '9') {
+            handleParamInput(msg);
+            return;
+        }
+        if (msg === '.') {
+            handleParamInput('.');
+            return;
+        }
+        cancelParamEdit();
+        return;
+    }
+    setInfoDisplay(msg);
+}
+
 window.pressCancel = pressCancel;
 window.setSpeed = setSpeed;
 window.toggleServo = toggleServo;
