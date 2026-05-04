@@ -5,33 +5,24 @@
 import {
     RobotState, DxState, robotJobs, wgravSelectedIdx, wgravCompleted,
     isShiftPressed, isServoOn, keyPosition, keyPositions, keyRotations,
-    saveJobsLocally
+    gripperAngle, gripper2Angle, saveJobsLocally
 } from './state.js';
 import { highlightJoint } from './robot3d.js';
 import { renderJob, renderList } from './jobManager.js';
 import { translations, updateLcdLanguage, getStatusText } from './lang.js';
 
 function setView(viewName) {
-    // Guardar la vista anterior para que CANCEL pueda retornar
-    if (DxState.view !== viewName) {
-        DxState._previousView = DxState.view;
-    }
     DxState.view = viewName;
-
-    // Actualizar activeDialog: null si es JOB, nombre de vista si es otra pantalla
-    DxState.activeDialog = (viewName === 'JOB') ? null : viewName;
-
     document.querySelectorAll('.lcd-sidebar-btn').forEach(b => b.classList.remove('active'));
     let baseView = viewName.startsWith('ROBOT') ? 'ROBOT' : viewName;
     if (baseView === 'SECURITY') baseView = 'SYSINFO';
-    if (baseView === 'EX-MEMORY') baseView = 'EXMEMORY';
 
     const btn = document.getElementById('btn-view-' + baseView.toLowerCase());
     if (btn) btn.classList.add('active');
 
     const screens = ['job-screen', 'robot-menu-screen', 'robot-screen', 'list-screen',
         'security-screen', 'home-position-screen', 'system-info-menu-screen',
-        'tool-screen', 'wgrav-screen', 'arc-screen', 'ex-memory-screen'];
+        'tool-screen', 'wgrav-screen', 'arc-screen'];
     screens.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
@@ -47,8 +38,7 @@ function setView(viewName) {
         'SYSTEM-INFO': ['system-info-menu-screen', null],
         'TOOL': ['tool-screen', null],
         'WGRAV': ['wgrav-screen', null],
-        'ARC': ['arc-screen', null],
-        'EX-MEMORY': ['ex-memory-screen', null]
+        'ARC': ['arc-screen', null]
     };
 
     const mapping = viewMap[viewName];
@@ -213,9 +203,9 @@ function moveAxis(axis, dir) {
     if (axis === 'a' || axis === 'e') {
         const isPinza2 = (axis === 'e');
         const maxOpen = 0.030;
-        let angle = isPinza2 ? RobotState.gripper2Angle : RobotState.gripperAngle;
+        let angle = isPinza2 ? gripper2Angle : gripperAngle;
         angle = Math.max(0, Math.min(maxOpen, angle + (0.01 * dir)));
-        if (isPinza2) RobotState.gripper2Angle = angle; else RobotState.gripperAngle = angle;
+        if (isPinza2) gripper2Angle = angle; else gripperAngle = angle;
         
         const pct = Math.round((angle / maxOpen) * 100);
         setInfoDisplay(`✓ PINZA ${isPinza2 ? '2' : '1'}: ${pct}%`);
@@ -245,11 +235,33 @@ function moveAxis(axis, dir) {
         const stepRot = (RobotState.speed * 0.005) * dir; // Radians for IK
         
         let delta = [0, 0, 0, 0, 0, 0]; // dx, dy, dz, drx, dry, drz
-        const axisIdx = { x: 0, y: 1, z: 2, r: 3, b: 4, t: 5 }[axis];
-        delta[axisIdx] = (axisIdx < 3) ? stepPos : stepRot;
 
-        if (!isWorld) {
-            // TOOL MODE: Rotate delta by current TCP orientation
+        if (isWorld) {
+            // Yaskawa ROBOT (WORLD) Mode Mapping
+            // X+ (Forward) -> Internal Y+
+            // Y+ (Left)    -> Internal X-
+            // Z+ (Up)      -> Internal Z+
+            if (axis === 'x') delta[1] = stepPos;
+            else if (axis === 'y') delta[0] = -stepPos;
+            else if (axis === 'z') delta[2] = stepPos;
+            else if (axis === 'r') delta[4] = stepRot;
+            else if (axis === 'b') delta[3] = -stepRot;
+            else if (axis === 't') delta[5] = stepRot;
+        } else {
+            // Yaskawa TOOL Mode Mapping
+            // Tool Z+ (Approach) -> Internal Y
+            // Tool X+ (Down)     -> Internal -Z
+            // Tool Y+ (Right)    -> Internal X
+            let localPos = new THREE.Vector3();
+            let localRot = new THREE.Vector3();
+
+            if (axis === 'x') localPos.set(0, 0, -stepPos);
+            else if (axis === 'y') localPos.set(stepPos, 0, 0);
+            else if (axis === 'z') localPos.set(0, stepPos, 0);
+            else if (axis === 'r') localRot.set(0, 0, -stepRot); // Roll around Tool X
+            else if (axis === 'b') localRot.set(stepRot, 0, 0);  // Pitch around Tool Y
+            else if (axis === 't') localRot.set(0, stepRot, 0);  // Yaw around Tool Z
+
             const current = calculateFK(RobotState.angles);
             const rot = new THREE.Euler(
                 THREE.MathUtils.degToRad(current.rx),
@@ -258,12 +270,11 @@ function moveAxis(axis, dir) {
             );
             const quat = new THREE.Quaternion().setFromEuler(rot);
             
-            // Rotate translation
-            const vecPos = new THREE.Vector3(delta[0], delta[1], delta[2]).applyQuaternion(quat);
-            // Rotate orientation (Simplified: Tool-relative rotation)
-            const vecRot = new THREE.Vector3(delta[3], delta[4], delta[5]).applyQuaternion(quat);
+            // Rotate the local movement vectors by the tool's current global orientation
+            localPos.applyQuaternion(quat);
+            localRot.applyQuaternion(quat);
             
-            delta = [vecPos.x, vecPos.y, vecPos.z, vecRot.x, vecRot.y, vecRot.z];
+            delta = [localPos.x, localPos.y, localPos.z, localRot.x, localRot.y, localRot.z];
         }
 
         const newAngles = solveCartesianStep(RobotState.angles, delta);
@@ -313,8 +324,22 @@ function updateDisplay() {
 
     // 2. Update Values
     const isCart = (mode !== 'JOINT');
+    
+    let dispX = coords.x, dispY = coords.y, dispZ = coords.z;
+    let dispRx = coords.rx, dispRy = coords.ry, dispRz = coords.rz;
+    
+    if (isCart) {
+        // Map Internal Kinematics to Yaskawa Standard ROBOT Mode Display
+        dispX = coords.y;   // Yaskawa X (Forward) = Internal Y
+        dispY = -coords.x;  // Yaskawa Y (Left) = Internal -X
+        dispZ = coords.z;   // Yaskawa Z (Up) = Internal Z
+        dispRx = coords.ry;
+        dispRy = -coords.rx;
+        dispRz = coords.rz;
+    }
+
     const vals = isCart
-        ? [coords.x * 1000, coords.y * 1000, coords.z * 1000, coords.rx, coords.ry, coords.rz]
+        ? [dispX * 1000, dispY * 1000, dispZ * 1000, dispRx, dispRy, dispRz]
         : [angles.s, angles.l, angles.u, angles.r, angles.b, angles.t];
 
     labels.forEach((id, i) => {
@@ -395,33 +420,6 @@ function handleDir(dir) {
     if (DxState.view === 'JOB') {
         const currentProgram = robotJobs[DxState.currentJobId];
         if (currentProgram && currentProgram.length > 0) {
-            // Edición rápida de parámetros con SHIFT + ▲/▼
-            if (isShiftPressed && (dir === 'up' || dir === 'down')) {
-                if (!checkTeachMode('Edición de parámetros')) return;
-                let step = currentProgram[DxState.selectedLineIndex];
-                let tokens = (step.code || '').split(' ');
-                if (DxState.selectedTokenIndex > 0 && tokens.length > DxState.selectedTokenIndex) {
-                    let target = tokens[DxState.selectedTokenIndex];
-                    if (target.startsWith('VJ=')) {
-                        const speeds = ['VJ=1.00', 'VJ=5.00', 'VJ=10.00', 'VJ=25.00', 'VJ=50.00', 'VJ=100.00'];
-                        let idx = speeds.indexOf(target);
-                        if (dir === 'up') idx = (idx + 1) % speeds.length;
-                        else idx = (idx - 1 + speeds.length) % speeds.length;
-                        tokens[DxState.selectedTokenIndex] = speeds[idx];
-                    } else if (target.startsWith('PL=')) {
-                        let plNum = parseInt(target.substring(3)) || 0;
-                        if (dir === 'up') plNum = Math.min(8, plNum + 1);
-                        else plNum = Math.max(0, plNum - 1);
-                        tokens[DxState.selectedTokenIndex] = 'PL=' + plNum;
-                    }
-                    step.code = tokens.join(' ');
-                    saveJobsLocally();
-                    renderJob();
-                    setInfoDisplay('✓ Parámetro actualizado');
-                }
-                return;
-            }
-
             if (dir === 'up') {
                 DxState.selectedLineIndex = Math.max(0, DxState.selectedLineIndex - 1);
                 DxState.selectedTokenIndex = 0;
@@ -614,7 +612,7 @@ function pressInsert() {
         if (btn) btn.classList.add('blink-active');
 
         // Default instruction in buffer
-        DxState.editingBuffer = 'MOVJ VJ=' + RobotState.speed + '.00 PL=0';
+        DxState.editingBuffer = 'MOVJ VJ=' + RobotState.speed + '.00';
         setInfoDisplay('INSERT activo. Elija instrucción y pulse ENTER.');
     }
     renderJob();
@@ -647,79 +645,6 @@ function cancelEdit() {
     document.querySelectorAll('.blink-active').forEach(el => el.classList.remove('blink-active'));
 }
 
-function pressCancel() {
-    // ═══════════════════════════════════════════════════════════════
-    // CANCEL BUTTON — PRIORIDAD INDUSTRIAL DX200
-    // ═══════════════════════════════════════════════════════════════
-
-    // Feedback visual tecla
-    const btn = Array.from(document.querySelectorAll('.kb-btn-sq')).find(b => b.textContent.includes('CANCEL'));
-    if (btn) {
-        const oldBg = btn.style.background;
-        btn.style.background = '#fff';
-        setTimeout(() => btn.style.background = oldBg, 150);
-    }
-
-    // 1. Cerrar ventana de ASSIST
-    const assist = document.getElementById('assist-screen');
-    if (assist && assist.style.display !== 'none') {
-        assist.style.display = 'none';
-        setInfoDisplay('CANCEL: Ayuda cerrada');
-        return;
-    }
-
-    // 2. Cerrar diálogo HOME CONFIRM
-    const homeConfirm = document.getElementById('home-confirm-dialog');
-    if (homeConfirm && homeConfirm.style.display !== 'none' && homeConfirm.style.display !== '') {
-        homeConfirm.style.display = 'none';
-        setInfoDisplay('CANCEL: Confirmación cancelada');
-        return;
-    }
-
-    // 3. Cerrar dropdowns abiertos
-    const dropdowns = document.querySelectorAll('.dropdown-menu');
-    let closedAny = false;
-    dropdowns.forEach(d => {
-        if (d.style.display === 'flex' || d.style.display === 'block') {
-            d.style.display = 'none';
-            closedAny = true;
-        }
-    });
-    if (closedAny) {
-        document.querySelectorAll('.menu-tab').forEach(t => { t.style.background = ''; t.style.color = ''; });
-        setInfoDisplay('CANCEL: Menú cerrado');
-        return;
-    }
-
-    // 4. Cancelar operaciones de edición activas
-    if (DxState.activeEditAction || DxState.isInserting || DxState.isDeleting || DxState.isModifying) {
-        cancelEdit();
-        setInfoDisplay('CANCEL: Operación de edición cancelada');
-        if (DxState.view === 'JOB') renderJob();
-        return;
-    }
-
-    // 5. Si hay pantalla secundaria abierta → volver a JOB
-    if (DxState.activeDialog !== null && DxState.view !== 'JOB') {
-        const robotSubViews = ['ROBOT-CURRENT', 'TOOL', 'HOME-POSITION', 'WGRAV'];
-        const sysInfoSubViews = ['SECURITY'];
-
-        if (robotSubViews.includes(DxState.view)) {
-            setView('ROBOT');
-            setInfoDisplay('CANCEL: Volver a menú ROBOT');
-        } else if (sysInfoSubViews.includes(DxState.view)) {
-            setView('SYSTEM-INFO');
-            setInfoDisplay('CANCEL: Volver a SYSTEM INFO');
-        } else {
-            setView('JOB');
-            setInfoDisplay('CANCEL: Volver a pantalla JOB');
-        }
-        return;
-    }
-
-    // 6. Nada activo → no hacer nada
-}
-
 function goToTop() {
     DxState.selectedLineIndex = 0;
     if (DxState.view !== 'JOB') setView('JOB');
@@ -732,7 +657,7 @@ function resetToZero() {
     RobotState.programRunning = false;
     let target = { s: 0, l: 0, u: 0, r: 0, b: 0, t: 0, gripper: 0 };
     const startAngles = { ...RobotState.angles };
-    const startGripper = RobotState.gripperAngle;
+    const startGripper = gripperAngle;
     let p = 0;
     const zeroAnim = setInterval(() => {
         p += 0.05;
@@ -743,7 +668,7 @@ function resetToZero() {
         RobotState.angles.r = startAngles.r + (target.r - startAngles.r) * p;
         RobotState.angles.b = startAngles.b + (target.b - startAngles.b) * p;
         RobotState.angles.t = startAngles.t + (target.t - startAngles.t) * p;
-        RobotState.gripperAngle = startGripper + (target.gripper - startGripper) * p;
+        gripperAngle = startGripper + (target.gripper - startGripper) * p;
     }, 30);
     setInfoDisplay('🏠 HOME FÍSICO (Retorno Absoluto a Cero)');
     const statusEl = document.getElementById('lcd-status');
@@ -785,9 +710,6 @@ function setMenuMode(mode) {
             <div class="lcd-sidebar-btn" id="btn-view-inout" onclick="setView('INOUT')"><div class="sidebar-icon" style="background:#4a4a8a;"></div>${t['sidebar-inout']}</div>
             <div class="lcd-sidebar-btn" id="btn-view-robot" onclick="setView('ROBOT')"><div class="sidebar-icon" style="background:#8a2be2;"></div>${t['sidebar-robot']}</div>
             <div class="lcd-sidebar-btn" id="btn-view-sysinfo" onclick="setView('SYSTEM-INFO')"><div class="sidebar-icon" style="background:#555;"></div>${t['sidebar-sysinfo']}</div>
-            <div class="lcd-sidebar-btn" id="btn-view-exmemory" onclick="setView('EX-MEMORY')"><div class="sidebar-icon" style="background:#444;"></div>EX MEMORY</div>
-            <div class="lcd-sidebar-btn" id="btn-view-setup" onclick="showMsg('SETUP MENU')"><div class="sidebar-icon" style="background:#666;"></div>SETUP</div>
-            <div class="lcd-sidebar-btn" id="btn-view-displaysetup" onclick="showMsg('DISPLAY SETUP MENU')"><div class="sidebar-icon" style="background:#888;"></div>DISPLAY SETUP</div>
         `;
         if (mainBtn) { mainBtn.style.background = '#4070b0'; mainBtn.style.color = '#fff'; }
         if (simpleBtn) { simpleBtn.style.background = '#a0a0a0'; simpleBtn.style.color = '#333'; }
@@ -807,7 +729,7 @@ function navigateSidebar(dir) {
     if (dir === 0) {
         sidebar.scrollTop = 0;
     } else {
-        sidebar.scrollTop += dir * 150;
+        sidebar.scrollTop += dir * 30;
     }
 }
 
@@ -832,9 +754,8 @@ export {
     updateKeySwitchDisplay, emergencyStop, handleFunc, showMsg, setInfoDisplay,
     moveAxis, updateDisplay, checkTeachMode, handleDir, handleEditAction,
     pressSelect, toggleDropdown, closeHomeConfirm, pressModify, pressInsert,
-    pressDelete, cancelEdit, pressCancel, goToTop, resetToZero, toggleCoordSystem,
-    keyPositions, keyPosition, setMenuMode, navigateSidebar, toggleLanguage,
-    handleLanguageBtn
+    pressDelete, goToTop, resetToZero, toggleCoordSystem, keyPositions, keyPosition,
+    setMenuMode, navigateSidebar, toggleLanguage, handleLanguageBtn
 };
 
 window.updateDisplay = updateDisplay;
@@ -844,4 +765,3 @@ window.setMenuMode = setMenuMode;
 window.navigateSidebar = navigateSidebar;
 window.toggleLanguage = toggleLanguage;
 window.handleLanguageBtn = handleLanguageBtn;
-window.pressCancel = pressCancel;

@@ -2,7 +2,7 @@
  * DX-200 Robot Simulator - Three.js 3D Renderer
  */
 
-import { RobotState } from './state.js';
+import { RobotState, gripperAngle, gripper2Angle } from './state.js';
 
 let scene, camera, renderer;
 let robotGroup, joints = [];
@@ -404,30 +404,28 @@ function setupCanvasEvents(canvas) {
             lastTouchCenter.x = centerX;
             lastTouchCenter.y = centerY;
         }
-    }, { passive: false });
-
     canvas.addEventListener('touchend', () => { isDragging = false; isPanning = false; lastDistance = 0; });
 }
 
 function updateRobotDisplay() {
     if (joints.length >= 6) {
-        joints[0].rotation.z = RobotState.angles.s * Math.PI / 180;
-        joints[1].rotation.x = RobotState.angles.l * Math.PI / 180;
-        joints[2].rotation.x = RobotState.angles.u * Math.PI / 180;
-        joints[3].rotation.z = RobotState.angles.r * Math.PI / 180;
-        joints[4].rotation.x = RobotState.angles.b * Math.PI / 180;
-        joints[5].rotation.z = RobotState.angles.t * Math.PI / 180;
+        joints[0].rotation.y = RobotState.angles.s * Math.PI / 180;
+        joints[1].rotation.z = RobotState.angles.l * Math.PI / 180;
+        joints[2].rotation.z = RobotState.angles.u * Math.PI / 180;
+        joints[3].rotation.y = RobotState.angles.r * Math.PI / 180;
+        joints[4].rotation.z = RobotState.angles.b * Math.PI / 180;
+        joints[5].rotation.y = RobotState.angles.t * Math.PI / 180;
 
         if (gripperGroup) {
             gripperGroup.children.forEach(child => {
-                if (child.userData.isPinza1Top) child.position.y = 0.028 + RobotState.gripperAngle;
-                else if (child.userData.isPinza1Bottom) child.position.y = -0.028 - RobotState.gripperAngle;
+                if (child.userData.isPinza1Top) child.position.y = 0.028 + gripperAngle;
+                else if (child.userData.isPinza1Bottom) child.position.y = -0.028 - gripperAngle;
             });
         }
         if (scissorGroup) {
             scissorGroup.children.forEach(child => {
-                if (child.userData.isPinza2Top) child.position.y = 0.028 + RobotState.gripper2Angle;
-                else if (child.userData.isPinza2Bottom) child.position.y = -0.028 - RobotState.gripper2Angle;
+                if (child.userData.isPinza2Top) child.position.y = 0.028 + gripper2Angle;
+                else if (child.userData.isPinza2Bottom) child.position.y = -0.028 - gripper2Angle;
             });
         }
     }
