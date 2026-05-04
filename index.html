@@ -1224,14 +1224,17 @@ function loadJobsLocally() {
                 if (!parsed['JOB_ALAMBRE'].some(l => l.code && l.code.includes('CALL JOB:'))) {
                     parsed['JOB_ALAMBRE'].splice(1, 0, { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, code: 'CALL JOB:SUB_PROG', desc: 'LLAMADA A SUBRUTINA' });
                 }
-                // Actualizar: si no tiene instrucciones MOVL, reemplazar con la versión nueva
-                if (!parsed['JOB_ALAMBRE'].some(l => l.code && l.code.startsWith('MOVL'))) {
+                // Actualizar si no tiene PL=
+                if (!parsed['JOB_ALAMBRE'].some(l => l.code && l.code.includes('PL='))) {
                     parsed['JOB_ALAMBRE'] = robotJobs['JOB_ALAMBRE'];
                 }
             }
             if (!parsed['SUB_PROG']) parsed['SUB_PROG'] = robotJobs['SUB_PROG'];
+            
             // Siempre asegurar que MOVL_DEMO existe (programa de demostración)
-            if (!parsed['MOVL_DEMO']) parsed['MOVL_DEMO'] = robotJobs['MOVL_DEMO'];
+            if (!parsed['MOVL_DEMO'] || !parsed['MOVL_DEMO'].some(l => l.code && l.code.includes('PL='))) {
+                parsed['MOVL_DEMO'] = robotJobs['MOVL_DEMO'];
+            }
             robotJobs = parsed;
         }
         if (!robotJobs[DxState.currentJobId]) {
@@ -3256,10 +3259,19 @@ function pressSelect() {
                     const speeds = ['VJ=1.00', 'VJ=5.00', 'VJ=10.00', 'VJ=25.00', 'VJ=50.00', 'VJ=100.00'];
                     let idx = speeds.indexOf(target);
                     tokens[DxState.selectedTokenIndex] = speeds[(idx + 1) % speeds.length];
+                } else if (target.startsWith('V=')) {
+                    const speeds = ['V=10.00', 'V=25.00', 'V=50.00', 'V=100.00', 'V=250.00'];
+                    let idx = speeds.indexOf(target);
+                    tokens[DxState.selectedTokenIndex] = speeds[(idx + 1) % speeds.length];
                 } else if (target.startsWith('T=')) {
                     const timers = ['T=0.1', 'T=0.5', 'T=1.0', 'T=2.0', 'T=5.0'];
                     let idx = timers.indexOf(target);
                     tokens[DxState.selectedTokenIndex] = timers[(idx + 1) % timers.length];
+                } else if (target.startsWith('PL=')) {
+                    const pls = ['PL=0', 'PL=1', 'PL=2', 'PL=3', 'PL=4', 'PL=5', 'PL=6', 'PL=7', 'PL=8'];
+                    let idx = pls.indexOf(target);
+                    if (idx === -1) idx = 0;
+                    tokens[DxState.selectedTokenIndex] = pls[(idx + 1) % pls.length];
                 }
                 step.code = tokens.join(' ');
                 saveJobsLocally();
@@ -3559,10 +3571,14 @@ function renderJob() {
         let tokenHtml = '';
         tokens.forEach((token, tIndex) => {
             let style = 'color:inherit;';
-            if (isSelected && !isCurrentStep) {
-                if (tIndex === 0) style = 'color:#ff0;font-weight:bold;';
-                else if (tIndex === DxState.selectedTokenIndex) style = 'background: #000; color: #ffea00; padding: 0 2px; border-radius: 2px; border: 1px solid #ffea00;';
-                else style = 'color:#0ff;';
+            if (isSelected) {
+                if (tIndex === 0) {
+                    style = isCurrentStep ? 'color:#0f0;font-weight:bold;' : 'color:#ff0;font-weight:bold;';
+                } else if (tIndex === DxState.selectedTokenIndex) {
+                    style = 'background: #000; color: #ffea00; padding: 0 2px; border-radius: 2px; border: 1px solid #ffea00;';
+                } else {
+                    style = isCurrentStep ? 'color:#0f0;' : 'color:#0ff;';
+                }
             } else if (isCurrentStep) {
                 if (tIndex === 0) style = 'color:#0f0;font-weight:bold;';
                 else style = 'color:#0f0;';
