@@ -1026,7 +1026,7 @@ let cameraDistance = 1.2;
 let cameraAngleX = 0.25;
 let cameraAngleY = 0.5;
 let cameraTargetX = 0.15;
-let cameraTargetY = 0.45;
+let cameraTargetY = 0.35;
 let cameraTargetZ = 0;
 let isDragging = false, isPanning = false, dragStartX = 0, dragStartY = 0;
 let activeJoint = -1, activeJointTimeout, highlightLight = null;
@@ -1820,8 +1820,8 @@ function setupCanvasEvents(canvas) {
 
     canvas.addEventListener('mousemove', (e) => {
         if (isDragging) {
-            cameraAngleY += (e.clientX - dragStartX) * 0.005;
-            cameraAngleX -= (e.clientY - dragStartY) * 0.005;
+            cameraAngleY -= (e.clientX - dragStartX) * 0.005;
+            cameraAngleX += (e.clientY - dragStartY) * 0.005;
             cameraAngleX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, cameraAngleX));
             updateCameraPosition();
             dragStartX = e.clientX;
@@ -1863,8 +1863,8 @@ function setupCanvasEvents(canvas) {
     canvas.addEventListener('touchmove', (e) => {
         e.preventDefault();
         if (e.touches.length === 1 && isDragging) {
-            cameraAngleY += (e.touches[0].clientX - dragStartX) * 0.005;
-            cameraAngleX -= (e.touches[0].clientY - dragStartY) * 0.005;
+            cameraAngleY -= (e.touches[0].clientX - dragStartX) * 0.005;
+            cameraAngleX += (e.touches[0].clientY - dragStartY) * 0.005;
             cameraAngleX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, cameraAngleX));
             updateCameraPosition();
             dragStartX = e.touches[0].clientX;
