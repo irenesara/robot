@@ -287,6 +287,9 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                             <div class="lcd-sidebar-btn" id="btn-view-inout" onclick="setView('INOUT')"><div class="sidebar-icon" style="background:#4a4a8a;"></div>IN/OUT</div>
                             <div class="lcd-sidebar-btn" id="btn-view-robot" onclick="setView('ROBOT')"><div class="sidebar-icon" style="background:#8a2be2;"></div>ROBOT</div>
                             <div class="lcd-sidebar-btn" id="btn-view-sysinfo" onclick="setView('SYSTEM-INFO')"><div class="sidebar-icon" style="background:#555;"></div>SYSTEM INFO</div>
+                            <div class="lcd-sidebar-btn" id="btn-view-exmemory" onclick="showMsg('EX. MEMORY')"><div class="sidebar-icon" style="background:#008b8b;"></div>EX. MEMORY</div>
+                            <div class="lcd-sidebar-btn" id="btn-view-parameter" onclick="showMsg('PARAMETER')"><div class="sidebar-icon" style="background:#daa520;"></div>PARAMETER</div>
+                            <div class="lcd-sidebar-btn" id="btn-view-setup" onclick="showMsg('SETUP')"><div class="sidebar-icon" style="background:#cd5c5c;"></div>SETUP</div>
                         </div>
                         <div class="lcd-main">
                             <div id="data-screen" style="display: none; flex-direction: column; background: #eaeff2; height: 100%;">
@@ -3119,6 +3122,9 @@ function updateSidebarUI() {
             <div class="lcd-sidebar-btn" id="btn-view-inout" onclick="setView('INOUT')"><div class="sidebar-icon" style="background:#4a4a8a;"></div>IN/OUT</div>
             <div class="lcd-sidebar-btn" id="btn-view-robot" onclick="setView('ROBOT')"><div class="sidebar-icon" style="background:#8a2be2;"></div>ROBOT</div>
             <div class="lcd-sidebar-btn" id="btn-view-sysinfo" onclick="setView('SYSTEM-INFO')"><div class="sidebar-icon" style="background:#555;"></div>SYSTEM INFO</div>
+            <div class="lcd-sidebar-btn" id="btn-view-exmemory" onclick="showMsg('EX. MEMORY')"><div class="sidebar-icon" style="background:#008b8b;"></div>EX. MEMORY</div>
+            <div class="lcd-sidebar-btn" id="btn-view-parameter" onclick="showMsg('PARAMETER')"><div class="sidebar-icon" style="background:#daa520;"></div>PARAMETER</div>
+            <div class="lcd-sidebar-btn" id="btn-view-setup" onclick="showMsg('SETUP')"><div class="sidebar-icon" style="background:#cd5c5c;"></div>SETUP</div>
         `;
     }
     // Re-aplicar clases active si corresponde
