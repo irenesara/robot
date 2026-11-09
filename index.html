@@ -11,7 +11,7 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
 
 .main-container { display: flex; flex-direction: row; height: 100%; width: 100%; gap: 15px; padding: 15px; align-items: stretch; justify-content: center; max-width: 1400px; margin: 0 auto; overflow: hidden; }
 .robot-section { flex: 1.2; min-width: 350px; background: #000000; border: 2px solid #444; overflow: hidden; display: flex; flex-direction: column; height: 100%; position: relative; }
-#canvas { flex: 1; touch-action: none; }
+#canvas { flex: 1 1 0; min-height: 0; width: 100%; display: block; touch-action: none; }
 .robot-info { background: rgba(0,0,0,0.95); padding: 6px; border-top: 1px solid #444; font-size: 8px; line-height: 1.4; font-family: monospace; }
 
 .console-wrapper { width: 480px; flex-shrink: 0; height: 100%; overflow-y: auto; padding-right: 5px; scroll-behavior: smooth; }
@@ -1255,7 +1255,9 @@ function initRenderer(canvas) {
     updateCameraPosition();
 
     renderer = new THREE.WebGLRenderer({ antialias: true, canvas, preserveDrawingBuffer: true });
-    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    // false = no fijar width/height en línea: el tamaño lo controla el CSS del contenedor
+    renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
     renderer.shadowMap.enabled = true;
 
     const light1 = new THREE.DirectionalLight(0xffffff, 1.0);
@@ -1278,7 +1280,7 @@ function initRenderer(canvas) {
         new THREE.ShadowMaterial({ opacity: 0.4 })
     );
     ground.rotation.x = -Math.PI / 2;
-    ground.position.y = -0.05;
+    ground.position.y = -0.001;
     ground.receiveShadow = true;
     scene.add(ground);
 
@@ -1290,203 +1292,279 @@ function buildRobot() {
     robotGroup = new THREE.Group();
     scene.add(robotGroup);
 
-    const yBlue = 0x0050A0; // Authentic Yaskawa Blue
-    const yGrey = 0xA0A0A0;
-    const yDark = 0x222222;
+    // ---- Paleta tipo Yaskawa Motoman (serie GP/MH, controlador DX200) ----
+    const yBlue  = 0x1D63C4;   // azul Motoman
+    const yGrey  = 0xA7ADB5;   // motores / tapas
+    const yDark  = 0x1E1F22;   // tapas negras de motor, juntas
+    const yAlu   = 0xC9CDD2;   // brida / aluminio
 
-    const floorPlateGeom = new THREE.BoxGeometry(0.8, 0.03, 0.8);
-    const floorPlateMat = new THREE.MeshPhongMaterial({ color: 0x333333, shininess: 50 });
-    const floorPlate = new THREE.Mesh(floorPlateGeom, floorPlateMat);
+    // Cada malla con su propio material (highlightJoint cambia el color por malla)
+    const M = (color, shininess = 70) =>
+        new THREE.MeshPhongMaterial({ color, shininess, specular: 0x333333 });
+
+    // Caja redondeada (extrusión con bisel) centrada en el origen
+    function roundedBox(w, h, d, r, color) {
+        const s = new THREE.Shape();
+        const x = -w / 2 + r, y = -h / 2 + r, iw = w - 2 * r, ih = h - 2 * r;
+        s.moveTo(x, y - r);
+        s.lineTo(x + iw, y - r);
+        s.absarc(x + iw, y, r, -Math.PI / 2, 0, false);
+        s.lineTo(x + iw + r, y + ih);
+        s.absarc(x + iw, y + ih, r, 0, Math.PI / 2, false);
+        s.lineTo(x, y + ih + r);
+        s.absarc(x, y + ih, r, Math.PI / 2, Math.PI, false);
+        s.lineTo(x - r, y);
+        s.absarc(x, y, r, Math.PI, Math.PI * 1.5, false);
+        const bev = Math.min(r * 0.6, d * 0.2);
+        const g = new THREE.ExtrudeGeometry(s, {
+            depth: d - 2 * bev, bevelEnabled: true, bevelThickness: bev,
+            bevelSize: bev * 0.6, bevelSegments: 3, curveSegments: 10
+        });
+        g.translate(0, 0, -(d - 2 * bev) / 2);
+        const m = new THREE.Mesh(g, M(color));
+        m.castShadow = true; m.receiveShadow = true;
+        return m;
+    }
+
+    // Eslabón tipo "estadio" (dos círculos unidos) en el plano XY, extruido en Z
+    function linkPlate(len, r0, r1, depth, color, bevel = 0.006) {
+        const s = new THREE.Shape();
+        const a = Math.asin((r0 - r1) / len);          // ángulo de las tangentes
+        s.moveTo(r0 * Math.sin(a), -r0 * Math.cos(a));
+        s.lineTo(len + r1 * Math.sin(a), -r1 * Math.cos(a));
+        s.absarc(len, 0, r1, -Math.PI / 2 + a, Math.PI / 2 - a, false);
+        s.lineTo(r0 * Math.sin(a), r0 * Math.cos(a));
+        s.absarc(0, 0, r0, Math.PI / 2 - a, Math.PI * 1.5 + a, false);
+        const g = new THREE.ExtrudeGeometry(s, {
+            depth: depth - 2 * bevel, bevelEnabled: true, bevelThickness: bevel,
+            bevelSize: bevel, bevelSegments: 3, curveSegments: 24
+        });
+        g.translate(0, 0, -(depth - 2 * bevel) / 2);
+        const m = new THREE.Mesh(g, M(color));
+        m.castShadow = true; m.receiveShadow = true;
+        return m;
+    }
+
+    // Cilindro orientado: axis = 'x' | 'y' | 'z'
+    function cyl(rTop, rBot, h, color, axis = 'y', seg = 28) {
+        const m = new THREE.Mesh(new THREE.CylinderGeometry(rTop, rBot, h, seg), M(color));
+        if (axis === 'x') m.rotation.z = -Math.PI / 2;
+        if (axis === 'z') m.rotation.x = Math.PI / 2;
+        m.castShadow = true; m.receiveShadow = true;
+        return m;
+    }
+
+    // Servomotor Yaskawa (cuerpo gris + tapa negra con conector)
+    function servoMotor(parent, x, y, z, dirZ) {
+        const body = cyl(0.030, 0.030, 0.050, yGrey, 'z');
+        body.position.set(x, y, z + dirZ * 0.025);
+        parent.add(body);
+        const cap = cyl(0.027, 0.027, 0.016, yDark, 'z');
+        cap.position.set(x, y, z + dirZ * 0.058);
+        parent.add(cap);
+        const conn = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.014, 0.016), M(yDark));
+        conn.position.set(x - 0.012, y + 0.030, z + dirZ * 0.040);
+        parent.add(conn);
+    }
+
+    // ================= SUELO / PLACA =================
+    const floorPlate = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.03, 0.8), M(0x3a3d42, 30));
     floorPlate.receiveShadow = true;
     floorPlate.position.y = 0.015;
     scene.add(floorPlate);
 
-    // Base Tier 1 (Wide Floor Mount)
-    const base1Geom = new THREE.CylinderGeometry(0.22, 0.25, 0.025, 32);
-    const base1 = new THREE.Mesh(base1Geom, new THREE.MeshPhongMaterial({ color: yBlue, shininess: 80 }));
-    base1.castShadow = true; base1.receiveShadow = true;
-    base1.position.y = 0.0275;
-    robotGroup.add(base1);
+    // Bandas amarillo/negro de seguridad alrededor de la placa
+    const stripeMat = new THREE.MeshPhongMaterial({ color: 0xE8B923, shininess: 20 });
+    [[0, 0.39, 0.8, 0.02], [0, -0.39, 0.8, 0.02], [0.39, 0, 0.02, 0.8], [-0.39, 0, 0.02, 0.8]].forEach(([x, z, w, d]) => {
+        const st = new THREE.Mesh(new THREE.BoxGeometry(w, 0.002, d), stripeMat);
+        st.position.set(x, 0.031, z);
+        scene.add(st);
+    });
 
-    // Base Tier 2 (Main Body)
-    const base2Geom = new THREE.CylinderGeometry(0.18, 0.22, 0.05, 32);
-    const base2 = new THREE.Mesh(base2Geom, new THREE.MeshPhongMaterial({ color: yBlue, shininess: 80 }));
-    base2.castShadow = true; base2.receiveShadow = true;
-    base2.position.y = 0.065;
-    robotGroup.add(base2);
+    // ================= BASE FIJA =================
+    // Pie cuadrado con esquinas redondeadas y 4 tornillos de anclaje
+    const baseFoot = roundedBox(0.30, 0.30, 0.035, 0.04, yBlue);
+    baseFoot.rotation.x = -Math.PI / 2;
+    baseFoot.position.y = 0.0475;
+    robotGroup.add(baseFoot);
 
-    // Base Ring Details
-    const baseRing = new THREE.Mesh(new THREE.TorusGeometry(0.20, 0.015, 16, 64), new THREE.MeshPhongMaterial({ color: yDark }));
-    baseRing.rotation.x = Math.PI / 2;
-    baseRing.position.y = 0.04;
-    robotGroup.add(baseRing);
+    [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(([sx, sz]) => {
+        const bolt = cyl(0.012, 0.012, 0.012, yDark, 'y', 12);
+        bolt.position.set(sx * 0.115, 0.069, sz * 0.115);
+        robotGroup.add(bolt);
+    });
 
-    // Base Tier 3 (Rotating S-Axis Housing)
-    const baseStructGeom = new THREE.CylinderGeometry(0.14, 0.16, 0.075, 32);
-    const baseStruct = new THREE.Mesh(baseStructGeom, new THREE.MeshPhongMaterial({ color: yBlue, shininess: 100 }));
-    baseStruct.castShadow = true;
-    baseStruct.position.y = 0.1275;
-    robotGroup.add(baseStruct);
+    // Pedestal cónico
+    const pedestal = cyl(0.115, 0.135, 0.06, yBlue, 'y', 40);
+    pedestal.position.y = 0.095;
+    robotGroup.add(pedestal);
 
-    const sMotorGeo = new THREE.CylinderGeometry(0.065, 0.065, 0.18, 16);
-    const sMotor = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.03, 16), new THREE.MeshPhongMaterial({ color: yDark, shininess: 100 }));
-    sMotor.rotation.z = Math.PI / 2;
-    sMotor.position.set(-0.16, 0.1275, 0);
-    robotGroup.add(sMotor);
+    // Caja de conectores trasera (cables del DX200)
+    const connBox = roundedBox(0.07, 0.05, 0.10, 0.01, yBlue);
+    connBox.position.set(-0.15, 0.09, 0);
+    robotGroup.add(connBox);
+    [-0.025, 0.025].forEach(z => {
+        const c = cyl(0.014, 0.014, 0.025, yDark, 'x', 16);
+        c.position.set(-0.195, 0.09, z);
+        robotGroup.add(c);
+    });
 
+    // Junta del eje S (anillo oscuro)
+    const sSeal = cyl(0.118, 0.118, 0.008, yDark, 'y', 40);
+    sSeal.position.y = 0.129;
+    robotGroup.add(sSeal);
+
+    // ================= EJE S (torreta giratoria) =================
     const joint0 = new THREE.Group();
-    joint0.position.y = 0.165; // S-Axis pivot
+    joint0.position.y = 0.165; // Pivote eje S (no cambiar: cinemática)
     robotGroup.add(joint0);
 
-    // Shoulder (Angled housing)
-    const shoulderShape = new THREE.Shape();
-    shoulderShape.moveTo(-0.08, 0.08);
-    shoulderShape.lineTo(0.08, 0.08);
-    shoulderShape.lineTo(0.12, -0.05);
-    shoulderShape.lineTo(-0.12, -0.05);
-    shoulderShape.lineTo(-0.08, 0.08);
-    
-    const shoulderGeom = new THREE.ExtrudeGeometry(shoulderShape, { depth: 0.16, bevelEnabled: true, bevelThickness: 0.01, bevelSize: 0.01 });
-    const shoulder = new THREE.Mesh(shoulderGeom, new THREE.MeshPhongMaterial({ color: yBlue, shininess: 100 }));
+    const turret = cyl(0.112, 0.116, 0.042, yBlue, 'y', 40);
+    turret.position.y = -0.012;
+    joint0.add(turret);
+
+    // Carcasa del hombro: perfil trapezoidal con cúpula sobre el eje L
+    const shShape = new THREE.Shape();
+    shShape.moveTo(-0.095, -0.01);
+    shShape.lineTo(0.095, -0.01);
+    shShape.lineTo(0.062, 0.05);
+    shShape.absarc(0, 0.05, 0.062, 0, Math.PI, false);
+    shShape.lineTo(-0.095, -0.01);
+    const shGeom = new THREE.ExtrudeGeometry(shShape, {
+        depth: 0.08, bevelEnabled: true, bevelThickness: 0.008, bevelSize: 0.006, bevelSegments: 3, curveSegments: 24
+    });
+    shGeom.translate(0, 0, -0.04);
+    const shoulder = new THREE.Mesh(shGeom, M(yBlue));
     shoulder.castShadow = true;
-    shoulder.position.z = -0.08;
+    shoulder.position.z = -0.005;
     joint0.add(shoulder);
 
-    const lMotor = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.03, 16), new THREE.MeshPhongMaterial({ color: yDark, shininess: 100 }));
-    lMotor.position.set(0, 0, -0.14);
-    lMotor.rotation.x = Math.PI / 2;
-    joint0.add(lMotor);
+    // Motor del eje L (lado opuesto al brazo)
+    servoMotor(joint0, 0, 0.05, -0.053, -1);
 
+    // ================= EJE L (brazo inferior) =================
     const joint1 = new THREE.Group();
-    joint1.position.y = 0.05; // L-Axis pivot
+    joint1.position.y = 0.05; // Pivote eje L (no cambiar)
     joint0.add(joint1);
 
-    // Lower Arm (L to U Link) - Muscular Curved Shape
-    const lArmShape = new THREE.Shape();
-    lArmShape.moveTo(0, 0.06);
-    lArmShape.quadraticCurveTo(0.15, 0.14, 0.32, 0.05); // Top hump
-    lArmShape.lineTo(0.32, -0.05);
-    lArmShape.quadraticCurveTo(0.15, 0.02, 0, -0.08); // Bottom concave curve
-    lArmShape.lineTo(0, 0.06);
+    // Brazo inferior lateral (estilo Motoman, montado a un lado)
+    const lArm = linkPlate(0.32, 0.062, 0.050, 0.042, yBlue);
+    lArm.position.z = 0.062;
+    joint1.add(lArm);
 
-    const lExtrudeSettings = { depth: 0.10, bevelEnabled: true, bevelThickness: 0.005, bevelSize: 0.005, bevelSegments: 3 };
-    const lArmGeom = new THREE.ExtrudeGeometry(lArmShape, lExtrudeSettings);
-    const upperArm = new THREE.Mesh(lArmGeom, new THREE.MeshPhongMaterial({ color: yBlue, shininess: 100 }));
-    upperArm.castShadow = true;
-    upperArm.position.z = -0.05; // Center extrusion
-    joint1.add(upperArm);
-    
-    // Corrugated Tube on Lower Arm
-    const curve1 = new THREE.CatmullRomCurve3([
-        new THREE.Vector3(0.02, -0.09, 0.06),
-        new THREE.Vector3(0.16, -0.01, 0.06),
-        new THREE.Vector3(0.30, -0.06, 0.06)
-    ]);
-    const tube1 = new THREE.Mesh(new THREE.TubeGeometry(curve1, 30, 0.015, 8, false), new THREE.MeshPhongMaterial({ color: 0x666666, flatShading: true }));
-    joint1.add(tube1);
+    // Tapas de rodamiento en los ejes L y U
+    const lCap = cyl(0.040, 0.040, 0.008, yGrey, 'z');
+    lCap.position.set(0, 0, 0.087);
+    joint1.add(lCap);
+    const uCap = cyl(0.032, 0.032, 0.008, yGrey, 'z');
+    uCap.position.set(0.32, 0, 0.087);
+    joint1.add(uCap);
 
-    const elbowJoint = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.07, 0.07, 0.13, 16),
-        new THREE.MeshPhongMaterial({ color: yGrey, shininess: 100, specular: 0x222222 })
-    );
-    elbowJoint.castShadow = true;
-    elbowJoint.rotation.x = Math.PI / 2;
-    elbowJoint.position.x = 0.32;
-    joint1.add(elbowJoint);
-
-    // uMotor removido a petición del usuario
-    // const uMotor = new THREE.Mesh(sMotorGeo, new THREE.MeshPhongMaterial({ color: yDark, shininess: 100 }));
-    // uMotor.position.set(0.32, 0, 0.12);
-    // uMotor.rotation.x = Math.PI / 2;
-    // joint1.add(uMotor);
+    // Rebaje decorativo (ranura) en el brazo inferior
+    const lGroove = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.022, 0.004), M(0x174f9e));
+    lGroove.position.set(0.16, 0, 0.0845);
+    joint1.add(lGroove);
 
     joints.push(joint0);
     joints.push(joint1);
 
+    // ================= EJE U (carcasa del brazo superior) =================
     const joint2 = new THREE.Group();
-    joint2.position.x = 0.32;
+    joint2.position.x = 0.32; // Pivote eje U (no cambiar)
     joint1.add(joint2);
 
-    // Upper Arm (U to R Link) - Straighter Profile for GP7
-    const uArmShape = new THREE.Shape();
-    uArmShape.moveTo(-0.02, 0.045);
-    uArmShape.lineTo(0.15, 0.035);
-    uArmShape.lineTo(0.15, -0.035);
-    uArmShape.lineTo(-0.02, -0.045);
-    uArmShape.lineTo(-0.02, 0.045);
+    // Carcasa del codo (aloja los motores R/B/T en la parte trasera)
+    const uCase = roundedBox(0.15, 0.10, 0.082, 0.025, yBlue);
+    uCase.position.set(-0.012, 0, 0);
+    joint2.add(uCase);
 
-    const extrudeSettings = { depth: 0.07, bevelEnabled: true, bevelThickness: 0.005, bevelSize: 0.01, bevelSegments: 2 };
-    const uArmGeom = new THREE.ExtrudeGeometry(uArmShape, extrudeSettings);
-    const uArm = new THREE.Mesh(uArmGeom, new THREE.MeshPhongMaterial({ color: yBlue, shininess: 100 }));
-    uArm.castShadow = true;
-    uArm.position.z = -0.035; // Center the extrusion
-    joint2.add(uArm);
+    // Tapa trasera de motores de muñeca
+    const rearCover = roundedBox(0.03, 0.075, 0.07, 0.012, yGrey);
+    rearCover.position.set(-0.092, 0, 0);
+    joint2.add(rearCover);
 
-    // Simulated Yaskawa Logo Plate (White side panels)
-    const logoPlate = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.04, 0.074), new THREE.MeshPhongMaterial({ color: 0xffffff, shininess: 50 }));
-    logoPlate.position.set(0.065, 0, 0);
-    joint2.add(logoPlate);
+    // Motor del eje U (lado opuesto al brazo inferior)
+    servoMotor(joint2, 0, 0, -0.041, -1);
 
-    // Corrugated Tube on Upper Arm
-    const curve2 = new THREE.CatmullRomCurve3([
-        new THREE.Vector3(-0.02, -0.06, 0.045),
-        new THREE.Vector3(0.06, -0.05, 0.045),
-        new THREE.Vector3(0.14, -0.02, 0.045)
-    ]);
-    const tube2 = new THREE.Mesh(new THREE.TubeGeometry(curve2, 20, 0.012, 8, false), new THREE.MeshPhongMaterial({ color: 0x666666, flatShading: true }));
-    joint2.add(tube2);
+    // Raíz del antebrazo (tubo cónico)
+    const foreRoot = cyl(0.036, 0.042, 0.10, yBlue, 'x');
+    foreRoot.position.x = 0.10;
+    joint2.add(foreRoot);
 
-    const wristBase = new THREE.Mesh(
-        new THREE.SphereGeometry(0.04, 20, 20),
-        new THREE.MeshPhongMaterial({ color: yGrey, shininess: 120 })
-    );
+    // Placa blanca de identificación (lateral)
+    const plate = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.002, 0.045), M(0xf2f2f2, 40));
+    plate.position.set(-0.02, 0.0505, 0);
+    joint2.add(plate);
+
+    const wristBase = new THREE.Mesh(new THREE.SphereGeometry(0.037, 24, 16), M(yBlue));
     wristBase.castShadow = true;
-    wristBase.position.x = 0.15; // Ajustado por la reducción de tamaño
+    wristBase.position.x = 0.15;
     joint2.add(wristBase);
 
     joints.push(joint2);
 
+    // ================= EJE R (giro del antebrazo) =================
     const joint3 = new THREE.Group();
-    joint3.position.x = 0.15; // Ajustado por la reducción de tamaño
+    joint3.position.x = 0.15; // Pivote eje R (no cambiar)
     joint2.add(joint3);
 
-    // EJE R: Roll (Rotación del antebrazo)
-    const wristRollGeom = new THREE.CylinderGeometry(0.04, 0.045, 0.12, 16);
-    const wristRoll = new THREE.Mesh(wristRollGeom, new THREE.MeshPhongMaterial({ color: yBlue, shininess: 90 }));
-    wristRoll.rotation.z = Math.PI / 2;
-    wristRoll.position.x = 0.06;
-    joint3.add(wristRoll);
+    const rTube = cyl(0.030, 0.036, 0.075, yBlue, 'x');
+    rTube.position.x = 0.0375;
+    joint3.add(rTube);
+
+    const rSeal = cyl(0.031, 0.031, 0.006, yDark, 'x');
+    rSeal.position.x = 0.005;
+    joint3.add(rSeal);
+
+    // Horquilla de la muñeca (dos placas laterales)
+    [-1, 1].forEach(side => {
+        const fork = linkPlate(0.05, 0.022, 0.026, 0.012, yBlue, 0.003);
+        fork.position.set(0.07, 0, side * 0.029);
+        joint3.add(fork);
+    });
+    const forkBridge = roundedBox(0.02, 0.044, 0.07, 0.008, yBlue);
+    forkBridge.position.set(0.072, 0, 0);
+    joint3.add(forkBridge);
     joints.push(joint3);
 
+    // ================= EJE B (cabeceo de muñeca) =================
     const joint4 = new THREE.Group();
-    joint4.position.x = 0.12;
+    joint4.position.x = 0.12; // Pivote eje B (no cambiar)
     joint3.add(joint4);
 
-    // EJE B: Bend (Giro arriba/abajo - Cabeceo)
-    // Esta es la "pequeña pieza" que menciona el usuario
-    const wristBendGeom = new THREE.BoxGeometry(0.06, 0.05, 0.05);
-    const wristBend = new THREE.Mesh(wristBendGeom, new THREE.MeshPhongMaterial({ color: yBlue, shininess: 90 }));
-    wristBend.position.x = 0.02;
-    joint4.add(wristBend);
-    
-    const bendMotor = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.06, 16), new THREE.MeshPhongMaterial({ color: yDark }));
-    bendMotor.rotation.x = Math.PI / 2;
-    bendMotor.userData.axisName = 'b';
-    bendMotor.userData.originalColor = yDark;
-    joint4.add(bendMotor);
+    const bHub = cyl(0.022, 0.022, 0.046, yBlue, 'z');
+    joint4.add(bHub);
+    const bCapA = cyl(0.016, 0.016, 0.004, yGrey, 'z');
+    bCapA.position.z = 0.038;
+    joint4.add(bCapA);
+    const bCapB = cyl(0.016, 0.016, 0.004, yGrey, 'z');
+    bCapB.position.z = -0.038;
+    joint4.add(bCapB);
+    const bNose = cyl(0.019, 0.022, 0.03, yBlue, 'x');
+    bNose.position.x = 0.018;
+    joint4.add(bNose);
     joints.push(joint4);
 
+    // ================= EJE T (brida de herramienta) =================
     const joint5 = new THREE.Group();
-    joint5.position.x = 0.04;
+    joint5.position.x = 0.04; // Pivote eje T (no cambiar)
     joint4.add(joint5);
 
-    // EJE T: Twist (Rotación de las pinzas)
-    const toolFlangeGeom = new THREE.CylinderGeometry(0.035, 0.035, 0.02, 16);
-    const toolFlange = new THREE.Mesh(toolFlangeGeom, new THREE.MeshPhongMaterial({ color: yGrey, shininess: 90 }));
-    toolFlange.rotation.z = Math.PI / 2;
-    toolFlange.position.x = 0.01;
+    const toolFlange = cyl(0.026, 0.026, 0.010, yAlu, 'x');
+    toolFlange.position.x = 0.002;
     joint5.add(toolFlange);
+
+    // Placa adaptadora de la herramienta (soporta los dos cilindros)
+    const toolPlate = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.05, 0.086), M(0x8d939b, 60));
+    toolPlate.castShadow = true;
+    toolPlate.position.x = 0.0145;
+    joint5.add(toolPlate);
+    const toolArm = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.014, 0.086), M(0x8d939b, 60));
+    toolArm.position.set(0.035, 0.025, 0);
+    joint5.add(toolArm);
     joints.push(joint5);
+
+    buildDX200Cabinet();
 
     // === CILINDRO NEUMÁTICO 1 ===
     gripperGroup = new THREE.Group();
@@ -1625,6 +1703,113 @@ function buildRobot() {
     grip2FingerR.position.set(0.010, -0.019, 0);
     grip2FingerR.userData.isGrip2R = true;
     grip2Base.add(grip2FingerR);
+}
+
+// ============================================================
+// Armario controlador DX200 + teach pendant + cable al robot
+// ============================================================
+function buildDX200Cabinet() {
+    const M = (color, shininess = 40) =>
+        new THREE.MeshPhongMaterial({ color, shininess, specular: 0x222222 });
+    const box = (w, h, d, color, x, y, z, parent) => {
+        const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), M(color));
+        m.position.set(x, y, z);
+        m.castShadow = true; m.receiveShadow = true;
+        parent.add(m);
+        return m;
+    };
+
+    const cab = new THREE.Group();
+    cab.position.set(-0.78, 0, -0.42);
+    cab.rotation.y = 0.45;
+    scene.add(cab);
+
+    const W = 0.40, H = 0.56, D = 0.30;
+    const bodyCol = 0xDCDEDF, doorCol = 0xE9EAEA, darkCol = 0x2b2d31;
+
+    // Zócalo y cuerpo
+    box(W - 0.02, 0.04, D - 0.02, darkCol, 0, 0.02, 0, cab);
+    box(W, H, D, bodyCol, 0, 0.04 + H / 2, 0, cab);
+    // Tapa superior ligeramente mayor
+    box(W + 0.01, 0.012, D + 0.01, 0xcfd2d4, 0, 0.04 + H + 0.006, 0, cab);
+
+    // Puerta frontal con junta
+    const doorZ = D / 2 + 0.004;
+    box(W - 0.03, H - 0.04, 0.006, doorCol, 0, 0.04 + H / 2, doorZ, cab);
+
+    // Interruptor general (maneta giratoria sobre placa)
+    box(0.07, 0.07, 0.004, 0xb9bcbf, -0.12, 0.44, doorZ + 0.005, cab);
+    const knob = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.024, 0.02, 24), M(darkCol, 60));
+    knob.rotation.x = Math.PI / 2;
+    knob.position.set(-0.12, 0.44, doorZ + 0.015);
+    cab.add(knob);
+    box(0.05, 0.012, 0.012, darkCol, -0.12, 0.44, doorZ + 0.03, cab);
+
+    // Pulsador de encendido (verde) y etiqueta
+    const pb = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.01, 16),
+        new THREE.MeshPhongMaterial({ color: 0x22aa44, emissive: 0x0a3a14 }));
+    pb.rotation.x = Math.PI / 2;
+    pb.position.set(-0.12, 0.36, doorZ + 0.008);
+    cab.add(pb);
+
+    // Cerraduras de la puerta
+    [0.48, 0.18].forEach(y => box(0.012, 0.03, 0.01, 0x777b80, 0.165, y, doorZ + 0.006, cab));
+
+    // Placa de características
+    box(0.12, 0.05, 0.002, 0xf6f6f6, 0.05, 0.50, doorZ + 0.004, cab);
+    box(0.12, 0.012, 0.002, 0x1D63C4, 0.05, 0.522, doorZ + 0.0045, cab);
+
+    // Rejillas de ventilación laterales
+    for (let i = 0; i < 6; i++) {
+        box(0.002, 0.008, 0.18, 0x9a9da1, W / 2 + 0.001, 0.15 + i * 0.022, 0, cab);
+        box(0.002, 0.008, 0.18, 0x9a9da1, -W / 2 - 0.001, 0.15 + i * 0.022, 0, cab);
+    }
+
+    // Teach pendant colgado en el lateral
+    const tp = new THREE.Group();
+    tp.position.set(W / 2 + 0.03, 0.40, 0.04);
+    tp.rotation.y = Math.PI / 2;
+    tp.rotation.x = -0.12;
+    cab.add(tp);
+    box(0.03, 0.02, 0.03, 0x777b80, 0, 0.11, -0.012, tp);         // gancho
+    box(0.17, 0.22, 0.035, 0x30343a, 0, 0, 0, tp);                 // carcasa
+    const screen = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.08, 0.002),
+        new THREE.MeshPhongMaterial({ color: 0x1b3d6e, emissive: 0x0c2244 }));
+    screen.position.set(0, 0.045, 0.0185);
+    tp.add(screen);
+    box(0.13, 0.07, 0.002, 0x5b6068, 0, -0.05, 0.0185, tp);        // teclado
+    const estop = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.012, 20),
+        new THREE.MeshPhongMaterial({ color: 0xd01818, shininess: 80 }));
+    estop.rotation.x = Math.PI / 2;
+    estop.position.set(0.065, 0.095, 0.02);
+    tp.add(estop);
+
+    // Cable del pendant (cuelga hasta el suelo)
+    const pendCable = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(W / 2 + 0.03, 0.29, 0.04),
+        new THREE.Vector3(W / 2 + 0.08, 0.12, 0.09),
+        new THREE.Vector3(W / 2 + 0.05, 0.01, 0.16),
+        new THREE.Vector3(W / 2 - 0.05, 0.008, D / 2 + 0.03)
+    ]);
+    const pc = new THREE.Mesh(new THREE.TubeGeometry(pendCable, 30, 0.006, 8, false), M(0x111111, 20));
+    pc.castShadow = true;
+    cab.add(pc);
+
+    // Cables de potencia/encoder desde el armario a la base del robot
+    cab.updateMatrixWorld(true);
+    const start = new THREE.Vector3(W / 2 + 0.01, 0.02, -0.05).applyMatrix4(cab.matrixWorld);
+    [-0.025, 0.025].forEach(dz => {
+        const curve = new THREE.CatmullRomCurve3([
+            new THREE.Vector3(start.x + dz, 0.01, start.z),
+            new THREE.Vector3(start.x + 0.2, 0.01, start.z + 0.12),
+            new THREE.Vector3(-0.45, 0.04, dz * 0.5),
+            new THREE.Vector3(-0.30, 0.045, dz),
+            new THREE.Vector3(-0.207, 0.09, dz)
+        ]);
+        const c = new THREE.Mesh(new THREE.TubeGeometry(curve, 60, 0.008, 8, false), M(0x15161a, 20));
+        c.castShadow = true;
+        scene.add(c);
+    });
 }
 
 function highlightJoint(index) {
@@ -1802,12 +1987,22 @@ function updateCameraPosition() {
 function setupCanvasEvents(canvas) {
     function updateCanvasSize() {
         if (canvas && canvas.clientWidth && canvas.clientHeight) {
-            camera.aspect = canvas.clientWidth / canvas.clientHeight;
+            const aspect = canvas.clientWidth / canvas.clientHeight;
+            camera.aspect = aspect;
+            // Mantener un campo de visión horizontal mínimo (~52°) para que el robot
+            // no quede cortado en vistas estrechas; en vistas anchas se usa 75° vertical.
+            const minHFov = 52 * Math.PI / 180;
+            const vFov = 2 * Math.atan(Math.tan(minHFov / 2) / aspect) * 180 / Math.PI;
+            // En vistas anchas y bajas (consola debajo) se cierra un poco el encuadre
+            const wideFov = aspect > 1 ? 75 - Math.min(22, (aspect - 1) * 16) : 75;
+            camera.fov = Math.min(110, Math.max(wideFov, vFov));
             camera.updateProjectionMatrix();
-            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+            if (typeof updateRobotDisplay === 'function' && joints.length >= 6) updateRobotDisplay();
         }
     }
     window.addEventListener('resize', updateCanvasSize);
+    if (window.ResizeObserver) new ResizeObserver(updateCanvasSize).observe(canvas);
     setTimeout(updateCanvasSize, 100);
 
     canvas.addEventListener('wheel', (e) => {
@@ -2447,89 +2642,337 @@ function inverseKinematics(targetPos) {
 }
 
 // ============================================================
-// INTERPOLACIÓN LINEAL CARTESIANA (para MOVL)
+// MOTOR DE MOVIMIENTO (MOVJ / MOVL / MOVC / IMOV) estilo DX200
+// ------------------------------------------------------------
+// - Cinemática exacta del modelo 3D hasta el TCP (punta de las pinzas)
+// - MOVJ: interpolación articular sincronizada, VJ = % de la vel. máx. de cada eje
+// - MOVL: el TCP sigue una recta y la orientación se interpola (slerp), V = mm/s
+// - MOVC: arco de circunferencia definido por 3 puntos MOVC consecutivos
+// - Perfil trapezoidal (acelera / velocidad constante / frena)
+// - PL = 0 parada exacta; PL 1..8 redondea la esquina (pasa al siguiente punto antes)
 // ============================================================
-// Estado de la trayectoria lineal activa
-let movlState = {
-    active: false,       // ¿hay un MOVL en curso?
-    startPos: null,      // posición cartesiana inicio {x,y,z,rx,ry,rz}
-    endPos: null,        // posición cartesiana destino
-    startAngles: null,   // ángulos de inicio (para fallback)
-    targetAngles: null,  // ángulos destino
-    progress: 0,         // 0.0 → 1.0
-    speed: 0.04          // incremento por frame
-};
+const D2R = Math.PI / 180;
+const JOINT_KEYS = ['s', 'l', 'u', 'r', 'b', 't'];
+
+// TCP: centro entre las dos pinzas, a la altura de la punta de los dedos (frame de la brida, m)
+const TOOL_TCP = new THREE.Vector3(0.04, -0.11, 0);
+
+// Velocidad máxima de cada eje al 100% (grados/s) — usada por MOVJ (VJ=%)
+const JOINT_MAX_SPEED = { s: 130, l: 120, u: 130, r: 220, b: 220, t: 300 };
+// Velocidad de reorientación máxima para MOVL/MOVC (grados/s), equivalente a VR
+const CART_MAX_ROT_SPEED = 90;
+// Distancias de redondeo PL0..PL8 (mm) — valores típicos de parámetro DX200
+const PL_DISTANCE = [0, 12.5, 25, 50, 100, 150, 200, 250, 300];
+// En TEACH (FWD/BWD y prueba) el DX200 limita la velocidad
+const TEACH_MAX_V = 250;   // mm/s
+const TEACH_MAX_VJ = 25;   // %
+
+const _T = new THREE.Matrix4(), _R = new THREE.Matrix4(), _E = new THREE.Euler();
+
+/** Matriz mundo del TCP (misma cadena que buildRobot/updateRobotDisplay). */
+function tcpMatrix(a) {
+    const M = new THREE.Matrix4();
+    M.makeTranslation(0, 0.165, 0).multiply(_R.makeRotationY(a.s * D2R));
+    M.multiply(_T.makeTranslation(0, 0.05, 0)).multiply(_R.makeRotationZ((a.l + 80) * D2R));
+    M.multiply(_T.makeTranslation(0.32, 0, 0)).multiply(_R.makeRotationZ((a.u - 80) * D2R));
+    _E.set(a.r * D2R, 0, -23 * D2R, 'XYZ');
+    M.multiply(_T.makeTranslation(0.15, 0, 0)).multiply(_R.makeRotationFromEuler(_E));
+    M.multiply(_T.makeTranslation(0.12, 0, 0)).multiply(_R.makeRotationZ(a.b * D2R));
+    M.multiply(_T.makeTranslation(0.04, 0, 0)).multiply(_R.makeRotationX(a.t * D2R));
+    M.multiply(_T.makeTranslation(TOOL_TCP.x, TOOL_TCP.y, TOOL_TCP.z));
+    return M;
+}
+
+/** Pose del TCP: posición en mm (frame de escena) + cuaternión. */
+function tcpPose(a) {
+    const M = tcpMatrix(a);
+    const p = new THREE.Vector3(), q = new THREE.Quaternion(), sc = new THREE.Vector3();
+    M.decompose(p, q, sc);
+    return { p: p.multiplyScalar(1000), q };
+}
+
+/** Error de orientación (vector de rotación en rad) para llevar qc a qt. */
+function orientationError(qc, qt) {
+    const qe = qt.clone().multiply(qc.clone().invert());
+    if (qe.w < 0) { qe.x = -qe.x; qe.y = -qe.y; qe.z = -qe.z; qe.w = -qe.w; }
+    const s = Math.sqrt(qe.x * qe.x + qe.y * qe.y + qe.z * qe.z);
+    if (s < 1e-9) return [0, 0, 0];
+    const ang = 2 * Math.atan2(s, qe.w);
+    return [qe.x / s * ang, qe.y / s * ang, qe.z / s * ang];
+}
 
 /**
- * Ejecuta un frame de interpolación lineal cartesiana.
- * Retorna true cuando la trayectoria está completa.
+ * IK de pose completa (posición + orientación del TCP) por mínimos cuadrados
+ * amortiguados, partiendo de 'seed' para mantener la configuración del brazo.
+ * Devuelve { angles, posErr (mm), rotErr (grados) }.
  */
-function linearInterpolateFrame(plValue = 0) {
-    if (!movlState.active) return true;
+function solveTcpIK(seed, targetP, targetQ, maxIter = 40) {
+    const ROT_W = 150;            // peso de la orientación (mm por rad)
+    const eps = 0.05;             // grados para la derivada numérica
+    const lambda = 2.0;
+    const a = stepAngles(seed);
+    let posErr = Infinity, rotErr = Infinity;
 
-    movlState.progress += movlState.speed;
-    
-    // PL=0 -> threshold = 1.0 (100%)
-    // PL=8 -> threshold = 0.6 (60%)
-    const threshold = 1.0 - (plValue * 0.05);
+    for (let it = 0; it < maxIter; it++) {
+        const cur = tcpPose(a);
+        const ep = [targetP.x - cur.p.x, targetP.y - cur.p.y, targetP.z - cur.p.z];
+        const er = orientationError(cur.q, targetQ);
+        posErr = Math.hypot(ep[0], ep[1], ep[2]);
+        rotErr = Math.hypot(er[0], er[1], er[2]) / D2R;
+        if (posErr < 0.05 && rotErr < 0.02) break;
+        const err = [ep[0], ep[1], ep[2], er[0] * ROT_W, er[1] * ROT_W, er[2] * ROT_W];
 
-    if (movlState.progress >= threshold) {
-        if (plValue === 0) movlState.progress = 1.0;
-        movlState.active = false;
-    }
-
-    const t = movlState.progress;
-    const s = movlState.startPos;
-    const e = movlState.endPos;
-
-    // Interpolar posición TCP linealmente
-    const interp = {
-        x:  s.x  + (e.x  - s.x)  * t,
-        y:  s.y  + (e.y  - s.y)  * t,
-        z:  s.z  + (e.z  - s.z)  * t,
-        rx: s.rx + (e.rx - s.rx) * t,
-        ry: s.ry + (e.ry - s.ry) * t,
-        rz: s.rz + (e.rz - s.rz) * t
-    };
-
-    // Resolver IK para esta posición interpolada
-    const solved = inverseKinematicsDLS(RobotState.angles, interp);
-    if (solved) {
-        RobotState.angles.s = solved.s;
-        RobotState.angles.l = solved.l;
-        RobotState.angles.u = solved.u;
-        RobotState.angles.r = solved.r;
-        RobotState.angles.b = solved.b;
-        RobotState.angles.t = solved.t;
-    } else {
-        // Fallback: interpolar ángulos directamente si IK falla
-        const sa = movlState.startAngles;
-        const ta = movlState.targetAngles;
-        if (sa && ta) {
-            RobotState.angles.s = sa.s + (ta.s - sa.s) * t;
-            RobotState.angles.l = sa.l + (ta.l - sa.l) * t;
-            RobotState.angles.u = sa.u + (ta.u - sa.u) * t;
-            RobotState.angles.r = sa.r + (ta.r - sa.r) * t;
-            RobotState.angles.b = sa.b + (ta.b - sa.b) * t;
-            RobotState.angles.t = sa.t + (ta.t - sa.t) * t;
+        // Jacobiano numérico 6x6
+        const J = [[], [], [], [], [], []];
+        for (let j = 0; j < 6; j++) {
+            const k = JOINT_KEYS[j];
+            const tmp = { ...a }; tmp[k] += eps;
+            const fk = tcpPose(tmp);
+            const dr = orientationError(cur.q, fk.q);
+            J[0][j] = (fk.p.x - cur.p.x) / eps;
+            J[1][j] = (fk.p.y - cur.p.y) / eps;
+            J[2][j] = (fk.p.z - cur.p.z) / eps;
+            J[3][j] = dr[0] * ROT_W / eps;
+            J[4][j] = dr[1] * ROT_W / eps;
+            J[5][j] = dr[2] * ROT_W / eps;
+        }
+        const JTJ = [], JTe = new Array(6).fill(0);
+        for (let i = 0; i < 6; i++) {
+            JTJ[i] = new Array(6).fill(0);
+            for (let j = 0; j < 6; j++) {
+                for (let k = 0; k < 6; k++) JTJ[i][j] += J[k][i] * J[k][j];
+                if (i === j) JTJ[i][j] += lambda * lambda;
+            }
+            for (let k = 0; k < 6; k++) JTe[i] += J[k][i] * err[k];
+        }
+        const dQ = solveLinearSystem(JTJ, JTe);
+        if (!dQ) break;
+        for (let i = 0; i < 6; i++) {
+            const k = JOINT_KEYS[i];
+            a[k] += Math.max(-10, Math.min(10, dQ[i]));
+            a[k] = Math.max(RobotState.limits[k].min, Math.min(RobotState.limits[k].max, a[k]));
         }
     }
+    return { angles: a, posErr, rotErr };
+}
 
-    return !movlState.active; // true = completo
+/** Perfil trapezoidal normalizado: tau 0..1 -> s 0..1 (20% acelera, 20% frena). */
+const PROFILE_ACC = 0.2;
+const PROFILE_VPEAK = 1 / (1 - PROFILE_ACC);
+function trapezoid(tau) {
+    const f = PROFILE_ACC, vp = PROFILE_VPEAK;
+    if (tau <= 0) return 0;
+    if (tau >= 1) return 1;
+    if (tau < f) return 0.5 * vp * tau * tau / f;
+    if (tau < 1 - f) return 0.5 * vp * f + vp * (tau - f);
+    return 1 - 0.5 * vp * (1 - tau) * (1 - tau) / f;
+}
+
+function parseMotionCode(code) {
+    const type = (code.trim().split(/\s+/)[0] || '').toUpperCase();
+    const vj = code.match(/\bVJ=(\d+(?:\.\d+)?)/i);
+    const v = code.match(/\bV=(\d+(?:\.\d+)?)/i) || code.match(/\bVL=(\d+(?:\.\d+)?)/i);
+    const pl = code.match(/\bPL=(\d+)/i);
+    return {
+        type,
+        vj: vj ? parseFloat(vj[1]) : 25,
+        v: v ? parseFloat(v[1]) : 100,
+        pl: pl ? Math.max(0, Math.min(8, parseInt(pl[1]))) : 0
+    };
+}
+
+function isMotionCode(code) {
+    return /^\s*(MOVJ|MOVL|MOVC|IMOV)\b/i.test(code || '');
+}
+
+function stepAngles(step) {
+    return { s: +step.s || 0, l: +step.l || 0, u: +step.u || 0, r: +step.r || 0, b: +step.b || 0, t: +step.t || 0 };
+}
+
+/** Plan de movimiento articular (MOVJ). */
+function planJoint(start, target, vjPct) {
+    const pct = Math.max(0.1, Math.min(100, vjPct)) / 100;
+    let T = 0;
+    JOINT_KEYS.forEach(k => {
+        T = Math.max(T, Math.abs(target[k] - start[k]) / (JOINT_MAX_SPEED[k] * pct));
+    });
+    T = Math.max(0.12, T * PROFILE_VPEAK);
+    const p0 = tcpPose(start).p, p1 = tcpPose(target).p;
+    return { kind: 'joint', start: { ...start }, target: { ...target }, T, elapsed: 0, length: p0.distanceTo(p1) };
 }
 
 /**
- * Inicia una trayectoria MOVL desde la posición actual hasta el step destino.
+ * Centro y base de la circunferencia que pasa por A, B, C (en ese orden).
+ * Devuelve null si los puntos están alineados.
  */
-function startMovlTrajectory(targetStep, speedFactor) {
-    movlState.startPos = forwardKinematics(RobotState.angles);
-    movlState.endPos = forwardKinematics(targetStep);
-    movlState.startAngles = { ...RobotState.angles };
-    movlState.targetAngles = { ...targetStep };
-    movlState.progress = 0;
-    movlState.speed = (speedFactor || 0.04) * 0.6; // MOVL es más lento que MOVJ
-    movlState.active = true;
+function circleFrom3(A, B, C) {
+    const ab = B.clone().sub(A), ac = C.clone().sub(A);
+    const n = ab.clone().cross(ac);
+    const n2 = n.lengthSq();
+    if (n2 < 1e-6) return null;
+    const term1 = n.clone().cross(ab).multiplyScalar(ac.lengthSq());
+    const term2 = ac.clone().cross(n).multiplyScalar(ab.lengthSq());
+    const center = A.clone().add(term1.add(term2).divideScalar(2 * n2));
+    const radius = center.distanceTo(A);
+    const normal = n.normalize();
+    return { center, radius, normal };
 }
+
+function arcAngle(circle, u, v, P) {
+    const d = P.clone().sub(circle.center);
+    let ang = Math.atan2(d.dot(v), d.dot(u));
+    if (ang < 0) ang += 2 * Math.PI;
+    return ang;
+}
+
+/**
+ * Plan cartesiano (MOVL o arco MOVC). 'arcPts' = [P0, P1, P2] en mm para MOVC:
+ * la circunferencia pasa por los tres y el tramo va desde la posición actual hasta el destino.
+ */
+function planCartesian(start, target, vMmS, arcPts) {
+    const a = tcpPose(start), b = tcpPose(target);
+    let pathAt, length, arc = null;
+
+    if (arcPts) {
+        const circle = circleFrom3(arcPts[0], arcPts[1], arcPts[2]);
+        if (circle) {
+            const u = a.p.clone().sub(circle.center).normalize();
+            const v = circle.normal.clone().cross(u);
+            const sweep = arcAngle(circle, u, v, b.p);
+            const r = a.p.distanceTo(circle.center);
+            arc = { circle, sweep };
+            length = r * sweep;
+            pathAt = s => {
+                const th = sweep * s;
+                return circle.center.clone()
+                    .add(u.clone().multiplyScalar(r * Math.cos(th)))
+                    .add(v.clone().multiplyScalar(r * Math.sin(th)));
+            };
+        }
+    }
+    if (!pathAt) {
+        length = a.p.distanceTo(b.p);
+        pathAt = s => a.p.clone().lerp(b.p, s);
+    }
+
+    const rotDeg = 2 * Math.acos(Math.min(1, Math.abs(a.q.dot(b.q)))) / D2R;
+    let T = Math.max(length / Math.max(0.1, vMmS), rotDeg / CART_MAX_ROT_SPEED);
+    T = Math.max(0.12, T * PROFILE_VPEAK);
+
+    return {
+        kind: 'cart', arc: !!arc, start: { ...start }, target: { ...target },
+        q0: a.q, q1: b.q, pathAt, length, T, elapsed: 0, lastAngles: { ...start }, maxPosErr: 0
+    };
+}
+
+/**
+ * Avanza un movimiento 'dt' segundos y escribe los ángulos en RobotState.
+ * Devuelve { done, remaining (mm aprox.) }.
+ */
+function advanceMotion(m, dt) {
+    m.elapsed = Math.min(m.T, m.elapsed + dt);
+    const tau = m.elapsed / m.T;
+    const s = trapezoid(tau);
+    let angles;
+
+    if (m.kind === 'joint') {
+        angles = {};
+        JOINT_KEYS.forEach(k => angles[k] = m.start[k] + (m.target[k] - m.start[k]) * s);
+    } else {
+        const p = m.pathAt(s);
+        const q = m.q0.clone().slerp(m.q1, s);
+        const sol = solveTcpIK(m.lastAngles, p, q);
+        angles = sol.angles;
+        m.maxPosErr = Math.max(m.maxPosErr, sol.posErr);
+        m.lastAngles = { ...angles };
+        if (sol.posErr > 3 && !m.reachWarned) {
+            m.reachWarned = true;
+            setInfoDisplay('⚠ ' + (m.type || 'MOVL') + ': parte de la trayectoria está fuera del alcance del robot (se aproxima)');
+        }
+    }
+    Object.assign(RobotState.angles, angles);
+    m.lastWritten = { ...angles };
+    return { done: tau >= 1, remaining: (1 - s) * m.length };
+}
+
+/** ¿Alguien movió el robot (JOG) desde el último frame del movimiento? */
+function motionInterrupted(m) {
+    if (!m || !m.lastWritten) return false;
+    return JOINT_KEYS.some(k => Math.abs(RobotState.angles[k] - m.lastWritten[k]) > 1e-6);
+}
+
+/**
+ * Construye el plan para la línea 'index' del programa partiendo de 'from'.
+ * opts.teach limita la velocidad (FWD/BWD/TEACH); opts.reverse = BWD.
+ */
+function planProgramStep(program, index, from, opts = {}) {
+    const step = program[index];
+    const mc = parseMotionCode(step.code || '');
+    const target = stepAngles(step);
+    from = stepAngles(from);
+    const teach = !!opts.teach;              // FWD/BWD: velocidad de TEACH y sin PL
+    const maxV = (teach || opts.testRun) ? TEACH_MAX_V : Infinity;
+    const maxVJ = teach ? TEACH_MAX_VJ : 100;
+    let plan;
+
+    if (mc.type === 'MOVJ') {
+        plan = planJoint(from, target, Math.min(mc.vj, maxVJ));
+    } else {
+        const v = Math.min(mc.v, maxV);
+        let arcPts = null, warn = null;
+        if (mc.type === 'MOVC' && !opts.reverse) {
+            // Tramo de MOVC consecutivos que contiene a 'index'
+            let a = index, b = index;
+            while (a > 0 && /^\s*MOVC\b/i.test(program[a - 1].code || '')) a--;
+            while (b < program.length - 1 && /^\s*MOVC\b/i.test(program[b + 1].code || '')) b++;
+            if (b - a + 1 < 3) {
+                warn = 'MOVC necesita 3 puntos MOVC seguidos: se mueve en línea recta';
+            } else if (index > a) {
+                const i0 = index + 1 <= b ? index - 1 : index - 2;
+                arcPts = [i0, i0 + 1, i0 + 2].map(i => tcpPose(stepAngles(program[i])).p);
+            } // index === a: primer punto del arco, se llega en línea recta
+        }
+        plan = planCartesian(from, target, v, arcPts);
+        plan.warn = warn;
+    }
+    plan.type = mc.type;
+    plan.pl = teach ? 0 : mc.pl;
+    plan.plDist = Math.min(PL_DISTANCE[plan.pl] || 0, plan.length * 0.5);
+    plan.stepIndex = index;
+    plan.jobId = DxState.currentJobId;
+    return plan;
+}
+
+/**
+ * Ejecuta un frame del plan. Devuelve true cuando el paso está terminado.
+ * Al terminar un MOVL/MOVC con parada exacta, si la IK quedó en otra
+ * configuración de muñeca se hace un ajuste articular corto hasta el punto grabado.
+ */
+function runPlanFrame(plan, dt) {
+    if (plan.settle) {
+        const r = advanceMotion(plan.settle, dt);
+        plan.lastWritten = plan.settle.lastWritten;
+        return r.done;
+    }
+    const r = advanceMotion(plan, dt);
+    if (plan.pl > 0 && r.remaining <= plan.plDist && plan.elapsed > 0) return true; // redondeo PL
+    if (!r.done) return false;
+    const diff = Math.max(...JOINT_KEYS.map(k => Math.abs(RobotState.angles[k] - plan.target[k])));
+    if (plan.kind === 'cart' && diff > 0.5) {
+        plan.settle = planJoint({ ...RobotState.angles }, plan.target, 20);
+        if (diff > 5) setInfoDisplay('⚠ ' + plan.type + ': la muñeca cambia de configuración al final del tramo');
+        return false;
+    }
+    Object.assign(RobotState.angles, plan.target);   // posición final exacta
+    return true;
+}
+
+// Movimiento de FWD/BWD (modo TEACH), lo avanza el gameLoop
+let teachMotion = null;
+// Movimiento del programa en PLAY/test
+let playMotion = null;
+// Pila de CALL JOB
+let callStack = [];
 
 function moveAxis(axis, dir) {
     if (!checkTeachMode('Movimiento manual')) return;
@@ -3258,31 +3701,56 @@ function pressSelect() {
         if (currentProgram && currentProgram.length > 0) {
             let step = currentProgram[DxState.selectedLineIndex];
             let tokens = (step.code || '').split(' ');
-            if (DxState.selectedTokenIndex > 0 && tokens.length > DxState.selectedTokenIndex) {
+            if (tokens.length > DxState.selectedTokenIndex) {
                 if (!checkTeachMode('Edición de parámetros')) return;
-                let target = tokens[DxState.selectedTokenIndex];
-                if (target.startsWith('VJ=')) {
-                    const speeds = ['VJ=1.00', 'VJ=5.00', 'VJ=10.00', 'VJ=25.00', 'VJ=50.00', 'VJ=100.00'];
-                    let idx = speeds.indexOf(target);
-                    tokens[DxState.selectedTokenIndex] = speeds[(idx + 1) % speeds.length];
-                } else if (target.startsWith('V=')) {
-                    const speeds = ['V=10.00', 'V=25.00', 'V=50.00', 'V=100.00', 'V=250.00'];
-                    let idx = speeds.indexOf(target);
-                    tokens[DxState.selectedTokenIndex] = speeds[(idx + 1) % speeds.length];
-                } else if (target.startsWith('T=')) {
-                    const timers = ['T=0.1', 'T=0.5', 'T=1.0', 'T=2.0', 'T=5.0'];
-                    let idx = timers.indexOf(target);
-                    tokens[DxState.selectedTokenIndex] = timers[(idx + 1) % timers.length];
-                } else if (target.startsWith('PL=')) {
-                    const pls = ['PL=0', 'PL=1', 'PL=2', 'PL=3', 'PL=4', 'PL=5', 'PL=6', 'PL=7', 'PL=8'];
-                    let idx = pls.indexOf(target);
-                    if (idx === -1) idx = 0;
-                    tokens[DxState.selectedTokenIndex] = pls[(idx + 1) % pls.length];
+                
+                if (DxState.selectedTokenIndex === 0) {
+                    let target = tokens[0];
+                    const movs = ['MOVJ', 'MOVL', 'MOVC', 'IMOV'];
+                    if (movs.includes(target)) {
+                        let idx = movs.indexOf(target);
+                        let nextMov = movs[(idx + 1) % movs.length];
+                        tokens[0] = nextMov;
+                        
+                        // Swap speed format based on motion type
+                        if (nextMov === 'MOVJ') {
+                            tokens = tokens.map(t => t.startsWith('V=') ? 'VJ=50.00' : t);
+                        } else {
+                            tokens = tokens.map(t => t.startsWith('VJ=') ? 'V=50.00' : t);
+                        }
+                        
+                        step.code = tokens.join(' ');
+                        saveJobsLocally();
+                        renderJob();
+                        setInfoDisplay('✓ Instrucción cambiada a ' + nextMov);
+                    } else {
+                        setInfoDisplay('✓ SELECT pulsado');
+                    }
+                } else {
+                    let target = tokens[DxState.selectedTokenIndex];
+                    if (target.startsWith('VJ=')) {
+                        const speeds = ['VJ=1.00', 'VJ=5.00', 'VJ=10.00', 'VJ=25.00', 'VJ=50.00', 'VJ=100.00'];
+                        let idx = speeds.indexOf(target);
+                        tokens[DxState.selectedTokenIndex] = speeds[(idx + 1) % speeds.length];
+                    } else if (target.startsWith('V=')) {
+                        const speeds = ['V=10.00', 'V=25.00', 'V=50.00', 'V=100.00', 'V=250.00'];
+                        let idx = speeds.indexOf(target);
+                        tokens[DxState.selectedTokenIndex] = speeds[(idx + 1) % speeds.length];
+                    } else if (target.startsWith('T=')) {
+                        const timers = ['T=0.1', 'T=0.5', 'T=1.0', 'T=2.0', 'T=5.0'];
+                        let idx = timers.indexOf(target);
+                        tokens[DxState.selectedTokenIndex] = timers[(idx + 1) % timers.length];
+                    } else if (target.startsWith('PL=')) {
+                        const pls = ['PL=0', 'PL=1', 'PL=2', 'PL=3', 'PL=4', 'PL=5', 'PL=6', 'PL=7', 'PL=8'];
+                        let idx = pls.indexOf(target);
+                        if (idx === -1) idx = 0;
+                        tokens[DxState.selectedTokenIndex] = pls[(idx + 1) % pls.length];
+                    }
+                    step.code = tokens.join(' ');
+                    saveJobsLocally();
+                    renderJob();
+                    setInfoDisplay('✓ Parámetro actualizado');
                 }
-                step.code = tokens.join(' ');
-                saveJobsLocally();
-                renderJob();
-                setInfoDisplay('✓ Parámetro actualizado');
             } else {
                 setInfoDisplay('✓ SELECT pulsado');
             }
@@ -3718,8 +4186,8 @@ function changeSpeed() {
 }
 
 function changeInstruction() {
-    const types = ['MOVJ VJ=', 'MOVL VL=', 'MOVC V=', 'IMOV V=', 'WAIT'];
-    const codes = ['MOVJ VJ=50.00', 'MOVL VL=500.00', 'MOVC V=500.00', 'IMOV V=500.00', 'WAIT 0.1'];
+    const types = ['MOVJ', 'MOVL', 'MOVC', 'IMOV', 'WAIT'];
+    const codes = ['MOVJ VJ=50.00 PL=0', 'MOVL V=100.0 PL=0', 'MOVC V=100.0', 'IMOV V=100.0', 'WAIT 0.1'];
     const currentProgram = robotJobs[DxState.currentJobId];
     if (!currentProgram || !currentProgram[DxState.selectedLineIndex]) return;
     const current = currentProgram[DxState.selectedLineIndex].code.split(' ')[0];
@@ -4667,81 +5135,39 @@ function stepProgram(direction) {
     
     const target = currentProgram[targetIndex];
     const targetCode = target.code || '';
-    const isMovl = targetCode.startsWith('MOVL') || targetCode.startsWith('MOVC');
-    const startAngles = { ...RobotState.angles };
-
-    if (isMovl) {
-        // ======== MOVL: Interpolación lineal cartesiana paso a paso ========
-        const startPos = forwardKinematics(startAngles);
-        const endPos = forwardKinematics(target);
-        let p = 0;
-        const stepAnim = setInterval(() => {
-            p += 0.08; // Un poco más lento para que se note la línea recta
-            if (p >= 1.0) { 
-                p = 1.0; 
-                clearInterval(stepAnim);
-                // Posición final exacta
-                RobotState.angles.s = target.s;
-                RobotState.angles.l = target.l;
-                RobotState.angles.u = target.u;
-                RobotState.angles.r = target.r;
-                RobotState.angles.b = target.b;
-                RobotState.angles.t = target.t;
-            } else {
-                // Interpolar TCP linealmente
-                const interp = {
-                    x:  startPos.x  + (endPos.x  - startPos.x)  * p,
-                    y:  startPos.y  + (endPos.y  - startPos.y)  * p,
-                    z:  startPos.z  + (endPos.z  - startPos.z)  * p,
-                    rx: startPos.rx + (endPos.rx - startPos.rx) * p,
-                    ry: startPos.ry + (endPos.ry - startPos.ry) * p,
-                    rz: startPos.rz + (endPos.rz - startPos.rz) * p
-                };
-                const solved = inverseKinematicsDLS(RobotState.angles, interp);
-                if (solved) {
-                    RobotState.angles.s = solved.s;
-                    RobotState.angles.l = solved.l;
-                    RobotState.angles.u = solved.u;
-                    RobotState.angles.r = solved.r;
-                    RobotState.angles.b = solved.b;
-                    RobotState.angles.t = solved.t;
-                } else {
-                    // Fallback: joint interp
-                    RobotState.angles.s = startAngles.s + (target.s - startAngles.s) * p;
-                    RobotState.angles.l = startAngles.l + (target.l - startAngles.l) * p;
-                    RobotState.angles.u = startAngles.u + (target.u - startAngles.u) * p;
-                    RobotState.angles.r = startAngles.r + (target.r - startAngles.r) * p;
-                    RobotState.angles.b = startAngles.b + (target.b - startAngles.b) * p;
-                    RobotState.angles.t = startAngles.t + (target.t - startAngles.t) * p;
-                }
-            }
-        }, 30);
-        setInfoDisplay(direction === 'FWD' 
-            ? '📐 FWD MOVL: Paso ' + targetIndex + ' (Lineal)' 
-            : '📐 BWD MOVL: Paso ' + targetIndex + ' (Lineal)');
+    const leavingLine = currentProgram[targetIndex + 1];
+    const bwdMotion = direction === 'BWD' && leavingLine && isMotionCode(leavingLine.code);
+    if (!isMotionCode(targetCode) && !bwdMotion) {
+        teachMotion = null;
+        setInfoDisplay((direction === 'FWD' ? '✅ FWD' : '✅ BWD') + ': Paso ' + targetIndex + ' - ' + targetCode + ' (sin movimiento)');
     } else {
-        // ======== MOVJ: Interpolación articular (original) ========
-        let p = 0;
-        const stepAnim = setInterval(() => {
-            p += 0.15;
-            if (p >= 1.0) { 
-                p = 1.0; 
-                clearInterval(stepAnim); 
-            }
-            RobotState.angles.s = startAngles.s + (target.s - startAngles.s) * p;
-            RobotState.angles.l = startAngles.l + (target.l - startAngles.l) * p;
-            RobotState.angles.u = startAngles.u + (target.u - startAngles.u) * p;
-            RobotState.angles.r = startAngles.r + (target.r - startAngles.r) * p;
-            RobotState.angles.b = startAngles.b + (target.b - startAngles.b) * p;
-            RobotState.angles.t = startAngles.t + (target.t - startAngles.t) * p;
-        }, 30);
-        setInfoDisplay(direction === 'FWD' 
-            ? '✅ FWD: Paso ' + targetIndex + ' - ' + targetCode 
-            : '✅ BWD: Paso ' + targetIndex + ' - ' + targetCode);
+        // En BWD se recorre hacia atrás el tramo de la línea que se abandona
+        let prog = currentProgram, idx = targetIndex;
+        if (direction === 'BWD') {
+            prog = [{ ...target, code: bwdMotion ? leavingLine.code : targetCode }];
+            idx = 0;
+        }
+        teachMotion = planProgramStep(prog, idx, { ...RobotState.angles }, { teach: true, reverse: direction === 'BWD' });
+        const label = { MOVJ: 'articular', MOVL: 'lineal', MOVC: teachMotion.arc ? 'circular' : 'lineal', IMOV: 'lineal' }[teachMotion.type] || '';
+        setInfoDisplay((direction === 'FWD' ? '📐 FWD ' : '📐 BWD ') + teachMotion.type + ': Paso ' + targetIndex + ' (' + label + ')' +
+            (teachMotion.warn ? ' ⚠ ' + teachMotion.warn : ''));
     }
 
     if (DxState.view !== 'JOB') setView('JOB');
     else renderJob();
+}
+
+/** Avanza a la siguiente línea del programa (con bucle al final). */
+function finishProgramStep() {
+    const prog = robotJobs[DxState.currentJobId] || [];
+    RobotState.programStep++;
+    if (RobotState.programStep >= prog.length) {
+        RobotState.programStep = 0;
+        systemInfo.cycleCount++;
+        document.getElementById('infoDisplay').textContent = '🔄 CICLO ' + systemInfo.cycleCount;
+    }
+    DxState.selectedLineIndex = RobotState.programStep;
+    if (DxState.view === 'JOB') renderJob();
 }
 
 loadJobsLocally();
@@ -4753,8 +5179,21 @@ window.addEventListener('load', () => {
     renderJob();
     updateKeySwitchDisplay();
 
+    let lastFrameTime = performance.now();
     function gameLoop() {
         requestAnimationFrame(gameLoop);
+        const nowT = performance.now();
+        const dt = Math.min(0.1, (nowT - lastFrameTime) / 1000);   // segundos reales
+        lastFrameTime = nowT;
+
+        // Movimiento FWD/BWD en TEACH (se detiene al soltar DEADMAN)
+        if (teachMotion && !RobotState.programRunning) {
+            if (!RobotState.deadman || motionInterrupted(teachMotion)) {
+                teachMotion = null;
+            } else if (runPlanFrame(teachMotion, dt)) {
+                teachMotion = null;
+            }
+        }
 
         // Actualizar luces de botones superiores
         const startBtn = document.querySelector('.op-start');
@@ -4794,7 +5233,7 @@ window.addEventListener('load', () => {
                 DxState.selectedLineIndex = RobotState.programStep;
                 if (DxState.view === 'JOB') renderJob();
             } else if (isWait) {
-                RobotState.stepTimer++;
+                RobotState.stepTimer += dt * 60;
                 const match = code.match(/T=([\d\.]+)/);
                 const maxFrames = match ? parseFloat(match[1]) * 60 : 30;
                 if (RobotState.stepTimer > maxFrames) {
@@ -4808,7 +5247,7 @@ window.addEventListener('load', () => {
                     if (DxState.view === 'JOB') renderJob();
                 }
             } else if (isTimer) {
-                RobotState.stepTimer++;
+                RobotState.stepTimer += dt * 60;
                 let maxFrames = 30;
                 let match = code.match(/T=([\d\.]+)/);
                 if (match && match[1]) maxFrames = parseFloat(match[1]) * 60;
@@ -4828,20 +5267,25 @@ window.addEventListener('load', () => {
                     DxState.selectedLineIndex = RobotState.programStep;
                     if (DxState.view === 'JOB') renderJob();
                 }
+            } else if (!isMotionCode(code)) {
+                // ======== Instrucciones sin movimiento: NOP, END, CALL, RET... ========
+                playMotion = null;
+                const callMatch = code.match(/^\s*CALL\s+JOB:(\S+)/i);
+                const isEnd = /^\s*(END|RET)\b/i.test(code);
+                if (callMatch && robotJobs[callMatch[1]] && callStack.length < 8) {
+                    callStack.push({ job: DxState.currentJobId, step: RobotState.programStep });
+                    DxState.currentJobId = callMatch[1];
+                    RobotState.programStep = -1;
+                    setInfoDisplay('↪ CALL JOB:' + callMatch[1]);
+                } else if (isEnd && callStack.length > 0) {
+                    const ret = callStack.pop();
+                    DxState.currentJobId = ret.job;
+                    RobotState.programStep = ret.step;
+                    setInfoDisplay('↩ RET a JOB:' + ret.job);
+                }
+                finishProgramStep();
             } else {
-                const isMovl = code.startsWith('MOVL');
-                const isMovc = code.startsWith('MOVC');
-
-                // Extraer velocidad del código para escalar la animación
-                let speedScale = 0.04;
-                const vjMatch = code.match(/VJ?=(\d+(?:\.\d+)?)/);
-                if (vjMatch) speedScale = parseFloat(vjMatch[1]) / 100 * 0.06;
-
-                // Extraer Position Level (PL)
-                let plValue = 0;
-                const plMatch = code.match(/PL=(\d+)/);
-                if (plMatch) plValue = parseInt(plMatch[1]);
-
+                // ======== MOVJ / MOVL / MOVC / IMOV ========
                 const targetPinza1 = digitalOutputs[1] ? 0.015 : 0;
                 const targetPinza2 = digitalOutputs[2] ? 0.015 : 0;
                 gripperAngle += (targetPinza1 - gripperAngle) * 0.06;
@@ -4849,74 +5293,17 @@ window.addEventListener('load', () => {
 
                 document.getElementById('lcd-mode').textContent = (RobotState.programStep + 1) + '/' + currentProgram.length;
 
-                if (isMovl || isMovc) {
-                    // ======== MOVL: INTERPOLACIÓN LINEAL CARTESIANA ========
-                    if (!movlState.active) {
-                        // Primer frame de este MOVL: iniciar trayectoria
-                        startMovlTrajectory(step, speedScale);
-                        document.getElementById('infoDisplay').textContent =
-                            '📐 MOVL: Trayectoria lineal en curso...';
-                    }
-
-                    const done = linearInterpolateFrame(plValue);
-
-                    if (done) {
-                        // Asegurar posición final exacta SOLO si PL=0 (Exact Stop)
-                        if (plValue === 0) {
-                            RobotState.angles.s = step.s;
-                            RobotState.angles.l = step.l;
-                            RobotState.angles.u = step.u;
-                            RobotState.angles.r = step.r;
-                            RobotState.angles.b = step.b;
-                            RobotState.angles.t = step.t;
-                        }
-
-                        RobotState.programStep++;
-                        if (RobotState.programStep >= currentProgram.length) {
-                            RobotState.programStep = 0;
-                            systemInfo.cycleCount++;
-                            document.getElementById('infoDisplay').textContent = '🔄 CICLO ' + systemInfo.cycleCount;
-                        }
-                        DxState.selectedLineIndex = RobotState.programStep;
-                        if (DxState.view === 'JOB') renderJob();
-                    }
-                } else {
-                    // ======== MOVJ: INTERPOLACIÓN EN ESPACIO ARTICULAR ========
-                    // Desactivar MOVL si estaba activo
-                    movlState.active = false;
-
-                    const lerpFactor = speedScale;
-                    RobotState.angles.s += (step.s - RobotState.angles.s) * lerpFactor;
-                    RobotState.angles.l += (step.l - RobotState.angles.l) * lerpFactor;
-                    RobotState.angles.u += (step.u - RobotState.angles.u) * lerpFactor;
-                    RobotState.angles.r += (step.r - RobotState.angles.r) * lerpFactor;
-                    RobotState.angles.b += (step.b - RobotState.angles.b) * lerpFactor;
-                    RobotState.angles.t += (step.t - RobotState.angles.t) * lerpFactor;
-
-                    let maxError = Math.max(
-                        Math.abs(step.s - RobotState.angles.s),
-                        Math.abs(step.l - RobotState.angles.l),
-                        Math.abs(step.u - RobotState.angles.u),
-                        Math.abs(step.r - RobotState.angles.r),
-                        Math.abs(step.b - RobotState.angles.b),
-                        Math.abs(step.t - RobotState.angles.t)
-                    );
-
-                    // Umbral dinámico según PL para "recortar" la esquina antes de llegar
-                    // PL=0 -> error < 1.0 (Llega exacto)
-                    // PL=8 -> error < 33.0 (Corta la esquina por lejos)
-                    const errorThreshold = 1.0 + (plValue * 4.0);
-
-                    if (maxError < errorThreshold) {
-                        RobotState.programStep++;
-                        if (RobotState.programStep >= currentProgram.length) {
-                            RobotState.programStep = 0;
-                            systemInfo.cycleCount++;
-                            document.getElementById('infoDisplay').textContent = '🔄 CICLO ' + systemInfo.cycleCount;
-                        }
-                        DxState.selectedLineIndex = RobotState.programStep;
-                        if (DxState.view === 'JOB') renderJob();
-                    }
+                if (!playMotion || playMotion.stepIndex !== RobotState.programStep ||
+                    playMotion.jobId !== DxState.currentJobId || motionInterrupted(playMotion)) {
+                    playMotion = planProgramStep(currentProgram, RobotState.programStep, { ...RobotState.angles },
+                        { testRun: RobotState.mode === 'TEACH' });
+                    const label = { MOVJ: 'articular', MOVL: 'lineal', MOVC: playMotion.arc ? 'circular' : 'lineal', IMOV: 'lineal' }[playMotion.type] || '';
+                    document.getElementById('infoDisplay').textContent = '📐 ' + code + ' (' + label + ', ' +
+                        playMotion.T.toFixed(1) + ' s)' + (playMotion.warn ? ' ⚠ ' + playMotion.warn : '');
+                }
+                if (runPlanFrame(playMotion, dt)) {
+                    playMotion = null;
+                    finishProgramStep();
                 }
             }
         }
