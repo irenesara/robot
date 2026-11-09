@@ -4161,6 +4161,45 @@ function toggleInsert() {
     setInfoDisplay('INSERT: MOVJ VJ=50 - Mueva robot, ENTER');
 }
 
+// ---- Ventana "INSERT INSTRUCTION" (tipo de movimiento y velocidad) ----
+function updateInsertScreen() {
+    const type = DxState.insertType || 'MOVJ';
+    document.querySelectorAll('.ins-type-btn').forEach(b => {
+        b.style.background = b.id === 'ins-type-' + type.toLowerCase() ? '#2b4b9b' : '#333';
+    });
+    const speedParam = type === 'MOVJ' ? 'VJ=' : 'V=';
+    document.querySelectorAll('.ins-speed-btn').forEach(b => {
+        const val = parseInt(b.textContent.replace(/\D+/g, ''), 10);
+        b.textContent = speedParam + val;
+        b.style.background = val === DxState.insertSpeed ? '#2b4b9b' : '#333';
+    });
+    const pos = document.getElementById('insert-pos-display');
+    if (pos) {
+        const a = RobotState.angles;
+        pos.innerHTML = `S:${a.s.toFixed(1)} L:${a.l.toFixed(1)} U:${a.u.toFixed(1)}<br>R:${a.r.toFixed(1)} B:${a.b.toFixed(1)} T:${a.t.toFixed(1)}`;
+    }
+}
+
+function selectInsertType(type) {
+    DxState.insertType = type;
+    updateInsertScreen();
+    setInfoDisplay('INSERT: ' + type + ' ' + (type === 'MOVJ' ? 'VJ=' : 'V=') + DxState.insertSpeed + ' - Mueva robot, ENTER');
+}
+
+function selectInsertSpeed(speed) {
+    DxState.insertSpeed = speed;
+    updateInsertScreen();
+}
+
+function cancelInsert() {
+    ['insert-overlay', 'insert-inst-screen'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
+    DxState.isInserting = false;
+    setInfoDisplay('INSERT cancelado');
+}
+
 function toggleDelete() {
     if (DxState.view !== 'JOB') { setInfoDisplay('⚠ Cambie a JOB'); return; }
     DxState.isDeleting = true;
@@ -5374,7 +5413,6 @@ window.showFile = showFile;
 window.showClock = showClock;
 window.showDataInfo = showDataInfo;
 window.showCalibration = showCalibration;
-window.calibrateAxis = calibrateAxis;
 window.resetCalibration = resetCalibration;
 window.setFontSize = setFontSize;
 window.toggleRobotInfo = toggleRobotInfo;
