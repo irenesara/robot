@@ -995,7 +995,7 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
 const RobotState = {
     deadman: false,
     speed: 50,
-    angles: { s: 0, l: 0, u: 0, r: 0, b: 0, t: 0 },
+    angles: { s: 0, l: 0, u: 0, r: 0, b: -67, t: 0 },   // B=-67: herramienta vertical hacia abajo
     limits: {
         s: { min: -170, max: 170 },
         l: { min: -120, max: 120 },
@@ -1039,32 +1039,32 @@ const DxState = {
 
 let robotJobs = {
     "JOB_ALAMBRE": [
-        { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, code: 'NOP', desc: 'INICIO' },
-        { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, code: 'CALL JOB:SUB_PROG', desc: 'LLAMADA A SUBRUTINA' },
-        { s: 30, l: -20, u: 50, r: 0, b: -45, t: 0, code: 'MOVJ VJ=50.00 PL=0', desc: 'IR A ROLLO HILO' },
-        { s: 30, l: -40, u: 70, r: 0, b: -90, t: 0, code: 'MOVL V=25.00 PL=0', desc: 'BAJAR A HILO (LINEAL)' },
-        { s: 30, l: -40, u: 70, r: 0, b: -90, t: 0, code: 'DOUT OG#(1) ON', desc: 'CERRAR PINZA 1 (COGER)' },
-        { s: 30, l: -40, u: 70, r: 0, b: -90, t: 0, code: 'TIMER T=0.5', desc: 'ESPERAR CIERRE' },
-        { s: 30, l: -20, u: 50, r: 0, b: -45, t: 0, code: 'MOVL V=10.00 PL=0', desc: 'TENSAR SUAVE (LINEAL)' },
-        { s: 0, l: -20, u: 50, r: 90, b: -45, t: -90, code: 'MOVJ VJ=50.00 PL=0', desc: 'TIRAR Y ENROLLAR' },
-        { s: -45, l: -10, u: 40, r: 180, b: 0, t: -180, code: 'MOVL V=50.00 PL=0', desc: 'ARRASTRAR LINEAL' },
-        { s: -45, l: -10, u: 40, r: 180, b: 0, t: -180, code: 'DOUT OG#(1) OFF', desc: 'SOLTAR ALAMBRE' },
-        { s: -45, l: -30, u: 60, r: 0, b: 0, t: 0, code: 'MOVJ VJ=100.00 PL=0', desc: 'RETORNO SEGURO' },
-        { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, code: 'END', desc: 'FIN BUCLE' }
+        { s: 0, l: -30, u: 60, r: 0, b: -97, t: 0, code: 'NOP', desc: 'INICIO' },
+        { s: 0, l: -30, u: 60, r: 0, b: -97, t: 0, code: 'CALL JOB:SUB_PROG', desc: 'LLAMADA A SUBRUTINA' },
+        { s: 30, l: -20, u: 50, r: 0, b: -97, t: 0, code: 'MOVJ VJ=50.00 PL=0', desc: 'IR A ROLLO HILO' },
+        { s: 30, l: -40, u: 70, r: 0, b: -97, t: 0, code: 'MOVL V=25.00 PL=0', desc: 'BAJAR A HILO (LINEAL)' },
+        { s: 30, l: -40, u: 70, r: 0, b: -97, t: 0, code: 'DOUT OG#(1) ON', desc: 'CERRAR PINZA 1 (COGER)' },
+        { s: 30, l: -40, u: 70, r: 0, b: -97, t: 0, code: 'TIMER T=0.5', desc: 'ESPERAR CIERRE' },
+        { s: 30, l: -20, u: 50, r: 0, b: -97, t: 0, code: 'MOVL V=10.00 PL=0', desc: 'TENSAR SUAVE (LINEAL)' },
+        { s: 0, l: -20, u: 50, r: 0, b: -97, t: -90, code: 'MOVJ VJ=50.00 PL=0', desc: 'TIRAR Y ENROLLAR' },
+        { s: -45, l: -10, u: 40, r: 0, b: -97, t: -180, code: 'MOVL V=50.00 PL=0', desc: 'ARRASTRAR LINEAL' },
+        { s: -45, l: -10, u: 40, r: 0, b: -97, t: -180, code: 'DOUT OG#(1) OFF', desc: 'SOLTAR ALAMBRE' },
+        { s: -45, l: -30, u: 60, r: 0, b: -97, t: 0, code: 'MOVJ VJ=100.00 PL=0', desc: 'RETORNO SEGURO' },
+        { s: 0, l: -30, u: 60, r: 0, b: -97, t: 0, code: 'END', desc: 'FIN BUCLE' }
     ],
     "SUB_PROG": [
-        { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, code: 'NOP', desc: 'INICIO SUB' },
-        { s: 0, l: 0, u: 0, r: 180, b: 0, t: 0, code: 'MOVJ VJ=50.00 PL=0', desc: 'POSICIÓN SEGURA' },
-        { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, code: 'END', desc: 'VOLVER' }
+        { s: 0, l: -30, u: 60, r: 0, b: -97, t: 0, code: 'NOP', desc: 'INICIO SUB' },
+        { s: 0, l: 0, u: 0, r: 0, b: -67, t: 0, code: 'MOVJ VJ=50.00 PL=0', desc: 'POSICIÓN SEGURA' },
+        { s: 0, l: -30, u: 60, r: 0, b: -97, t: 0, code: 'END', desc: 'VOLVER' }
     ],
     "MOVL_DEMO": [
-        { s: 0, l: 0, u: 0, r: 0, b: 0, t: 0, code: 'NOP', desc: 'DEMO MOVL vs MOVJ' },
-        { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, code: 'MOVJ VJ=30.00 PL=0', desc: 'POS INICIO (JOINT)' },
-        { s: 45, l: -10, u: 30, r: 0, b: -45, t: 0, code: 'MOVJ VJ=30.00 PL=0', desc: 'POS A via MOVJ (curvo)' },
-        { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, code: 'MOVJ VJ=30.00 PL=0', desc: 'RETORNO' },
-        { s: 45, l: -10, u: 30, r: 0, b: -45, t: 0, code: 'MOVL V=30.00 PL=0', desc: 'POS A via MOVL (recto)' },
-        { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, code: 'MOVL V=30.00 PL=0', desc: 'RETORNO LINEAL' },
-        { s: 0, l: -30, u: 60, r: 0, b: 0, t: 0, code: 'END', desc: 'FIN DEMO' }
+        { s: 0, l: 0, u: 0, r: 0, b: -67, t: 0, code: 'NOP', desc: 'DEMO MOVL vs MOVJ' },
+        { s: 0, l: -30, u: 60, r: 0, b: -97, t: 0, code: 'MOVJ VJ=30.00 PL=0', desc: 'POS INICIO (JOINT)' },
+        { s: 45, l: -10, u: 30, r: 0, b: -87, t: 0, code: 'MOVJ VJ=30.00 PL=0', desc: 'POS A via MOVJ (curvo)' },
+        { s: 0, l: -30, u: 60, r: 0, b: -97, t: 0, code: 'MOVJ VJ=30.00 PL=0', desc: 'RETORNO' },
+        { s: 45, l: -10, u: 30, r: 0, b: -87, t: 0, code: 'MOVL V=30.00 PL=0', desc: 'POS A via MOVL (recto)' },
+        { s: 0, l: -30, u: 60, r: 0, b: -97, t: 0, code: 'MOVL V=30.00 PL=0', desc: 'RETORNO LINEAL' },
+        { s: 0, l: -30, u: 60, r: 0, b: -97, t: 0, code: 'END', desc: 'FIN DEMO' }
     ]
 };
 
@@ -1332,8 +1332,17 @@ function loadJobsLocally() {
             if (!deleted.includes('MOVL_DEMO') && (!parsed['MOVL_DEMO'] || !parsed['MOVL_DEMO'].some(l => l.code && l.code.includes('PL=')))) {
                 parsed['MOVL_DEMO'] = robotJobs['MOVL_DEMO'];
             }
+            // Ejemplos v2: herramienta en línea con la brida y pinza hacia abajo
+            let exVer = null;
+            try { exVer = localStorage.getItem('dx200_examplesVersion'); } catch (e) {}
+            if (exVer !== '2') {
+                ['JOB_ALAMBRE', 'SUB_PROG', 'MOVL_DEMO'].forEach(name => {
+                    if (!deleted.includes(name)) parsed[name] = JSON.parse(JSON.stringify(robotJobs[name]));
+                });
+            }
             robotJobs = parsed;
         }
+        try { localStorage.setItem('dx200_examplesVersion', '2'); } catch (e) {}
         if (!robotJobs[DxState.currentJobId]) {
             const keys = Object.keys(robotJobs);
             DxState.currentJobId = keys.length > 0 ? keys[0] : 'JOB_ALAMBRE';
@@ -1735,155 +1744,170 @@ function buildRobot() {
     toolFlange.position.x = 0.002;
     joint5.add(toolFlange);
 
-    // Placa adaptadora de la herramienta (soporta los dos cilindros)
-    const toolPlate = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.05, 0.086), M(0x8d939b, 60));
-    toolPlate.castShadow = true;
-    toolPlate.position.x = 0.0145;
+    // Adaptador de herramienta: brida aislante negra + escuadra de aluminio con tornillos
+    const toolAdapter = cyl(0.026, 0.026, 0.008, 0x23262b, 'x', 32);
+    toolAdapter.position.x = 0.011;
+    joint5.add(toolAdapter);
+    const toolPlate = roundedBox(0.008, 0.05, 0.092, 0.004, 0xb4bac2);
+    toolPlate.position.x = 0.019;
     joint5.add(toolPlate);
-    const toolArm = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.014, 0.086), M(0x8d939b, 60));
-    toolArm.position.set(0.035, 0.025, 0);
-    joint5.add(toolArm);
+    // Montaje de la herramienta EN LÍNEA con la brida (eje T), como en el robot real:
+    // dentro de toolMount, el eje "-Y" apunta hacia fuera de la brida (+X de joint5).
+    const toolMount = new THREE.Group();
+    toolMount.rotation.z = Math.PI / 2;
+    joint5.add(toolMount);
+    // Tornillos de la placa de montaje
+    [[0.015, -0.032], [0.015, 0.032], [-0.015, -0.032], [-0.015, 0.032]].forEach(([y, z]) => {
+        const bolt = cyl(0.003, 0.003, 0.003, 0x2a2d31, 'x', 12);
+        bolt.position.set(0.0245, y, z);
+        joint5.add(bolt);
+    });
     joints.push(joint5);
 
     buildDX200Cabinet();
 
-    // === CILINDRO NEUMÁTICO 1 ===
-    gripperGroup = new THREE.Group();
-    gripperGroup.position.x = 0.04;
-    gripperGroup.position.z = 0.025;
-    joint5.add(gripperGroup);
+    // === HERRAMIENTA: 2 cilindros neumáticos compactos + 2 pinzas paralelas ===
+    // (la animación mueve el vástago [isCylinderN] y las mordazas [isGripNL/R])
+    const ALU = 0xc3c8ce, ALU_DARK = 0x9aa1aa, BLACK = 0x26292e, CHROME = 0xe3e6ea, PAD = 0xe0782c;
 
-    // Cuerpo del cilindro 1 (housing)
-    const cyl1Body = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.012, 0.012, 0.05, 16),
-        new THREE.MeshPhongMaterial({ color: 0x333333, shininess: 80 })
-    );
-    cyl1Body.castShadow = true;
-    gripperGroup.add(cyl1Body);
+    function buildPneumaticGripper(n, z) {
+        const g = new THREE.Group();
+        g.position.set(0, -0.05, z);
+        toolMount.add(g);
 
-    // Tapa superior cilindro 1
-    const cyl1Cap = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.014, 0.014, 0.006, 16),
-        new THREE.MeshPhongMaterial({ color: 0x222222, shininess: 60 })
-    );
-    cyl1Cap.position.y = 0.025;
-    gripperGroup.add(cyl1Cap);
+        // Cuerpo cuadrado de aluminio del cilindro compacto
+        const body = roundedBox(0.026, 0.044, 0.026, 0.004, ALU);
+        body.position.y = 0.0;
+        g.add(body);
+        // Culata superior y tapa delantera (lado del vástago)
+        const headCap = roundedBox(0.027, 0.006, 0.027, 0.003, ALU_DARK);
+        headCap.position.y = 0.024;
+        g.add(headCap);
+        const rodCap = roundedBox(0.027, 0.006, 0.027, 0.003, ALU_DARK);
+        rodCap.position.y = -0.024;
+        g.add(rodCap);
+        // Ranuras para detectores magnéticos (caras laterales)
+        [-1, 1].forEach(side => {
+            const slot = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.04, 0.0012), M(0x6f767f));
+            slot.position.set(0.006 * side, 0, 0.0132 * Math.sign(z));
+            g.add(slot);
+        });
+        // Detector magnético con su LED
+        const sensor = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.012, 0.003), M(0x1b1d21));
+        sensor.position.set(0.006, -0.012, 0.0145 * Math.sign(z));
+        g.add(sensor);
+        const led = new THREE.Mesh(new THREE.BoxGeometry(0.0025, 0.0025, 0.001),
+            new THREE.MeshPhongMaterial({ color: 0xff3b2f, emissive: 0x991a10 }));
+        led.position.set(0.006, -0.0075, 0.0162 * Math.sign(z));
+        g.add(led);
 
-    // Tapa inferior cilindro 1
-    const cyl1CapBot = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.014, 0.014, 0.006, 16),
-        new THREE.MeshPhongMaterial({ color: 0x222222, shininess: 60 })
-    );
-    cyl1CapBot.position.y = -0.025;
-    gripperGroup.add(cyl1CapBot);
+        // Racores rápidos y tubos de aire (azul = avance, negro = retroceso)
+        [[0.016, 0x1e6fd9], [-0.016, 0x1b1d21]].forEach(([y, col], i) => {
+            const fit = cyl(0.0034, 0.0034, 0.007, 0x8a9099, 'x', 12);
+            fit.position.set(0.016, y, 0);
+            g.add(fit);
+            const collet = cyl(0.0042, 0.0042, 0.002, 0x2a5fb8, 'x', 12);
+            collet.position.set(0.0205, y, 0);
+            g.add(collet);
+            // Tubo desde el racor hasta el bloque de electroválvulas (coordenadas de la brida)
+            const curve = new THREE.CatmullRomCurve3([
+                new THREE.Vector3(0.0205, -0.05 + y, z),
+                new THREE.Vector3(0.03, -0.05 + y, z * 1.02),
+                new THREE.Vector3(0.035, -0.045 + y * 0.4, z * 0.7),
+                new THREE.Vector3(0.037, -0.04 + y * 0.2, z * 0.3)
+            ]);
+            const tube = new THREE.Mesh(new THREE.TubeGeometry(curve, 24, 0.0024, 8, false), M(col, 30));
+            toolMount.add(tube);
+        });
 
-    // Vástago/pistón cilindro 1 (se mueve)
-    const cyl1Piston = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.006, 0.006, 0.06, 12),
-        new THREE.MeshPhongMaterial({ color: 0xcccccc, shininess: 120, specular: 0x888888 })
-    );
-    cyl1Piston.castShadow = true;
-    cyl1Piston.position.y = -0.04;
-    cyl1Piston.userData.isCylinder1 = true;
-    gripperGroup.add(cyl1Piston);
+        // Vástago cromado (se mueve)
+        const rod = cyl(0.0045, 0.0045, 0.06, CHROME, 'y', 16);
+        rod.material.shininess = 140;
+        rod.position.y = -0.04;
+        rod.userData['isCylinder' + n] = true;
+        g.add(rod);
+        // Tuerca del extremo del vástago
+        const nut = cyl(0.0068, 0.0068, 0.005, 0x8a9099, 'y', 6);
+        nut.position.y = -0.0255;
+        rod.add(nut);
 
-    // Pinza paralela cilindro 1
-    const grip1Base = new THREE.Mesh(
-        new THREE.BoxGeometry(0.024, 0.008, 0.018),
-        new THREE.MeshPhongMaterial({ color: 0x444444, shininess: 80 })
-    );
-    grip1Base.position.y = -0.035;
-    cyl1Piston.add(grip1Base);
+        // Pinza paralela neumática (cuerpo negro anodizado con guía de mordazas)
+        const gb = roundedBox(0.032, 0.018, 0.022, 0.003, BLACK);
+        gb.position.y = -0.037;
+        rod.add(gb);
+        const rail = new THREE.Mesh(new THREE.BoxGeometry(0.034, 0.004, 0.012), M(ALU_DARK));
+        rail.position.y = -0.0095;
+        gb.add(rail);
+        const label = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.006, 0.0008), M(0xd8dce1));
+        label.position.set(0, 0.002, 0.0112 * Math.sign(z));
+        gb.add(label);
+        [-0.006, 0.006].forEach(x => {
+            const gf = cyl(0.0022, 0.0022, 0.004, 0x8a9099, 'z', 10);
+            gf.position.set(x, 0.004, -0.0125 * Math.sign(z));
+            gb.add(gf);
+        });
 
-    const fingerMat = new THREE.MeshPhongMaterial({ color: 0xdd8844, shininess: 90, specular: 0x444444 });
+        // Mordazas + dedos de aluminio con almohadilla de poliuretano
+        [-1, 1].forEach(side => {
+            const jaw = new THREE.Group();
+            jaw.position.set(0.010 * side, -0.009, 0);
+            jaw.userData['isGrip' + n + (side < 0 ? 'L' : 'R')] = true;
+            gb.add(jaw);
 
-    // Dedo izquierdo pinza 1
-    const grip1FingerL = new THREE.Mesh(
-        new THREE.BoxGeometry(0.005, 0.030, 0.014),
-        fingerMat
-    );
-    grip1FingerL.castShadow = true;
-    grip1FingerL.position.set(-0.010, -0.019, 0);
-    grip1FingerL.userData.isGrip1L = true;
-    grip1Base.add(grip1FingerL);
+            const slide = new THREE.Mesh(new THREE.BoxGeometry(0.009, 0.006, 0.014), M(0xd0d4d9, 90));
+            slide.position.y = -0.002;
+            jaw.add(slide);
+            // Dedo: placa que baja y se estrecha en la punta
+            const fs = new THREE.Shape();
+            fs.moveTo(-0.0025, 0); fs.lineTo(0.0025, 0); fs.lineTo(0.0025, -0.02);
+            fs.lineTo(0, -0.026); fs.lineTo(-0.0025, -0.02); fs.lineTo(-0.0025, 0);
+            const fg = new THREE.ExtrudeGeometry(fs, { depth: 0.012, bevelEnabled: true, bevelThickness: 0.0008, bevelSize: 0.0008, bevelSegments: 2 });
+            fg.translate(0, 0, -0.006);
+            const finger = new THREE.Mesh(fg, M(0xd6dade, 80));
+            finger.castShadow = true;
+            finger.position.y = -0.004;
+            jaw.add(finger);
+            // Almohadilla en la cara interior (la que agarra)
+            const pad = new THREE.Mesh(new THREE.BoxGeometry(0.0018, 0.012, 0.011), M(PAD, 20));
+            pad.position.set(-side * 0.0033, -0.017, 0);
+            jaw.add(pad);
+            // Tornillos del dedo
+            [-0.0035, 0.0035].forEach(zz => {
+                const sc = cyl(0.0011, 0.0011, 0.001, 0x2a2d31, 'z', 8);
+                sc.position.set(zz * 0.4, -0.006, 0.0072 * Math.sign(z));
+                jaw.add(sc);
+            });
+        });
+        return g;
+    }
 
-    // Dedo derecho pinza 1
-    const grip1FingerR = new THREE.Mesh(
-        new THREE.BoxGeometry(0.005, 0.030, 0.014),
-        fingerMat
-    );
-    grip1FingerR.castShadow = true;
-    grip1FingerR.position.set(0.010, -0.019, 0);
-    grip1FingerR.userData.isGrip1R = true;
-    grip1Base.add(grip1FingerR);
+    gripperGroup = buildPneumaticGripper(1, 0.025);
+    scissorGroup = buildPneumaticGripper(2, -0.025);
 
-    // === CILINDRO NEUMÁTICO 2 ===
-    scissorGroup = new THREE.Group();
-    scissorGroup.position.x = 0.04;
-    scissorGroup.position.z = -0.025;
-    joint5.add(scissorGroup);
-
-    // Cuerpo del cilindro 2
-    const cyl2Body = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.012, 0.012, 0.05, 16),
-        new THREE.MeshPhongMaterial({ color: 0x333333, shininess: 80 })
-    );
-    cyl2Body.castShadow = true;
-    scissorGroup.add(cyl2Body);
-
-    // Tapa superior cilindro 2
-    const cyl2Cap = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.014, 0.014, 0.006, 16),
-        new THREE.MeshPhongMaterial({ color: 0x222222, shininess: 60 })
-    );
-    cyl2Cap.position.y = 0.025;
-    scissorGroup.add(cyl2Cap);
-
-    // Tapa inferior cilindro 2
-    const cyl2CapBot = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.014, 0.014, 0.006, 16),
-        new THREE.MeshPhongMaterial({ color: 0x222222, shininess: 60 })
-    );
-    cyl2CapBot.position.y = -0.025;
-    scissorGroup.add(cyl2CapBot);
-
-    // Vástago/pistón cilindro 2 (se mueve)
-    const cyl2Piston = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.006, 0.006, 0.06, 12),
-        new THREE.MeshPhongMaterial({ color: 0xcccccc, shininess: 120, specular: 0x888888 })
-    );
-    cyl2Piston.castShadow = true;
-    cyl2Piston.position.y = -0.04;
-    cyl2Piston.userData.isCylinder2 = true;
-    scissorGroup.add(cyl2Piston);
-
-    // Pinza paralela cilindro 2
-    const grip2Base = new THREE.Mesh(
-        new THREE.BoxGeometry(0.024, 0.008, 0.018),
-        new THREE.MeshPhongMaterial({ color: 0x444444, shininess: 80 })
-    );
-    grip2Base.position.y = -0.035;
-    cyl2Piston.add(grip2Base);
-
-    // Dedo izquierdo pinza 2
-    const grip2FingerL = new THREE.Mesh(
-        new THREE.BoxGeometry(0.005, 0.030, 0.014),
-        fingerMat
-    );
-    grip2FingerL.castShadow = true;
-    grip2FingerL.position.set(-0.010, -0.019, 0);
-    grip2FingerL.userData.isGrip2L = true;
-    grip2Base.add(grip2FingerL);
-
-    // Dedo derecho pinza 2
-    const grip2FingerR = new THREE.Mesh(
-        new THREE.BoxGeometry(0.005, 0.030, 0.014),
-        fingerMat
-    );
-    grip2FingerR.castShadow = true;
-    grip2FingerR.position.set(0.010, -0.019, 0);
-    grip2FingerR.userData.isGrip2R = true;
-    grip2Base.add(grip2FingerR);
+    // Bloque de electroválvulas sobre la escuadra (de aquí salen los 4 tubos)
+    const manifold = roundedBox(0.014, 0.036, 0.032, 0.003, 0x2a2d31);
+    manifold.position.set(0.037, -0.04, 0);
+    toolMount.add(manifold);
+    [-0.009, 0.009].forEach(zz => {
+        const coil = roundedBox(0.01, 0.02, 0.012, 0.002, 0x1b1d21);
+        coil.position.set(0.048, -0.042, zz);
+        toolMount.add(coil);
+        const vled = new THREE.Mesh(new THREE.BoxGeometry(0.002, 0.002, 0.002),
+            new THREE.MeshPhongMaterial({ color: 0x35ff6a, emissive: 0x0f7a2a }));
+        vled.position.set(0.0535, -0.034, zz);
+        toolMount.add(vled);
+    });
+    // Manguera de alimentación: entra en la muñeca por el eje B
+    const supply = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(0.038, -0.024, 0),
+        new THREE.Vector3(0.036, 0.0, 0),
+        new THREE.Vector3(0.027, 0.028, 0),
+        new THREE.Vector3(0.012, 0.04, 0),
+        new THREE.Vector3(0.0, 0.04, 0)
+    ]);
+    const supplyHose = new THREE.Mesh(new THREE.TubeGeometry(supply, 30, 0.0036, 10, false), M(0x1b1d21, 30));
+    supplyHose.castShadow = true;
+    toolMount.add(supplyHose);
 }
 
 // ============================================================
@@ -2326,6 +2350,13 @@ function updateRobotDisplay() {
         }
     }
     renderer.render(scene, camera);
+
+    // Barra inferior con los ángulos reales (también durante la ejecución del programa)
+    ['s', 'l', 'u', 'r', 'b', 't'].forEach(k => {
+        const el = document.getElementById(k);
+        const txt = RobotState.angles[k].toFixed(1) + '°';
+        if (el && el.textContent !== txt) el.textContent = txt;
+    });
 
     const elapsed = Math.floor((Date.now() - startTime) / 1000);
     const elRuntime = document.getElementById('runtime');
@@ -2844,7 +2875,7 @@ const D2R = Math.PI / 180;
 const JOINT_KEYS = ['s', 'l', 'u', 'r', 'b', 't'];
 
 // TCP: centro entre las dos pinzas, a la altura de la punta de los dedos (frame de la brida, m)
-const TOOL_TCP = new THREE.Vector3(0.04, -0.11, 0);
+const TOOL_TCP = new THREE.Vector3(0.16, 0, 0);   // herramienta en línea con la brida (eje T)
 
 // Velocidad máxima de cada eje al 100% (grados/s) — usada por MOVJ (VJ=%)
 const JOINT_MAX_SPEED = { s: 130, l: 120, u: 130, r: 220, b: 220, t: 300 };
@@ -4242,7 +4273,7 @@ const coordEl = document.getElementById('lcd-coord');
 function resetToZero() {
     if (!RobotState.deadman) { showMsg('⚠️ Requiere Deadman (Pulse ESPACIO)'); return; }
     RobotState.programRunning = false;
-    let target = { s: 0, l: 0, u: 0, r: 0, b: 0, t: 0, gripper: 0 };
+    let target = { s: 0, l: 0, u: 0, r: 0, b: -67, t: 0, gripper: 0 };   // pinza hacia abajo
     const startAngles = { ...RobotState.angles };
     const startGripper = gripperAngle;
     let p = 0;
@@ -4257,7 +4288,7 @@ function resetToZero() {
         RobotState.angles.t = startAngles.t + (target.t - startAngles.t) * p;
         gripperAngle = startGripper + (target.gripper - startGripper) * p;
     }, 30);
-    setInfoDisplay('🏠 HOME FÍSICO (Retorno Absoluto a Cero)');
+    setInfoDisplay('🏠 HOME (ejes a cero, muñeca B=-67° con la pinza hacia abajo)');
     document.getElementById('lcd-status').textContent = 'HOMING';
 }
 
