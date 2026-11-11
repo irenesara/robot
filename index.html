@@ -65,7 +65,39 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
 
 .lcd-display { background: #000000; border: 3px solid #0f0; border-radius: 0; height: 240px; flex-shrink: 0; color: #0f0; font-family: "Courier New", monospace; display: flex; flex-direction: column; overflow: hidden; margin: 0; user-select: none; position: relative; }
 .lcd-top-bar { background: #000000; color: #0f0; padding: 1px 4px; font-size: 7px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; border-bottom: 2px solid #0f0; }
-.lcd-body { display: flex; flex: 1; height: auto; overflow: visible; }
+.lcd-body { display: flex; flex: 1; height: auto; overflow: visible; position: relative; }
+.main-submenu { display: none; position: absolute; left: 62px; top: 2px; width: 92px; background: #e4e4e4; border: 1px solid #1a3a6a; box-shadow: 2px 2px 6px rgba(0,0,0,0.5); z-index: 1100; flex-direction: column; font-family: Arial, sans-serif; }
+.main-submenu .sub-title { background: #1a3a6a; color: #fff; font-size: 6px; font-weight: bold; padding: 2px 4px; }
+.main-submenu .sub-item { font-size: 6px; padding: 3px 5px; border-bottom: 1px solid #bbb; cursor: pointer; color: #000; }
+.main-submenu .sub-item:hover { background: #2b4b9b; color: #fff; }
+.main-submenu .sub-item.disabled { color: #888; }
+.nj-row { display: flex; align-items: center; border-bottom: 1px solid #999; padding: 3px 4px; font-size: 7px; color: #000; background: #f2f2f2; }
+.nj-row:nth-child(even) { background: #e6e6e6; }
+.nj-label { width: 70px; font-weight: bold; color: #1a3a6a; }
+.nj-input { flex: 1; font-family: 'Courier New', monospace; font-size: 8px; padding: 1px 3px; border: 1px solid #1a3a6a; background: #fff; color: #000; text-transform: uppercase; min-width: 0; }
+.nj-input.comment { text-transform: none; }
+.nj-value { flex: 1; font-family: 'Courier New', monospace; font-size: 8px; padding: 1px 3px; cursor: pointer; }
+.nj-value.selectable { background: #fff; border: 1px solid #888; }
+.skb { display: none; position: absolute; inset: 0; z-index: 400; background: #c8ccd2; flex-direction: column; font-family: Arial, sans-serif; }
+.skb-title { background: #1a3a6a; color: #fff; font-size: 7px; font-weight: bold; padding: 2px 5px; display: flex; justify-content: space-between; }
+.skb-result { margin: 3px 4px; background: #fff; border: 2px solid #1a3a6a; font-family: 'Courier New', monospace; font-size: 10px; color: #000; padding: 2px 4px; min-height: 13px; white-space: pre; overflow: hidden; }
+.skb-tabs { display: flex; gap: 2px; margin: 0 4px 2px; }
+.skb-tab { flex: 1; text-align: center; font-size: 6px; font-weight: bold; padding: 2px; background: #9aa3ad; color: #fff; cursor: pointer; border: 1px solid #667; }
+.skb-tab.on { background: #2b4b9b; }
+.skb-grid { flex: 1; display: grid; grid-template-columns: repeat(10, 1fr); gap: 2px; margin: 0 4px 4px; align-content: start; }
+.skb-key { background: #f4f4f4; border: 1px solid #777; box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #aaa; text-align: center; font-family: 'Courier New', monospace; font-size: 8px; font-weight: bold; padding: 3px 0; cursor: pointer; color: #000; user-select: none; }
+.skb-key.wide2 { grid-column: span 2; }
+.skb-key.wide3 { grid-column: span 3; }
+.skb-key.ctrl { background: #dfe4ea; font-family: Arial, sans-serif; font-size: 6px; }
+.skb-key.enter { background: #2b8a3e; color: #fff; }
+.skb-key.cur { outline: 2px solid #ff8c00; outline-offset: -2px; background: #fff3c4; }
+.skb-key:active { background: #2b4b9b; color: #fff; }
+.lcd-confirm { display: none; position: absolute; top: 18px; left: 12px; right: 12px; background: #eef5ff; border: 3px solid #2b4b9b; z-index: 450; flex-direction: column; align-items: center; justify-content: center; padding: 10px 6px; box-shadow: 4px 4px 8px rgba(0,0,0,0.4); }
+.lcd-confirm .msg { font-size: 10px; font-weight: bold; color: #000; margin-bottom: 10px; text-align: center; }
+.lcd-confirm button { padding: 2px 14px; border: 1px solid #000; background: #e0e0e0; font-family: 'Courier New', monospace; font-weight: bold; cursor: pointer; font-size: 10px; box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #aaa; }
+.lcd-confirm button.cur { outline: 2px solid #ff8c00; outline-offset: -2px; }
+.nj-btn { flex: 1; text-align: center; padding: 5px; font-size: 7px; font-weight: bold; cursor: pointer; border-right: 1px solid #999; }
+
 .lcd-sidebar { width: 50px; background: #000000; border-right: 1px solid #0f0; display: flex; flex-direction: column; padding: 2px; overflow-y: auto; flex-shrink: 0; }
 .lcd-sidebar-btn { min-height: 14px; font-size: 4px; text-align: center; border: 1px solid #555; background: #d0d0d0; cursor: pointer; font-weight: bold; border-radius: 1px; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; margin: 1px 0; padding: 2px 1px; color: #000; gap: 1px; }
 .lcd-sidebar-btn:active, .lcd-sidebar-btn.active { background: #fff; border-left: 3px solid #1a3a6a; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
@@ -286,21 +318,21 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                         </div>
 
                         <div id="edit-dropdown" class="dropdown-menu" style="width: 130px; left: 12%;">
-                            <div class="dropdown-item" onclick="handleEditAction('UNDO'); toggleDropdown('edit-dropdown')">UNDO</div>
-                            <div class="dropdown-item" onclick="handleEditAction('CUT'); toggleDropdown('edit-dropdown')">CUT</div>
-                            <div class="dropdown-item" id="copy-btn" onclick="handleEditAction('COPY'); toggleDropdown('edit-dropdown')">COPY</div>
-                            <div class="dropdown-item" onclick="handleEditAction('PASTE'); toggleDropdown('edit-dropdown')">PASTE</div>
-                            <div class="dropdown-item" onclick="handleEditAction('SEARCH'); toggleDropdown('edit-dropdown')">SEARCH</div>
-                            <div class="dropdown-item" onclick="handleEditAction('REPLACE'); toggleDropdown('edit-dropdown')">REPLACE</div>
-                            <div class="dropdown-item" onclick="handleEditAction('CHANGE SPEED'); toggleDropdown('edit-dropdown')">CHANGE SPEED</div>
-                            <div class="dropdown-item" onclick="handleEditAction('TOP LINE'); toggleDropdown('edit-dropdown')">TOP LINE</div>
-                            <div class="dropdown-item" onclick="handleEditAction('END LINE'); toggleDropdown('edit-dropdown')">END LINE</div>
-                            <div class="dropdown-item" onclick="handleEditAction('REVERSE'); toggleDropdown('edit-dropdown')">REVERSE</div>
+                            <div class="dropdown-item" onclick="handleEditAction('UNDO')">UNDO</div>
+                            <div class="dropdown-item" onclick="handleEditAction('CUT')">CUT</div>
+                            <div class="dropdown-item" id="copy-btn" onclick="handleEditAction('COPY')">COPY</div>
+                            <div class="dropdown-item" onclick="handleEditAction('PASTE')">PASTE</div>
+                            <div class="dropdown-item" onclick="handleEditAction('SEARCH')">SEARCH</div>
+                            <div class="dropdown-item" onclick="handleEditAction('REPLACE')">REPLACE</div>
+                            <div class="dropdown-item" onclick="handleEditAction('CHANGE SPEED')">CHANGE SPEED</div>
+                            <div class="dropdown-item" onclick="handleEditAction('TOP LINE')">TOP LINE</div>
+                            <div class="dropdown-item" onclick="handleEditAction('END LINE')">END LINE</div>
+                            <div class="dropdown-item" onclick="handleEditAction('REVERSE')">REVERSE PASTE</div>
                         </div>
                     </div>
                     <div class="lcd-body">
                         <div class="lcd-sidebar">
-                            <div class="lcd-sidebar-btn active" id="btn-view-job" onclick="setView('JOB')"><div class="sidebar-icon" style="background:#2b4b9b;"></div>JOB</div>
+                            <div class="lcd-sidebar-btn active" id="btn-view-job" onclick="toggleJobMainMenu(event)"><div class="sidebar-icon" style="background:#2b4b9b;"></div>JOB</div>
                             <div class="lcd-sidebar-btn" id="btn-view-general" onclick="setView('GENERAL')"><div class="sidebar-icon" style="background:#8b4513;"></div>ARC WELDING</div>
                             <div class="lcd-sidebar-btn" id="btn-view-variable" onclick="setView('VARIABLE')"><div class="sidebar-icon" style="background:#006400;"></div>VARIABLE</div>
                             <div class="lcd-sidebar-btn" id="btn-view-inout" onclick="setView('INOUT')"><div class="sidebar-icon" style="background:#4a4a8a;"></div>IN/OUT</div>
@@ -310,7 +342,43 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                             <div class="lcd-sidebar-btn" id="btn-view-parameter" onclick="showMsg('PARAMETER')"><div class="sidebar-icon" style="background:#daa520;"></div>PARAMETER</div>
                             <div class="lcd-sidebar-btn" id="btn-view-setup" onclick="showMsg('SETUP')"><div class="sidebar-icon" style="background:#cd5c5c;"></div>SETUP</div>
                         </div>
+                        <div id="main-submenu-job" class="main-submenu dropdown-menu">
+                            <div class="sub-title">JOB</div>
+                            <div class="sub-item" onclick="closeJobMainMenu(); setView('JOB')">JOB</div>
+                            <div class="sub-item" onclick="closeJobMainMenu(); setView('LIST')">SELECT JOB</div>
+                            <div class="sub-item" onclick="closeJobMainMenu(); createNewJob()">CREATE NEW JOB</div>
+                            <div class="sub-item disabled" onclick="closeJobMainMenu(); showMsg('MASTER JOB (no simulado)')">MASTER JOB</div>
+                            <div class="sub-item disabled" onclick="closeJobMainMenu(); showMsg('JOB CAPACITY: ' + Object.keys(robotJobs).length + ' JOBS')">JOB CAPACITY</div>
+                        </div>
                         <div class="lcd-main">
+                            <div id="soft-keyboard" class="skb">
+                                <div class="skb-title"><span id="skb-title">CHARACTER INPUT</span><span id="skb-count">0/32</span></div>
+                                <div class="skb-result" id="skb-result"></div>
+                                <div class="skb-tabs" id="skb-tabs"></div>
+                                <div class="skb-grid" id="skb-grid"></div>
+                            </div>
+                            <div id="lcd-confirm" class="lcd-confirm">
+                                <div class="msg" id="lcd-confirm-msg">?</div>
+                                <div style="display: flex; gap: 30px;">
+                                    <button id="lcd-confirm-yes" onclick="closeLcdConfirm(true)">YES</button>
+                                    <button id="lcd-confirm-no" class="cur" onclick="closeLcdConfirm(false)">NO</button>
+                                </div>
+                            </div>
+                            <div id="new-job-screen" style="display: none; flex-direction: column; height: 100%; background: #ccc;">
+                                <div class="lcd-header"><span>JOB CREATE</span></div>
+                                <div style="flex: 1; padding: 4px; display: flex; flex-direction: column;">
+                                    <div class="nj-row"><span class="nj-label">JOB NAME</span><input id="nj-name" class="nj-input" maxlength="32" autocomplete="off" spellcheck="false" readonly inputmode="none" style="cursor:pointer;" onclick="editNewJobField('name')"></div>
+                                    <div class="nj-row"><span class="nj-label">COMMENT</span><input id="nj-comment" class="nj-input comment" maxlength="32" autocomplete="off" spellcheck="false" readonly inputmode="none" style="cursor:pointer;" onclick="editNewJobField('comment')"></div>
+                                    <div class="nj-row"><span class="nj-label">GROUP SET</span><span class="nj-value">R1</span></div>
+                                    <div class="nj-row"><span class="nj-label">JOB TYPE</span><span id="nj-type" class="nj-value selectable" onclick="toggleNewJobType()">ROBOT JOB</span></div>
+                                    <div id="nj-msg" style="font-size: 6px; color: #a00; padding: 4px 2px; min-height: 10px;"></div>
+                                    <div style="font-size: 6px; color: #333; padding: 0 2px;">Toque JOB NAME o COMMENT para abrir el teclado. Después seleccione EXECUTE.</div>
+                                </div>
+                                <div style="display: flex; border-top: 2px solid #1a3a6a; background: #ddd;">
+                                    <div class="nj-btn" style="color:#060;" onclick="executeNewJob()">EXECUTE</div>
+                                    <div class="nj-btn" onclick="setView('JOB'); setInfoDisplay('CREATE NEW JOB cancelado')">CANCEL</div>
+                                </div>
+                            </div>
                             <div id="data-screen" style="display: none; flex-direction: column; background: #eaeff2; height: 100%;">
                                 <div style="background: #1a3a6a; color: white; padding: 4px 8px; font-size: 8px; font-weight: bold;" id="data-screen-title">DATA</div>
                                 <div style="padding: 12px; font-family: 'Courier New', monospace; font-size: 10px; color: #000; flex: 1;">
@@ -884,7 +952,7 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                             <div class="kb-bot-btn pink-bg" id="interlock-btn" onclick="toggleInterlock()">INTER<br>LOCK</div>
                             <div class="kb-bot-btn" onclick="showMsg('INFORM LIST')">INFORM<br>LIST</div>
                             <div class="kb-bot-btn" onclick="showMsg('WELD ON/OFF')">WELD<br>ON/OFF</div>
-                            <div class="kb-bot-btn" onclick="showMsg('MOTION TYPE')"><span></span><span>MOTION<br>TYPE</span></div>
+                            <div class="kb-bot-btn" onclick="pressMotionType()"><span></span><span>MOTION<br>TYPE</span></div>
                         </div>
                         
                         <div class="kb-numpad">
@@ -958,6 +1026,10 @@ const DxState = {
     clipboard: null,
     insertType: 'MOVJ',
     insertSpeed: 50,
+    motionType: 'MOVJ',     // línea de entrada: tipo de movimiento (tecla MOTION TYPE)
+    bufferVJ: 25.00,        // velocidad MOVJ (%)
+    bufferV: 100.0,         // velocidad MOVL/MOVC (mm/s)
+    insertPl: 0,            // nivel de posicionamiento PL
     jobHistory: [],
     focusedWindowIndex: 0,
     isSimpleMenu: false,
@@ -1239,7 +1311,10 @@ function loadJobsLocally() {
         const saved = localStorage.getItem('dx200_robotJobs');
         if (saved) {
             let parsed = JSON.parse(saved);
-            if (!parsed['JOB_ALAMBRE']) {
+            const deleted = getDeletedJobs();
+            if (deleted.includes('JOB_ALAMBRE')) {
+                // borrado por el usuario: no se vuelve a crear
+            } else if (!parsed['JOB_ALAMBRE']) {
                 parsed['JOB_ALAMBRE'] = robotJobs['JOB_ALAMBRE'];
             } else {
                 // Asegurar que la linea CALL JOB está presente para que el usuario pueda probar
@@ -1251,10 +1326,10 @@ function loadJobsLocally() {
                     parsed['JOB_ALAMBRE'] = robotJobs['JOB_ALAMBRE'];
                 }
             }
-            if (!parsed['SUB_PROG']) parsed['SUB_PROG'] = robotJobs['SUB_PROG'];
+            if (!parsed['SUB_PROG'] && !deleted.includes('SUB_PROG')) parsed['SUB_PROG'] = robotJobs['SUB_PROG'];
             
             // Siempre asegurar que MOVL_DEMO existe (programa de demostración)
-            if (!parsed['MOVL_DEMO'] || !parsed['MOVL_DEMO'].some(l => l.code && l.code.includes('PL='))) {
+            if (!deleted.includes('MOVL_DEMO') && (!parsed['MOVL_DEMO'] || !parsed['MOVL_DEMO'].some(l => l.code && l.code.includes('PL=')))) {
                 parsed['MOVL_DEMO'] = robotJobs['MOVL_DEMO'];
             }
             robotJobs = parsed;
@@ -2168,6 +2243,7 @@ function updateRobotDisplay() {
 }
 
 function setView(viewName) {
+    if (isSoftKeyboardOpen() && viewName !== DxState.view) closeSoftKeyboard();
     DxState.view = viewName;
     document.querySelectorAll('.lcd-sidebar-btn').forEach(b => b.classList.remove('active'));
     let baseView = viewName.startsWith('ROBOT') ? 'ROBOT' : viewName;
@@ -2182,7 +2258,7 @@ function setView(viewName) {
     const screens = ['job-screen', 'robot-menu-screen', 'robot-screen', 'list-screen',
         'security-screen', 'home-position-screen', 'system-info-menu-screen',
         'tool-screen', 'wgrav-screen', 'variable-screen', 'inout-screen', 
-        'alarm-screen', 'utility-screen', 'amplitude-screen', 'general-screen', 'data-screen', 'calibration-screen', 'master-rezero-screen', 'parameter-screen', 'clock-screen', 'file-screen'];
+        'alarm-screen', 'utility-screen', 'amplitude-screen', 'general-screen', 'data-screen', 'calibration-screen', 'master-rezero-screen', 'parameter-screen', 'clock-screen', 'file-screen', 'new-job-screen'];
     screens.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
@@ -2190,6 +2266,7 @@ function setView(viewName) {
 
     const viewMap = {
         'JOB': ['job-screen', renderJob],
+        'NEW-JOB': ['new-job-screen', null],
         'ROBOT': ['robot-menu-screen', null],
         'ROBOT-CURRENT': ['robot-screen', null],
         'LIST': ['list-screen', renderList],
@@ -2399,6 +2476,8 @@ function handleFunc(func) {
 }
 
 function pressCancel() {
+    if (isSoftKeyboardOpen()) { closeSoftKeyboard(true); return; }
+    if (isLcdConfirmOpen()) { closeLcdConfirm(false); return; }
     // Feedback visual tecla
     const btn = Array.from(document.querySelectorAll('.kb-btn-sq')).find(b => b.textContent.includes('CANCEL'));
     if (btn) {
@@ -3291,32 +3370,27 @@ function checkTeachMode(actionName) {
 }
 
 function handleDir(dir) {
-    if (DxState.isInserting) {
-        const types = ['MOVJ', 'MOVL', 'MOVC', 'IMOV'];
-        const speeds = [10, 25, 50, 75, 100];
-        if (dir === 'up' || dir === 'down') {
-            const idx = types.indexOf(DxState.insertType);
-            DxState.insertType = types[(idx + 1) % types.length];
-        } else if (dir === 'left' || dir === 'right') {
-            if (isShiftPressed) {
-                // Change Position Level (PL=0 to PL=8)
-                const plDir = dir === 'right' ? 1 : -1;
-                DxState.insertPl = (DxState.insertPl + plDir + 9) % 9;
-            } else {
-                const idx = speeds.indexOf(DxState.insertSpeed);
-                DxState.insertSpeed = speeds[(idx + 1) % speeds.length];
-            }
-        }
-        
-        let displayStr = 'INSERT: ' + DxState.insertType + ' VJ=' + DxState.insertSpeed;
-        if (DxState.insertType === 'MOVJ' || DxState.insertType === 'MOVL') {
-            displayStr += ' PL=' + DxState.insertPl;
-        }
-        document.getElementById('job-mode-indicator').textContent = displayStr;
-        setInfoDisplay(displayStr + ' - ENTER (Shift+←/→ cambia PL)');
+    if (isSoftKeyboardOpen()) { softKbMove(dir); return; }
+    if (isLcdConfirmOpen()) {
+        if (dir === 'left' || dir === 'right') { lcdConfirmYes = dir === 'left'; updateLcdConfirmCursor(); }
         return;
     }
-    
+    if (DxState.isInserting) {
+        if (dir === 'up' || dir === 'down') {
+            cycleMotionType();
+        } else if (isShiftPressed) {
+            // SHIFT + ←/→ : nivel de posicionamiento PL=0..8
+            DxState.insertPl = ((DxState.insertPl || 0) + (dir === 'right' ? 1 : -1) + 9) % 9;
+        } else {
+            // ←/→ : nivel de velocidad
+            changeBufferSpeed(dir === 'right' ? 1 : -1);
+        }
+        DxState.editingBuffer = getBufferInstruction();
+        setInfoDisplay('INSERT: ' + DxState.editingBuffer + ' - ENTER (←/→ velocidad, SHIFT+←/→ PL)');
+        renderJob();
+        return;
+    }
+
     if (DxState.view === 'WGRAV') {
         if (dir === 'up' && wgravSelectedIdx > 0) selectWgravLine(wgravSelectedIdx - 1);
         if (dir === 'down' && wgravSelectedIdx < 4) selectWgravLine(wgravSelectedIdx + 1);
@@ -3578,7 +3652,7 @@ function updateSidebarUI() {
         `;
     } else {
         sidebar.innerHTML = `
-            <div class="lcd-sidebar-btn active" id="btn-view-job" onclick="setView('JOB')"><div class="sidebar-icon" style="background:#2b4b9b;"></div>JOB</div>
+            <div class="lcd-sidebar-btn active" id="btn-view-job" onclick="toggleJobMainMenu(event)"><div class="sidebar-icon" style="background:#2b4b9b;"></div>JOB</div>
             <div class="lcd-sidebar-btn" id="btn-view-general" onclick="setView('GENERAL')"><div class="sidebar-icon" style="background:#8b4513;"></div>ARC WELDING</div>
             <div class="lcd-sidebar-btn" id="btn-view-variable" onclick="setView('VARIABLE')"><div class="sidebar-icon" style="background:#006400;"></div>VARIABLE</div>
             <div class="lcd-sidebar-btn" id="btn-view-inout" onclick="setView('INOUT')"><div class="sidebar-icon" style="background:#4a4a8a;"></div>IN/OUT</div>
@@ -3597,86 +3671,171 @@ function updateSidebarUI() {
     });
 }
 
+// ============================================================
+// MENÚ EDIT del JOB
+// ============================================================
+let undoStack = [];
+
+/** Guarda el estado del JOB actual antes de una edición (para UNDO). */
+function pushUndo(label) {
+    const prog = robotJobs[DxState.currentJobId];
+    if (!prog) return;
+    undoStack.push({ jobId: DxState.currentJobId, lines: JSON.parse(JSON.stringify(prog)),
+                     cursor: DxState.selectedLineIndex, label: label || 'EDIT' });
+    if (undoStack.length > 30) undoStack.shift();
+}
+
+/** Líneas afectadas: la selección (SHIFT + ↑/↓) o la línea del cursor. Nunca NOP ni END. */
+function getEditRange(prog) {
+    let idx = (DxState.selectedLines && DxState.selectedLines.length > 0)
+        ? [...DxState.selectedLines] : [DxState.selectedLineIndex];
+    return idx.filter(i => i > 0 && i < prog.length - 1).sort((x, y) => x - y);
+}
+
+function pasteLines(prog, items, label) {
+    const insertAt = Math.min(DxState.selectedLineIndex + 1, prog.length - 1);   // nunca después de END
+    prog.splice(insertAt, 0, ...JSON.parse(JSON.stringify(items)));
+    DxState.selectedLineIndex = insertAt + items.length - 1;
+    DxState.selectedLines = [];
+    setInfoDisplay('✓ ' + label + ': ' + items.length + ' línea(s) en ' + String(insertAt).padStart(4, '0'));
+}
+
+function formatSpeedToken(kind, value) {
+    if (kind === 'VJ') return 'VJ=' + Math.max(0.01, Math.min(100, value)).toFixed(2);
+    return 'V=' + Math.max(0.1, Math.min(1500, value)).toFixed(1);
+}
+
 function handleEditAction(action) {
-    if (!checkTeachMode('EDIT')) return;
-    const currentProgram = robotJobs[DxState.currentJobId];
-    if (!currentProgram || currentProgram.length === 0) return;
+    const prog = robotJobs[DxState.currentJobId];
+    if (!prog || prog.length === 0) return;
+    if (DxState.view !== 'JOB') setView('JOB');
 
-    if (action === 'TOP LINE') {
-        DxState.selectedLineIndex = 0; DxState.selectedTokenIndex = 0;
-        setInfoDisplay('✓ CURSOR AL INICIO');
-    } else if (action === 'END LINE') {
-        DxState.selectedLineIndex = currentProgram.length - 1; DxState.selectedTokenIndex = 0;
-        setInfoDisplay('✓ CURSOR AL FINAL');
-    } else if (action === 'SEARCH') {
-        showMsg('SEARCH: Función en desarrollo'); return;
-    } else if (action === 'COPY') {
-        const currentProgram = robotJobs[DxState.currentJobId];
-        const copyList = [];
-        if (DxState.selectedLines && DxState.selectedLines.length > 0) {
-            DxState.selectedLines.forEach(idx => {
-                if (currentProgram[idx]) copyList.push(JSON.parse(JSON.stringify(currentProgram[idx])));
-            });
-            showMsg('✓ ' + copyList.length + ' líneas copiadas');
-        } else {
-            copyList.push(JSON.parse(JSON.stringify(currentProgram[DxState.selectedLineIndex])));
-            showMsg('✓ Línea ' + DxState.selectedLineIndex + ' copiada');
-        }
-        DxState.clipboard = copyList;
-        
-        // Visual feedback only AFTER clicking
-        const copyBtn = document.getElementById('copy-btn');
-        if (copyBtn) {
-            copyBtn.style.background = '#2b4b9b';
-            copyBtn.style.color = '#fff';
-            // Optional: keep it blue to show clipboard has content, 
-            // but the user wants to "verify I'm copying" so a persistent state is good.
-        }
+    // Navegación: no modifica el programa
+    if (action === 'TOP LINE' || action === 'END LINE') {
+        DxState.selectedLineIndex = action === 'TOP LINE' ? 0 : prog.length - 1;
+        DxState.selectedTokenIndex = 0;
+        renderJob();
+        setInfoDisplay(action === 'TOP LINE' ? '✓ CURSOR EN LA PRIMERA LÍNEA' : '✓ CURSOR EN END');
         return;
-
-    } else if (action === 'PASTE') {
-        if (!DxState.clipboard || DxState.clipboard.length === 0) {
-            setInfoDisplay('⚠ Clipboard vacío'); return;
-        }
-        const insertIdx = DxState.selectedLineIndex + 1;
-        const itemsToPaste = Array.isArray(DxState.clipboard) ? DxState.clipboard : [DxState.clipboard];
-        currentProgram.splice(insertIdx, 0, ...JSON.parse(JSON.stringify(itemsToPaste)));
-        DxState.selectedLineIndex = insertIdx + itemsToPaste.length - 1;
-        DxState.selectedLines = [];
-        // Visual feedback for PASTE tab
-        document.querySelectorAll('.menu-tab').forEach(t => t.classList.remove('active'));
-        const pasteTab = document.getElementById('paste-tab');
-        if (pasteTab) {
-            pasteTab.classList.add('active');
-            setTimeout(() => pasteTab.classList.remove('active'), 800);
-        }
-        showMsg('✓ Pegadas ' + itemsToPaste.length + ' líneas');
-    } else if (action === 'CUT') {
-        DxState.clipboard = [JSON.parse(JSON.stringify(currentProgram[DxState.selectedLineIndex]))];
-        currentProgram.splice(DxState.selectedLineIndex, 1);
-        if (DxState.selectedLineIndex >= currentProgram.length) DxState.selectedLineIndex = Math.max(0, currentProgram.length - 1);
-        showMsg('✓ Línea cortada');
-    } else if (action === 'CHANGE SPEED') {
-        let step = currentProgram[DxState.selectedLineIndex];
-        let tokens = (step.code || '').split(' ');
-        let speedChanged = false;
-        for (let i = 0; i < tokens.length; i++) {
-            if (tokens[i].startsWith('VJ=') || tokens[i].startsWith('V=')) {
-                const speeds = ['VJ=1.00', 'VJ=5.00', 'VJ=10.00', 'VJ=25.00', 'VJ=50.00', 'VJ=100.00'];
-                let idx = speeds.indexOf(tokens[i]);
-                tokens[i] = speeds[(idx + 1) % speeds.length];
-                step.code = tokens.join(' ');
-                setInfoDisplay('✓ Velocidad cambiada a ' + tokens[i]);
-                speedChanged = true; break;
+    }
+    if (action === 'SEARCH') {
+        openSoftKeyboard({
+            title: 'SEARCH (nº de línea o texto)', value: DxState.lastSearch || '', maxLen: 32, upper: true,
+            onEnter: (val) => {
+                const q = val.trim().toUpperCase();
+                if (!q) return true;
+                DxState.lastSearch = q;
+                if (/^\d+$/.test(q)) {
+                    const n = Math.min(parseInt(q, 10), prog.length - 1);
+                    DxState.selectedLineIndex = n;
+                    setInfoDisplay('✓ SEARCH: línea ' + String(n).padStart(4, '0'));
+                } else {
+                    let found = -1;
+                    for (let k = 1; k <= prog.length; k++) {
+                        const i = (DxState.selectedLineIndex + k) % prog.length;
+                        if ((prog[i].code || '').toUpperCase().includes(q)) { found = i; break; }
+                    }
+                    if (found < 0) { setInfoDisplay('⚠ SEARCH: "' + q + '" no encontrado'); return true; }
+                    DxState.selectedLineIndex = found;
+                    setInfoDisplay('✓ SEARCH: "' + q + '" en la línea ' + String(found).padStart(4, '0') + ' (repita SEARCH para la siguiente)');
+                }
+                DxState.selectedTokenIndex = 0;
+                renderJob();
+                return true;
             }
-        }
-        if (!speedChanged) setInfoDisplay('⚠ La línea no tiene parámetro de velocidad');
+        });
+        return;
+    }
+    if (action === 'COPY') {
+        const range = getEditRange(prog);
+        if (range.length === 0) { setInfoDisplay('⚠ COPY: NOP y END no se pueden copiar'); return; }
+        DxState.clipboard = range.map(i => JSON.parse(JSON.stringify(prog[i])));
+        const copyBtn = document.getElementById('copy-btn');
+        if (copyBtn) { copyBtn.style.background = '#2b4b9b'; copyBtn.style.color = '#fff'; }
+        setInfoDisplay('✓ COPY: ' + range.length + ' línea(s) al portapapeles');
+        return;
+    }
+
+    // A partir de aquí se modifica el programa
+    if (!checkTeachMode('EDIT')) return;
+    if (RobotState.programRunning) { setInfoDisplay('❌ EDIT: detenga el programa primero'); return; }
+    if (DxState.securityMode === 'OPERATION' && action !== 'UNDO') { setInfoDisplay('❌ SECURITY ERROR: REQUIRE EDITING MODE'); return; }
+
+    if (action === 'UNDO') {
+        const last = undoStack.pop();
+        if (!last) { setInfoDisplay('⚠ UNDO: no hay nada que deshacer'); return; }
+        robotJobs[last.jobId] = last.lines;
+        DxState.currentJobId = last.jobId;
+        DxState.selectedLineIndex = Math.min(last.cursor, last.lines.length - 1);
+        DxState.selectedLines = [];
+        setInfoDisplay('✓ UNDO: deshecho "' + last.label + '"');
+    } else if (action === 'CUT') {
+        const range = getEditRange(prog);
+        if (range.length === 0) { setInfoDisplay('⚠ CUT: NOP y END no se pueden cortar'); return; }
+        pushUndo('CUT');
+        DxState.clipboard = range.map(i => JSON.parse(JSON.stringify(prog[i])));
+        for (let k = range.length - 1; k >= 0; k--) prog.splice(range[k], 1);
+        DxState.selectedLineIndex = Math.max(0, Math.min(range[0] - 1, prog.length - 1));
+        DxState.selectedLines = [];
+        setInfoDisplay('✓ CUT: ' + range.length + ' línea(s) al portapapeles');
+    } else if (action === 'PASTE' || action === 'REVERSE') {
+        if (!DxState.clipboard || DxState.clipboard.length === 0) { setInfoDisplay('⚠ Portapapeles vacío: use COPY o CUT primero'); return; }
+        pushUndo(action === 'PASTE' ? 'PASTE' : 'REVERSE PASTE');
+        let items = Array.isArray(DxState.clipboard) ? DxState.clipboard : [DxState.clipboard];
+        if (action === 'REVERSE') items = [...items].reverse();   // orden inverso: trayecto de vuelta
+        pasteLines(prog, items, action === 'PASTE' ? 'PASTE' : 'REVERSE PASTE');
+    } else if (action === 'CHANGE SPEED') {
+        const range = getEditRange(prog).filter(i => /\bVJ?=/.test(prog[i].code || ''));
+        if (range.length === 0) { setInfoDisplay('⚠ CHANGE SPEED: seleccione líneas con VJ= o V='); return; }
+        openSoftKeyboard({
+            title: 'CHANGE SPEED: % (' + range.length + ' línea/s)', value: '100', maxLen: 4, upper: true,
+            onEnter: (val) => {
+                const pct = parseFloat(val);
+                if (!(pct > 0 && pct <= 1000)) { setInfoDisplay('❌ Introduzca un porcentaje entre 1 y 1000'); return false; }
+                pushUndo('CHANGE SPEED');
+                range.forEach(i => {
+                    prog[i].code = prog[i].code.replace(/\b(VJ|V)=(\d+(?:\.\d+)?)/, (m, kind, num) =>
+                        formatSpeedToken(kind, parseFloat(num) * pct / 100));
+                });
+                saveJobsLocally(); renderJob();
+                setInfoDisplay('✓ CHANGE SPEED: ' + range.length + ' línea(s) al ' + pct + '%');
+                return true;
+            }
+        });
+        return;
+    } else if (action === 'REPLACE') {
+        const range = (DxState.selectedLines && DxState.selectedLines.length > 0)
+            ? getEditRange(prog) : prog.map((_, i) => i).filter(i => i > 0 && i < prog.length - 1);
+        openSoftKeyboard({
+            title: 'REPLACE: texto a buscar', value: '', maxLen: 32, upper: true,
+            onEnter: (find) => {
+                const f = find.trim();
+                if (!f) return true;
+                setTimeout(() => openSoftKeyboard({
+                    title: 'REPLACE "' + f + '" por:', value: '', maxLen: 32, upper: true,
+                    onEnter: (repl) => {
+                        let count = 0;
+                        const lines = range.filter(i => (prog[i].code || '').toUpperCase().includes(f.toUpperCase()));
+                        if (lines.length) pushUndo('REPLACE');
+                        lines.forEach(i => {
+                            const re = new RegExp(f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+                            prog[i].code = prog[i].code.replace(re, () => { count++; return repl.trim(); });
+                        });
+                        saveJobsLocally(); renderJob();
+                        setInfoDisplay(count ? '✓ REPLACE: ' + count + ' cambio(s) en ' + lines.length + ' línea(s)' : '⚠ REPLACE: "' + f + '" no encontrado');
+                        return true;
+                    }
+                }), 0);
+                return true;
+            }
+        });
+        return;
     } else {
-        showMsg(action + ': Función reservada/en desarrollo');
+        showMsg(action + ': no disponible');
+        return;
     }
     saveJobsLocally();
-    if (DxState.view !== 'JOB') setView('JOB');
-    else renderJob();
+    renderJob();
 }
 
 
@@ -3707,6 +3866,8 @@ function insertDout(port, onOff) {
 }
 
 function pressSelect() {
+    if (isSoftKeyboardOpen()) { softKbSelect(); return; }
+    if (isLcdConfirmOpen()) { closeLcdConfirm(lcdConfirmYes); return; }
     if (DxState.view === 'LIST') {
         const jobKeys = Object.keys(robotJobs);
         if (jobKeys.length > 0) {
@@ -3844,6 +4005,13 @@ function selectDropdownItem(element, action) {
     // NO cerrar el dropdown
 }
 
+// Al elegir una opción de cualquier desplegable, el menú se cierra
+document.addEventListener('click', function(e) {
+    if (e.target.closest && e.target.closest('.dropdown-item')) {
+        setTimeout(closeTopMenus, 0);
+    }
+});
+
 // Cerrar dropdowns cuando se hace click fuera
 document.addEventListener('click', function(e) {
     if (openDropdownId && !e.target.closest('.dropdown-menu') && !e.target.closest('.menu-tab')) {
@@ -3917,9 +4085,9 @@ function pressInsert() {
         DxState.isInserting = true;
         if (btn) btn.classList.add('blink-active');
 
-        // Definir instrucción por defecto en buffer
-        DxState.editingBuffer = 'MOVJ VJ=' + RobotState.speed + '.00';
-        setInfoDisplay('INSERT: ' + DxState.editingBuffer + ' - ENTER para insertar');
+        // La instrucción a insertar es la de la línea de entrada (MOTION TYPE + velocidad)
+        DxState.editingBuffer = getBufferInstruction();
+        setInfoDisplay('INSERT: ' + DxState.editingBuffer + ' - ENTER para registrar (MOTION TYPE cambia el tipo)');
         renderJob();
     }
 }
@@ -4100,7 +4268,7 @@ function renderJob() {
             bufferContainer.innerHTML = `<span style="color:${actionColor}; font-weight:bold; margin-right:8px;">${DxState.activeEditAction}:</span> <span>${DxState.editingBuffer}</span><span class="cursor-blink">_</span>`;
             bufferContainer.style.background = '#0a2050';
         } else {
-            bufferContainer.innerHTML = '<span style="color:#666;">READY</span>';
+            bufferContainer.innerHTML = '<span style="color:#888; margin-right:6px;">⇒</span><span style="color:#fff;">' + getBufferInstruction() + '</span>';
             bufferContainer.style.background = '#1a1a2e';
         }
     }
@@ -4201,12 +4369,14 @@ function updateInsertScreen() {
 
 function selectInsertType(type) {
     DxState.insertType = type;
+    DxState.motionType = type;
     updateInsertScreen();
     setInfoDisplay('INSERT: ' + type + ' ' + (type === 'MOVJ' ? 'VJ=' : 'V=') + DxState.insertSpeed + ' - Mueva robot, ENTER');
 }
 
 function selectInsertSpeed(speed) {
     DxState.insertSpeed = speed;
+    if ((DxState.motionType || 'MOVJ') === 'MOVJ') DxState.bufferVJ = speed; else DxState.bufferV = speed;
     updateInsertScreen();
 }
 
@@ -4262,12 +4432,8 @@ function confirmInsert() {
     const currentProgram = robotJobs[DxState.currentJobId];
     const instrType = DxState.insertType || 'MOVJ';
     // MOVJ usa VJ= (velocidad articular %), MOVL/MOVC/IMOV usan V= (velocidad cartesiana mm/s)
-    const speedParam = instrType === 'MOVJ' ? 'VJ=' : 'V=';
-    const speedVal = (DxState.insertSpeed || RobotState.speed).toFixed(2);
-    let finalCode = instrType + ' ' + speedParam + speedVal;
-    if (instrType === 'MOVJ' || instrType === 'MOVL') {
-        finalCode += ' PL=' + (DxState.insertPl || 0);
-    }
+    DxState.motionType = instrType;
+    let finalCode = getBufferInstruction();
     
     const newStep = {
         s: RobotState.angles.s, l: RobotState.angles.l, u: RobotState.angles.u,
@@ -4874,73 +5040,398 @@ function updateMultiLayout() {
     }
 }
 
-function createNewJob() {
-    let newName = prompt("NOMBRE DEL JOB:", "JOB_001");
-    if (!newName) return;
-    newName = newName.toUpperCase().replace(/\s+/g, '_');
+// ============================================================
+// LÍNEA DE ENTRADA (input buffer) y tecla MOTION TYPE — como en el DX200
+// ============================================================
+const MOTION_TYPES = ['MOVJ', 'MOVL', 'MOVC'];
+const VJ_LEVELS = [0.78, 1.56, 3.12, 6.25, 12.50, 25.00, 50.00, 100.00];   // % (MOVJ)
+const V_LEVELS = [10.0, 25.0, 50.0, 100.0, 250.0, 500.0, 1000.0];          // mm/s (MOVL/MOVC)
 
-    if (robotJobs[newName]) {
-        alert("¡Error! Ya existe un JOB con ese nombre.");
-        return;
+function getBufferInstruction() {
+    const type = DxState.motionType || 'MOVJ';
+    const pl = DxState.insertPl || 0;
+    let code = type === 'MOVJ'
+        ? 'MOVJ VJ=' + (DxState.bufferVJ ?? 25).toFixed(2)
+        : type + ' V=' + (DxState.bufferV ?? 100).toFixed(1);
+    if (pl > 0 && type !== 'MOVC') code += ' PL=' + pl;
+    return code;
+}
+
+function cycleMotionType() {
+    const idx = MOTION_TYPES.indexOf(DxState.motionType || 'MOVJ');
+    DxState.motionType = MOTION_TYPES[(idx + 1) % MOTION_TYPES.length];
+    DxState.insertType = DxState.motionType;
+}
+
+function changeBufferSpeed(dir) {
+    if ((DxState.motionType || 'MOVJ') === 'MOVJ') {
+        let i = VJ_LEVELS.indexOf(DxState.bufferVJ ?? 25);
+        if (i < 0) i = 5;
+        DxState.bufferVJ = VJ_LEVELS[Math.max(0, Math.min(VJ_LEVELS.length - 1, i + dir))];
+    } else {
+        let i = V_LEVELS.indexOf(DxState.bufferV ?? 100);
+        if (i < 0) i = 3;
+        DxState.bufferV = V_LEVELS[Math.max(0, Math.min(V_LEVELS.length - 1, i + dir))];
     }
+}
 
-    robotJobs[newName] = [
-        { s: 0, l: 0, u: 0, r: 0, b: 0, t: 0, code: 'NOP', desc: 'INICIO' },
-        { s: 0, l: 0, u: 0, r: 0, b: 0, t: 0, code: 'END', desc: 'FIN' }
-    ];
-    DxState.currentJobId = newName;
-    DxState.selectedLineIndex = 0;
-    saveJobsLocally();
-    setView('JOB');
-    setInfoDisplay('✓ Nuevo trabajo creado: ' + newName);
+/** Tecla [MOTION TYPE]: MOVJ → MOVL → MOVC → MOVJ ... en la línea de entrada. */
+function pressMotionType() {
+    if (DxState.view !== 'JOB') { setInfoDisplay('⚠ MOTION TYPE: abra la pantalla JOB'); return; }
+    cycleMotionType();
+    if (DxState.activeEditAction === 'INSERT') DxState.editingBuffer = getBufferInstruction();
+    setInfoDisplay('MOTION TYPE: ' + getBufferInstruction() + (DxState.activeEditAction === 'INSERT' ? ' - ENTER para registrar' : ' - pulse INSERT y ENTER'));
     renderJob();
 }
 
-function runRenameJob() {
-    const newName = prompt('Nuevo nombre del JOB:', DxState.currentJobId);
-    if (newName && newName.trim() !== '') {
-        if (robotJobs[newName]) {
-            alert('¡Error! Ya existe un JOB con ese nombre.');
-            return;
+// ============================================================
+// MENÚ PRINCIPAL {JOB} → submenú
+// ============================================================
+function toggleJobMainMenu(e) {
+    if (e) e.stopPropagation();
+    const m = document.getElementById('main-submenu-job');
+    if (!m) { setView('JOB'); return; }
+    const open = m.style.display === 'flex';
+    m.style.display = open ? 'none' : 'flex';
+    if (!open) {
+        const btn = document.getElementById('btn-view-job');
+        const body = m.parentElement;
+        if (btn && body) {
+            const rb = btn.getBoundingClientRect(), rp = body.getBoundingClientRect();
+            m.style.left = (rb.right - rp.left + 2) + 'px';
+            m.style.top = (rb.top - rp.top) + 'px';
         }
-        robotJobs[newName] = robotJobs[DxState.currentJobId];
-        delete robotJobs[DxState.currentJobId];
-        DxState.currentJobId = newName;
-        saveJobsLocally();
-        setInfoDisplay('✓ JOB renombrado a: ' + newName);
-        renderJob();
+        setInfoDisplay('MAIN MENU: JOB');
     }
+}
+
+function closeJobMainMenu() {
+    const m = document.getElementById('main-submenu-job');
+    if (m) m.style.display = 'none';
+}
+
+document.addEventListener('click', (e) => {
+    const m = document.getElementById('main-submenu-job');
+    if (m && m.style.display === 'flex' && !m.contains(e.target)) m.style.display = 'none';
+});
+
+// ============================================================
+// JOB → CREATE NEW JOB (pantalla JOB CREATE + EXECUTE)
+// ============================================================
+function suggestJobName() {
+    for (let i = 1; i < 1000; i++) {
+        const n = 'JOB_' + String(i).padStart(3, '0');
+        if (!robotJobs[n]) return n;
+    }
+    return 'JOB_NEW';
+}
+
+function createNewJob() {
+    if (!checkTeachMode('CREATE NEW JOB')) return;
+    if (RobotState.programRunning) { setInfoDisplay('❌ Detenga el programa antes de crear un JOB'); return; }
+    setView('NEW-JOB');
+    const name = document.getElementById('nj-name');
+    document.getElementById('nj-comment').value = '';
+    document.getElementById('nj-type').textContent = 'ROBOT JOB';
+    document.getElementById('nj-msg').textContent = '';
+    if (name) name.value = suggestJobName();
+    editNewJobField('name');
+    setInfoDisplay('CREATE NEW JOB: escriba el nombre con el teclado y pulse ENTER');
+}
+
+function toggleNewJobType() {
+    const el = document.getElementById('nj-type');
+    el.textContent = el.textContent === 'ROBOT JOB' ? 'CONCURRENT JOB' : 'ROBOT JOB';
+}
+
+function executeNewJob() {
+    const msg = document.getElementById('nj-msg');
+    const name = (document.getElementById('nj-name').value || '').trim().toUpperCase();
+    const comment = (document.getElementById('nj-comment').value || '').trim();
+    const jobType = document.getElementById('nj-type').textContent === 'CONCURRENT JOB' ? 'CONCURRENT' : 'ROBOT';
+
+    if (!name) { msg.textContent = 'ERROR: introduzca un nombre de JOB'; return; }
+    if (name.length > 32) { msg.textContent = 'ERROR: máximo 32 caracteres'; return; }
+    if (!/^[A-Z0-9_\-]+$/.test(name)) { msg.textContent = 'ERROR: use solo letras, números, "_" y "-" (sin espacios)'; return; }
+    if (robotJobs[name]) { msg.textContent = 'ERROR: ya existe un JOB con ese nombre'; return; }
+
+    const home = { s: RobotState.angles.s, l: RobotState.angles.l, u: RobotState.angles.u,
+                   r: RobotState.angles.r, b: RobotState.angles.b, t: RobotState.angles.t };
+    robotJobs[name] = [
+        { ...home, code: 'NOP', desc: comment || 'INICIO', comment, group: 'R1', jobType },
+        { ...home, code: 'END', desc: 'FIN' }
+    ];
+    DxState.currentJobId = name;
+    DxState.selectedLineIndex = 0;
+    RobotState.programStep = 0;
+    unmarkJobDeleted(name);
+    saveJobsLocally();
+    setView('JOB');
+    renderJob();
+    setInfoDisplay('✓ JOB ' + name + ' creado (' + (jobType === 'ROBOT' ? 'ROBOT JOB, R1' : 'CONCURRENT JOB') + '). Mueva el robot, INSERT + ENTER');
+}
+
+function validateJobName(name, exceptName) {
+    if (!name) return 'Introduzca un nombre de JOB';
+    if (name.length > 32) return 'Máximo 32 caracteres';
+    if (!/^[A-Z0-9_\-]+$/.test(name)) return 'Use solo letras, números, "_" y "-"';
+    if (robotJobs[name] && name !== exceptName) return 'Ya existe un JOB con ese nombre';
+    return null;
+}
+
+function jobEditAllowed(action) {
+    if (!checkTeachMode(action)) return false;
+    if (RobotState.programRunning) { setInfoDisplay('❌ ' + action + ': detenga el programa primero'); return false; }
+    return true;
+}
+
+function closeTopMenus() {
+    document.querySelectorAll('.dropdown-menu').forEach(d => d.style.display = 'none');
+    document.querySelectorAll('.menu-tab').forEach(t => t.classList.remove('active'));
+    if (typeof openDropdownId !== 'undefined') openDropdownId = null;
+}
+
+function runRenameJob() {
+    closeTopMenus();
+    if (!jobEditAllowed('RENAME JOB')) return;
+    const oldName = DxState.currentJobId;
+    openSoftKeyboard({
+        title: 'RENAME JOB: ' + oldName, value: oldName, maxLen: 32, upper: true,
+        onEnter: (val) => {
+            const newName = val.trim().toUpperCase();
+            if (newName === oldName) return true;
+            const err = validateJobName(newName);
+            if (err) { setInfoDisplay('❌ ' + err); return false; }
+            // Mantener el orden de la lista
+            const renamed = {};
+            Object.keys(robotJobs).forEach(k => renamed[k === oldName ? newName : k] = robotJobs[k]);
+            robotJobs = renamed;
+            DxState.currentJobId = newName;
+            markJobDeleted(oldName);
+            saveJobsLocally();
+            renderJob();
+            setInfoDisplay('✓ JOB renombrado: ' + oldName + ' → ' + newName);
+            return true;
+        }
+    });
 }
 
 function runCopyJob() {
-    const newName = prompt('Nombre para el nuevo JOB:', DxState.currentJobId + '_COPY');
-    if (newName && newName.trim() !== '') {
-        if (robotJobs[newName]) {
-            alert('¡Error! Ya existe un JOB con ese nombre.');
-            return;
+    closeTopMenus();
+    if (!jobEditAllowed('COPY JOB')) return;
+    const src = DxState.currentJobId;
+    let suggestion = (src + '_COPY').slice(0, 32);
+    openSoftKeyboard({
+        title: 'COPY JOB: ' + src, value: suggestion, maxLen: 32, upper: true,
+        onEnter: (val) => {
+            const newName = val.trim().toUpperCase();
+            const err = validateJobName(newName);
+            if (err) { setInfoDisplay('❌ ' + err); return false; }
+            robotJobs[newName] = robotJobs[src].map(line => ({ ...line }));
+            unmarkJobDeleted(newName);
+            saveJobsLocally();
+            setInfoDisplay('✓ JOB copiado: ' + src + ' → ' + newName);
+            return true;
         }
-        // Copiar todas las líneas del programa actual
-        const currentProgram = robotJobs[DxState.currentJobId];
-        robotJobs[newName] = currentProgram.map(line => ({...line}));
-        saveJobsLocally();
-        setInfoDisplay('✓ JOB copiado a: ' + newName);
-    }
+    });
 }
 
 function runDeleteJob() {
-    if (confirm('¿Eliminar JOB: ' + DxState.currentJobId + '?')) {
-        const jobKeys = Object.keys(robotJobs);
-        if (jobKeys.length <= 1) {
-            alert('ERROR: No se puede eliminar el último JOB');
-            return;
-        }
-        delete robotJobs[DxState.currentJobId];
-        DxState.currentJobId = jobKeys.find(k => k !== DxState.currentJobId) || 'JOB_ALAMBRE';
+    closeTopMenus();
+    if (!jobEditAllowed('DELETE JOB')) return;
+    const name = DxState.currentJobId;
+    if (Object.keys(robotJobs).length <= 1) { setInfoDisplay('❌ No se puede borrar el único JOB'); return; }
+    showLcdConfirm('Delete ' + name + ' ?', () => {
+        const keys = Object.keys(robotJobs);
+        const idx = keys.indexOf(name);
+        delete robotJobs[name];
+        markJobDeleted(name);
+        const rest = Object.keys(robotJobs);
+        DxState.currentJobId = rest[Math.min(idx, rest.length - 1)];
+        DxState.selectedLineIndex = 0;
+        RobotState.programStep = 0;
+        if (typeof callStack !== 'undefined') callStack.length = 0;
         saveJobsLocally();
-        setInfoDisplay('✓ JOB eliminado');
-        renderJob();
-        showMsg('✓ JOB eliminado');
+        setView('JOB');
+        setInfoDisplay('✓ JOB ' + name + ' eliminado. JOB actual: ' + DxState.currentJobId);
+    });
+}
+
+// Los programas de ejemplo ya no reaparecen si el usuario los borra o renombra
+function getDeletedJobs() {
+    try { return JSON.parse(localStorage.getItem('dx200_deletedJobs') || '[]'); } catch (e) { return []; }
+}
+function markJobDeleted(name) {
+    try {
+        const list = getDeletedJobs();
+        if (!list.includes(name)) list.push(name);
+        localStorage.setItem('dx200_deletedJobs', JSON.stringify(list));
+    } catch (e) {}
+}
+function unmarkJobDeleted(name) {
+    try { localStorage.setItem('dx200_deletedJobs', JSON.stringify(getDeletedJobs().filter(n => n !== name))); } catch (e) {}
+}
+
+// ============================================================
+// Diálogo YES / NO en la pantalla del pendant
+// ============================================================
+let lcdConfirmCallback = null, lcdConfirmYes = false;
+function showLcdConfirm(message, onYes) {
+    lcdConfirmCallback = onYes;
+    lcdConfirmYes = false;
+    document.getElementById('lcd-confirm-msg').textContent = message;
+    updateLcdConfirmCursor();
+    document.getElementById('lcd-confirm').style.display = 'flex';
+    setInfoDisplay(message + ' — ←/→ y SELECT, o toque YES / NO');
+}
+function updateLcdConfirmCursor() {
+    document.getElementById('lcd-confirm-yes').classList.toggle('cur', lcdConfirmYes);
+    document.getElementById('lcd-confirm-no').classList.toggle('cur', !lcdConfirmYes);
+}
+function isLcdConfirmOpen() {
+    const el = document.getElementById('lcd-confirm');
+    return el && el.style.display === 'flex';
+}
+function closeLcdConfirm(yes) {
+    document.getElementById('lcd-confirm').style.display = 'none';
+    const cb = lcdConfirmCallback;
+    lcdConfirmCallback = null;
+    if (yes && cb) cb();
+    else if (!yes) setInfoDisplay('Operación cancelada');
+}
+
+// ============================================================
+// TECLADO EN PANTALLA (CHARACTER INPUT) — como el del pendant DX200
+// Se usa tocando las teclas, con las flechas + [SELECT] del pendant,
+// o con el teclado del ordenador como atajo. [ENTER] confirma, [CANCEL] cierra.
+// ============================================================
+const SKB_LAYOUTS = {
+    CAPITAL: ['1234567890', 'ABCDEFGHIJ', 'KLMNOPQRST', 'UVWXYZ_-.@'],
+    SMALL:   ['1234567890', 'abcdefghij', 'klmnopqrst', 'uvwxyz_-.@'],
+    SYMBOL:  ['!#$%&()*+,', '/:;<=>?[]^', '{|}~\'"`\\ ', '          ']
+};
+let skb = null;   // { opts, value, tab, cur }
+
+function skbKeys() {
+    const rows = SKB_LAYOUTS[skb.tab].map(r => r.split('').map(ch => ({ ch, w: 1 })));
+    rows.push([
+        { ctrl: 'SPACE', w: 3, label: 'SPACE' },
+        { ctrl: 'BS', w: 2, label: 'BS' },
+        { ctrl: 'CLEAR', w: 2, label: 'CLEAR' },
+        { ctrl: 'ENTER', w: 3, label: 'ENTER' }
+    ]);
+    return rows;
+}
+
+function openSoftKeyboard(opts) {
+    skb = { opts, value: String(opts.value || '').slice(0, opts.maxLen || 32), tab: 'CAPITAL', cur: { r: 1, c: 0 } };
+    document.getElementById('soft-keyboard').style.display = 'flex';
+    renderSoftKeyboard();
+    setInfoDisplay((opts.title || 'CHARACTER INPUT') + ': escriba y pulse ENTER (CANCEL para salir)');
+}
+
+function isSoftKeyboardOpen() { return !!skb; }
+
+function renderSoftKeyboard() {
+    if (!skb) return;
+    const o = skb.opts, max = o.maxLen || 32;
+    document.getElementById('skb-title').textContent = o.title || 'CHARACTER INPUT';
+    document.getElementById('skb-count').textContent = skb.value.length + '/' + max;
+    document.getElementById('skb-result').innerHTML =
+        skb.value.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '<span class="cursor-blink">_</span>';
+    const tabs = o.upper ? ['CAPITAL', 'SYMBOL'] : ['CAPITAL', 'SMALL', 'SYMBOL'];
+    document.getElementById('skb-tabs').innerHTML = tabs.map(t =>
+        `<div class="skb-tab${t === skb.tab ? ' on' : ''}" onclick="softKbTab('${t}')">${t}</div>`).join('');
+    const grid = document.getElementById('skb-grid');
+    grid.innerHTML = '';
+    skbKeys().forEach((row, r) => {
+        let col = 0;
+        row.forEach((k, i) => {
+            const el = document.createElement('div');
+            el.className = 'skb-key' + (k.w === 2 ? ' wide2' : k.w === 3 ? ' wide3' : '') +
+                (k.ctrl ? ' ctrl' : '') + (k.ctrl === 'ENTER' ? ' enter' : '') +
+                (skb.cur.r === r && skb.cur.c === i ? ' cur' : '');
+            el.textContent = k.label || (k.ch === ' ' ? '' : k.ch);
+            if (k.ch === ' ' && !k.ctrl) el.style.visibility = 'hidden';
+            el.onclick = (e) => { e.stopPropagation(); skb.cur = { r, c: i }; softKbPress(k); };
+            grid.appendChild(el);
+            col += k.w;
+        });
+    });
+}
+
+function softKbTab(t) { if (!skb) return; skb.tab = t; renderSoftKeyboard(); }
+
+function softKbType(ch) {
+    if (!skb) return;
+    const max = skb.opts.maxLen || 32;
+    if (skb.opts.upper) ch = ch.toUpperCase();
+    if (skb.value.length >= max) { setInfoDisplay('⚠ Máximo ' + max + ' caracteres'); return; }
+    skb.value += ch;
+    renderSoftKeyboard();
+}
+
+function softKbPress(k) {
+    if (!skb) return;
+    if (k.ctrl === 'SPACE') softKbType(' ');
+    else if (k.ctrl === 'BS') { skb.value = skb.value.slice(0, -1); renderSoftKeyboard(); }
+    else if (k.ctrl === 'CLEAR') { skb.value = ''; renderSoftKeyboard(); }
+    else if (k.ctrl === 'ENTER') softKbEnter();
+    else if (k.ch && k.ch !== ' ') softKbType(k.ch);
+}
+
+function softKbMove(dir) {
+    if (!skb) return;
+    const rows = skbKeys();
+    let { r, c } = skb.cur;
+    if (dir === 'left') c = Math.max(0, c - 1);
+    else if (dir === 'right') c = Math.min(rows[r].length - 1, c + 1);
+    else {
+        // Mantener la columna visual al cambiar de fila
+        const colStart = (row, idx) => rows[row].slice(0, idx).reduce((a, k) => a + k.w, 0);
+        const x = colStart(r, c);
+        r = dir === 'up' ? Math.max(0, r - 1) : Math.min(rows.length - 1, r + 1);
+        let acc = 0; c = rows[r].length - 1;
+        for (let i = 0; i < rows[r].length; i++) { if (x < acc + rows[r][i].w) { c = i; break; } acc += rows[r][i].w; }
     }
+    skb.cur = { r, c };
+    renderSoftKeyboard();
+}
+
+function softKbSelect() {
+    if (!skb) return;
+    const k = skbKeys()[skb.cur.r][skb.cur.c];
+    softKbPress(k);
+}
+
+function softKbEnter() {
+    if (!skb) return;
+    const cb = skb.opts.onEnter;
+    const ok = cb ? cb(skb.value) : true;
+    if (ok !== false) closeSoftKeyboard();
+}
+
+function closeSoftKeyboard(cancelled) {
+    const o = skb && skb.opts;
+    skb = null;
+    document.getElementById('soft-keyboard').style.display = 'none';
+    if (cancelled) setInfoDisplay('CHARACTER INPUT cancelado');
+    if (cancelled && o && o.onCancel) o.onCancel();
+}
+
+/** Campo de la pantalla JOB CREATE → teclado en pantalla */
+function editNewJobField(field) {
+    const input = document.getElementById(field === 'name' ? 'nj-name' : 'nj-comment');
+    openSoftKeyboard({
+        title: field === 'name' ? 'JOB NAME' : 'COMMENT',
+        value: input.value, maxLen: 32, upper: field === 'name',
+        onEnter: (val) => {
+            input.value = field === 'name' ? val.trim().toUpperCase() : val;
+            document.getElementById('nj-msg').textContent = '';
+            setInfoDisplay(field === 'name' ? 'JOB NAME: ' + input.value + ' — seleccione EXECUTE' : 'COMMENT registrado');
+            return true;
+        }
+    });
 }
 
 function showJobList() {
@@ -4975,6 +5466,9 @@ function loadJob(jobName) {
 }
 
 function pressEnter() {
+    if (isSoftKeyboardOpen()) { softKbEnter(); return; }
+    if (isLcdConfirmOpen()) { closeLcdConfirm(lcdConfirmYes); return; }
+    if (DxState.view === 'NEW-JOB') { executeNewJob(); return; }
     if (DxState.view === 'WGRAV') {
         const wInput = document.getElementById('wgrav-val-w');
         if (wInput && wInput.textContent !== '*.*** kg') {
@@ -5001,15 +5495,25 @@ function pressEnter() {
 
     // LÓGICA DE COMMIT (Confirmación de edición)
     if (DxState.activeEditAction === 'INSERT') {
+        pushUndo('INSERT');
+        const nopInfo = currentProgram[0] || {};
+        const code = DxState.editingBuffer || getBufferInstruction();
+        if (nopInfo.jobType === 'CONCURRENT' && isMotionCode(code)) {
+            setInfoDisplay('❌ Un CONCURRENT JOB no admite instrucciones de movimiento');
+            cancelEdit();
+            return;
+        }
         const newStep = {
             s: RobotState.angles.s, l: RobotState.angles.l, u: RobotState.angles.u,
             r: RobotState.angles.r, b: RobotState.angles.b, t: RobotState.angles.t,
-            code: DxState.editingBuffer || ('MOVJ VJ=' + RobotState.speed.toFixed(2)), 
+            code,
             desc: 'Punto ENSEÑADO'
         };
-        currentProgram.splice(DxState.selectedLineIndex + 1, 0, newStep);
-        DxState.selectedLineIndex++;
-        setInfoDisplay('✓ INSERT: Instrucción añadida');
+        // Se registra debajo del cursor; nunca después de END
+        const insertAt = Math.min(DxState.selectedLineIndex + 1, currentProgram.length - 1);
+        currentProgram.splice(insertAt, 0, newStep);
+        DxState.selectedLineIndex = insertAt;
+        setInfoDisplay('✓ INSERT: ' + code + ' registrado en la línea ' + String(insertAt).padStart(4, '0'));
         cancelEdit();
         saveJobsLocally();
         return;
@@ -5022,6 +5526,7 @@ function pressEnter() {
             cancelEdit();
             return;
         }
+        pushUndo('DELETE');
         currentProgram.splice(DxState.selectedLineIndex, 1);
         DxState.selectedLineIndex = Math.max(0, DxState.selectedLineIndex - 1);
         setInfoDisplay('✓ DELETE: Línea eliminada');
@@ -5033,6 +5538,7 @@ function pressEnter() {
     if (DxState.activeEditAction === 'MODIFY') {
         const step = currentProgram[DxState.selectedLineIndex];
         if (step.code === 'NOP' || step.code === 'END') return;
+        pushUndo('MODIFY');
         
         // Actualizar coordenadas a la posición actual del robot
         step.s = RobotState.angles.s; step.l = RobotState.angles.l; step.u = RobotState.angles.u;
@@ -5375,11 +5881,33 @@ window.addEventListener('load', () => {
 });
 
 window.addEventListener('keydown', (e) => {
+    if (isSoftKeyboardOpen()) {
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        e.preventDefault();
+        if (e.key === 'Enter') softKbEnter();
+        else if (e.key === 'Escape') closeSoftKeyboard(true);
+        else if (e.key === 'Backspace') { skb.value = skb.value.slice(0, -1); renderSoftKeyboard(); }
+        else if (e.key.startsWith('Arrow')) softKbMove(e.key.slice(5).toLowerCase());
+        else if (e.key.length === 1) softKbType(e.key);
+        return;
+    }
+    if (isLcdConfirmOpen()) {
+        e.preventDefault();
+        if (e.key === 'Enter') closeLcdConfirm(lcdConfirmYes);
+        else if (e.key === 'Escape') closeLcdConfirm(false);
+        else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { lcdConfirmYes = e.key === 'ArrowLeft'; updateLcdConfirmCursor(); }
+        return;
+    }
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
+        if (e.key === 'Enter' && DxState.view === 'NEW-JOB') { e.preventDefault(); executeNewJob(); }
+        return;
+    }
     if (e.code === 'Space') { e.preventDefault(); toggleDeadman(); }
     if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') { toggleShift(true); }
     if (e.code === 'AltLeft' || e.code === 'AltRight') { e.preventDefault(); toggleInterlock(true); }
 });
 window.addEventListener('keyup', (e) => {
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
     if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') { toggleShift(false); }
     if (e.code === 'AltLeft' || e.code === 'AltRight') { toggleInterlock(false); }
 });
@@ -5461,6 +5989,14 @@ window.handleToolKey = handleToolKey;
 window.handleLanguageBtn = handleLanguageBtn;
 window.toggleLanguage = toggleLanguage;
 window.updateLcdLanguage = updateLcdLanguage;
+window.pressMotionType = pressMotionType;
+window.toggleJobMainMenu = toggleJobMainMenu;
+window.closeJobMainMenu = closeJobMainMenu;
+window.toggleNewJobType = toggleNewJobType;
+window.executeNewJob = executeNewJob;
+window.editNewJobField = editNewJobField;
+window.softKbTab = softKbTab;
+window.closeLcdConfirm = closeLcdConfirm;
 </script>
 </body>
 </html>
