@@ -1541,56 +1541,141 @@ function buildRobot() {
     joint1.position.y = 0.05; // Pivote eje L (no cambiar)
     joint0.add(joint1);
 
-    // Brazo inferior lateral (estilo Motoman, montado a un lado)
-    const lArm = linkPlate(0.32, 0.062, 0.050, 0.042, yBlue);
+    // Brazo inferior estilo Motoman: fino en el centro, ensanchado solo en las
+    // articulaciones (más ancho abajo, en el eje L, que arriba, en el eje U)
+    // y ligeramente curvado hacia atrás.
+    function curvedLink(len, r0, r1, waist, bow, depth, color, bevel = 0.006) {
+        const sh = new THREE.Shape();
+        // borde delantero (y negativo): de la articulación L a la U pasando por la cintura
+        const cBot = 2 * (-waist + bow) + 0.5 * (r0 + r1);
+        // borde trasero (y positivo)
+        const cTop = 2 * (waist + bow) - 0.5 * (r0 + r1);
+        sh.moveTo(0, -r0);
+        sh.quadraticCurveTo(len * 0.5, cBot, len, -r1);
+        sh.absarc(len, 0, r1, -Math.PI / 2, Math.PI / 2, false);
+        sh.quadraticCurveTo(len * 0.5, cTop, 0, r0);
+        sh.absarc(0, 0, r0, Math.PI / 2, Math.PI * 1.5, false);
+        const g = new THREE.ExtrudeGeometry(sh, {
+            depth: depth - 2 * bevel, bevelEnabled: true, bevelThickness: bevel,
+            bevelSize: bevel, bevelSegments: 4, curveSegments: 40
+        });
+        g.translate(0, 0, -(depth - 2 * bevel) / 2);
+        const m = new THREE.Mesh(g, M(color));
+        m.castShadow = true; m.receiveShadow = true;
+        return m;
+    }
+
+    const lArm = curvedLink(0.32, 0.070, 0.044, 0.031, 0.012, 0.040, yBlue);
     lArm.position.z = 0.062;
     joint1.add(lArm);
 
-    // Tapas de rodamiento en los ejes L y U
-    const lCap = cyl(0.040, 0.040, 0.008, yGrey, 'z');
-    lCap.position.set(0, 0, 0.087);
-    joint1.add(lCap);
-    const uCap = cyl(0.032, 0.032, 0.008, yGrey, 'z');
-    uCap.position.set(0.32, 0, 0.087);
-    joint1.add(uCap);
+    // Tapa abombada (elipse extruida con bisel grande = cara redondeada)
+    function domeCap(rx, ry, depth, bevel, color) {
+        const sh = new THREE.Shape();
+        sh.absellipse(0, 0, rx - bevel, ry - bevel, 0, Math.PI * 2, false, 0);
+        const g = new THREE.ExtrudeGeometry(sh, {
+            depth: Math.max(0.001, depth - 2 * bevel), bevelEnabled: true, bevelThickness: bevel,
+            bevelSize: bevel, bevelSegments: 6, curveSegments: 40
+        });
+        g.translate(0, 0, -Math.max(0.001, depth - 2 * bevel) / 2);
+        const m = new THREE.Mesh(g, M(color));
+        m.castShadow = true; m.receiveShadow = true;
+        return m;
+    }
 
-    // Rebaje decorativo (ranura) en el brazo inferior
-    const lGroove = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.022, 0.004), M(0x174f9e));
-    lGroove.position.set(0.16, 0, 0.0845);
-    joint1.add(lGroove);
+    // Articulación de abajo (eje L): tapa redonda grande, azul como el robot real
+    const lCap = domeCap(0.064, 0.064, 0.05, 0.014, yBlue);
+    lCap.position.set(0, 0, 0.068);
+    joint1.add(lCap);
+
+    // Cabeza del eje U: tapa ovalada y abombada, más ancha que el brazo
+    const uHead = domeCap(0.066, 0.056, 0.056, 0.016, yBlue);
+    uHead.position.set(0.312, 0.004, 0.066);
+    joint1.add(uHead);
 
     joints.push(joint0);
     joints.push(joint1);
 
-    // ================= EJE U (carcasa del brazo superior) =================
+    // Viga de sección rectangular redondeada que se estrecha (perfil lateral en XY, extruida en Z)
+    function roundedPoly(pts, r) {
+        const sh = new THREE.Shape();
+        const n = pts.length;
+        for (let i = 0; i < n; i++) {
+            const p = pts[i], prev = pts[(i + n - 1) % n], next = pts[(i + 1) % n];
+            const d1 = new THREE.Vector2(prev.x - p.x, prev.y - p.y).normalize().multiplyScalar(r);
+            const d2 = new THREE.Vector2(next.x - p.x, next.y - p.y).normalize().multiplyScalar(r);
+            const a1 = new THREE.Vector2(p.x + d1.x, p.y + d1.y), a2 = new THREE.Vector2(p.x + d2.x, p.y + d2.y);
+            if (i === 0) sh.moveTo(a1.x, a1.y); else sh.lineTo(a1.x, a1.y);
+            sh.quadraticCurveTo(p.x, p.y, a2.x, a2.y);
+        }
+        sh.closePath();
+        return sh;
+    }
+    function taperBeam(len, h0, h1, depth, rc, color, bevel = 0.009) {
+        const pts = [new THREE.Vector2(0, -h0), new THREE.Vector2(len, -h1), new THREE.Vector2(len, h1), new THREE.Vector2(0, h0)];
+        const g = new THREE.ExtrudeGeometry(roundedPoly(pts, rc), {
+            depth: depth - 2 * bevel, bevelEnabled: true, bevelThickness: bevel,
+            bevelSize: bevel * 0.8, bevelSegments: 4, curveSegments: 8
+        });
+        g.translate(0, 0, -(depth - 2 * bevel) / 2);
+        const m = new THREE.Mesh(g, M(color));
+        m.castShadow = true; m.receiveShadow = true;
+        return m;
+    }
+
+    // ================= EJE U (carcasa del codo + antebrazo) =================
     const joint2 = new THREE.Group();
     joint2.position.x = 0.32; // Pivote eje U (no cambiar)
     joint1.add(joint2);
 
-    // Carcasa del codo (aloja los motores R/B/T en la parte trasera)
-    const uCase = roundedBox(0.15, 0.10, 0.082, 0.025, yBlue);
-    uCase.position.set(-0.012, 0, 0);
-    joint2.add(uCase);
+    // Carcasa cilíndrica del codo (reductor del eje U) con anillos en relieve y tornillos
+    const uDrum = cyl(0.056, 0.056, 0.088, yBlue, 'z', 40);
+    joint2.add(uDrum);
+    [-0.03, 0.006].forEach(z => {
+        const ring = cyl(0.06, 0.06, 0.008, 0x1a58b0, 'z', 40);
+        ring.position.z = z;
+        joint2.add(ring);
+    });
+    for (let i = 0; i < 8; i++) {
+        const a = i / 8 * Math.PI * 2;
+        const bolt = cyl(0.0045, 0.0045, 0.006, 0x174a94, 'z', 10);
+        bolt.position.set(Math.cos(a) * 0.046, Math.sin(a) * 0.046, -0.046);
+        joint2.add(bolt);
+    }
+    // Relieves de la tapa del reductor en la parte superior
+    [-0.012, 0.012].forEach(z => {
+        const rib = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.008, 0.008), M(0x1a58b0));
+        rib.position.set(-0.01, 0.057, z);
+        joint2.add(rib);
+    });
 
-    // Tapa trasera de motores de muñeca
-    const rearCover = roundedBox(0.03, 0.075, 0.07, 0.012, yGrey);
-    rearCover.position.set(-0.092, 0, 0);
+    // Carcasa trasera (aloja los motores de muñeca R/B/T)
+    const uCase = roundedBox(0.10, 0.092, 0.082, 0.024, yBlue);
+    uCase.position.set(-0.055, 0.004, 0);
+    joint2.add(uCase);
+    const rearCover = roundedBox(0.018, 0.07, 0.066, 0.008, yGrey);
+    rearCover.position.set(-0.108, 0.004, 0);
     joint2.add(rearCover);
+    const rearConn = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.016, 0.03), M(yDark));
+    rearConn.position.set(-0.075, 0.054, 0);
+    joint2.add(rearConn);
 
     // Motor del eje U (lado opuesto al brazo inferior)
-    servoMotor(joint2, 0, 0, -0.041, -1);
+    servoMotor(joint2, 0, 0, -0.044, -1);
 
-    // Raíz del antebrazo (tubo cónico)
-    const foreRoot = cyl(0.036, 0.042, 0.10, yBlue, 'x');
-    foreRoot.position.x = 0.10;
-    joint2.add(foreRoot);
+    // Antebrazo: viga larga, recta y que se estrecha hacia la muñeca (zona del logotipo)
+    const foreBeam = taperBeam(0.17, 0.047, 0.037, 0.074, 0.014, yBlue);
+    foreBeam.position.x = 0.005;
+    joint2.add(foreBeam);
 
-    // Placa blanca de identificación (lateral)
-    const plate = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.002, 0.045), M(0xf2f2f2, 40));
-    plate.position.set(-0.02, 0.0505, 0);
-    joint2.add(plate);
+    // Cubierta lateral ligeramente rehundida (donde va el rótulo en el robot real)
+    [-1, 1].forEach(side => {
+        const panel = taperBeam(0.11, 0.03, 0.026, 0.004, 0.01, 0x1a5ab4, 0.0015);
+        panel.position.set(0.035, 0, side * 0.0375);
+        joint2.add(panel);
+    });
 
-    const wristBase = new THREE.Mesh(new THREE.SphereGeometry(0.037, 24, 16), M(yBlue));
+    const wristBase = new THREE.Mesh(new THREE.SphereGeometry(0.036, 24, 16), M(yBlue));
     wristBase.castShadow = true;
     wristBase.position.x = 0.15;
     joint2.add(wristBase);
@@ -1602,21 +1687,23 @@ function buildRobot() {
     joint3.position.x = 0.15; // Pivote eje R (no cambiar)
     joint2.add(joint3);
 
-    const rTube = cyl(0.030, 0.036, 0.075, yBlue, 'x');
-    rTube.position.x = 0.0375;
-    joint3.add(rTube);
-
-    const rSeal = cyl(0.031, 0.031, 0.006, yDark, 'x');
-    rSeal.position.x = 0.005;
+    // Junta giratoria del eje R
+    const rSeal = roundedBox(0.006, 0.07, 0.066, 0.012, yDark);
+    rSeal.position.x = 0.004;
     joint3.add(rSeal);
 
-    // Horquilla de la muñeca (dos placas laterales)
+    // Tramo delantero del antebrazo (gira con R)
+    const rBeam = taperBeam(0.075, 0.034, 0.028, 0.062, 0.012, yBlue, 0.008);
+    rBeam.position.x = 0.007;
+    joint3.add(rBeam);
+
+    // Cabeza de la muñeca: horquilla con dos placas que sujetan el eje B
     [-1, 1].forEach(side => {
-        const fork = linkPlate(0.05, 0.022, 0.026, 0.012, yBlue, 0.003);
-        fork.position.set(0.07, 0, side * 0.029);
+        const fork = linkPlate(0.05, 0.028, 0.027, 0.013, yBlue, 0.004);
+        fork.position.set(0.07, 0, side * 0.0295);
         joint3.add(fork);
     });
-    const forkBridge = roundedBox(0.02, 0.044, 0.07, 0.008, yBlue);
+    const forkBridge = roundedBox(0.02, 0.054, 0.072, 0.01, yBlue);
     forkBridge.position.set(0.072, 0, 0);
     joint3.add(forkBridge);
     joints.push(joint3);
@@ -1819,17 +1906,20 @@ function buildDX200Cabinet() {
     scene.add(cab);
 
     const W = 0.40, H = 0.56, D = 0.30;
-    const bodyCol = 0xDCDEDF, doorCol = 0xE9EAEA, darkCol = 0x2b2d31;
+    const bodyCol = 0xEEF0F1, doorCol = 0xF6F7F8, darkCol = 0x2b2d31, navy = 0x1C2B5E;
 
-    // Zócalo y cuerpo
-    box(W - 0.02, 0.04, D - 0.02, darkCol, 0, 0.02, 0, cab);
+    // Zócalo, cuerpo blanco y marco azul oscuro (como el DX200 real)
+    box(W - 0.02, 0.04, D - 0.02, navy, 0, 0.02, 0, cab);
     box(W, H, D, bodyCol, 0, 0.04 + H / 2, 0, cab);
-    // Tapa superior ligeramente mayor
-    box(W + 0.01, 0.012, D + 0.01, 0xcfd2d4, 0, 0.04 + H + 0.006, 0, cab);
+    box(W + 0.01, 0.014, D + 0.01, navy, 0, 0.04 + H + 0.007, 0, cab);                 // techo
+    [-1, 1].forEach(sx => box(0.014, H, 0.014, navy, sx * (W / 2 - 0.002), 0.04 + H / 2, D / 2 - 0.002, cab));
+    [-1, 1].forEach(sx => box(0.014, H, 0.014, navy, sx * (W / 2 - 0.002), 0.04 + H / 2, -D / 2 + 0.002, cab));
+    // Franja vertical azul oscuro en el frente derecho (donde va el rótulo DX200)
+    box(0.07, H - 0.01, 0.008, navy, W / 2 - 0.035, 0.04 + H / 2, D / 2 + 0.004, cab);
 
-    // Puerta frontal con junta
+    // Puerta frontal blanca
     const doorZ = D / 2 + 0.004;
-    box(W - 0.03, H - 0.04, 0.006, doorCol, 0, 0.04 + H / 2, doorZ, cab);
+    box(W - 0.10, H - 0.04, 0.006, doorCol, -0.035, 0.04 + H / 2, doorZ, cab);
 
     // Interruptor general (maneta giratoria sobre placa)
     box(0.07, 0.07, 0.004, 0xb9bcbf, -0.12, 0.44, doorZ + 0.005, cab);
@@ -1847,11 +1937,11 @@ function buildDX200Cabinet() {
     cab.add(pb);
 
     // Cerraduras de la puerta
-    [0.48, 0.18].forEach(y => box(0.012, 0.03, 0.01, 0x777b80, 0.165, y, doorZ + 0.006, cab));
+    [0.48, 0.18].forEach(y => box(0.012, 0.03, 0.01, 0x777b80, 0.13, y, doorZ + 0.006, cab));
 
-    // Placa de características
-    box(0.12, 0.05, 0.002, 0xf6f6f6, 0.05, 0.50, doorZ + 0.004, cab);
-    box(0.12, 0.012, 0.002, 0x1D63C4, 0.05, 0.522, doorZ + 0.0045, cab);
+    // Placa de características y etiqueta de aviso
+    box(0.10, 0.012, 0.002, navy, 0.03, 0.55, doorZ + 0.004, cab);
+    box(0.03, 0.03, 0.002, 0xF2C200, -0.12, 0.30, doorZ + 0.004, cab);
 
     // Rejillas de ventilación laterales
     for (let i = 0; i < 6; i++) {
@@ -1859,31 +1949,32 @@ function buildDX200Cabinet() {
         box(0.002, 0.008, 0.18, 0x9a9da1, -W / 2 - 0.001, 0.15 + i * 0.022, 0, cab);
     }
 
-    // Teach pendant colgado en el lateral
+    // Teach pendant colgado en la puerta (como en las fotos del DX200)
     const tp = new THREE.Group();
-    tp.position.set(W / 2 + 0.03, 0.40, 0.04);
-    tp.rotation.y = Math.PI / 2;
-    tp.rotation.x = -0.12;
+    tp.position.set(0.02, 0.33, doorZ + 0.03);
+    tp.rotation.x = -0.06;
     cab.add(tp);
-    box(0.03, 0.02, 0.03, 0x777b80, 0, 0.11, -0.012, tp);         // gancho
-    box(0.17, 0.22, 0.035, 0x30343a, 0, 0, 0, tp);                 // carcasa
-    const screen = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.08, 0.002),
+    box(0.04, 0.02, 0.03, 0x777b80, 0, 0.115, -0.015, tp);        // gancho
+    box(0.15, 0.21, 0.032, 0xE2E5E8, 0, 0, 0, tp);                 // carcasa clara
+    box(0.15, 0.025, 0.034, 0x9aa0a8, 0, -0.095, 0, tp);           // empuñadura inferior
+    const screen = new THREE.Mesh(new THREE.BoxGeometry(0.105, 0.08, 0.002),
         new THREE.MeshPhongMaterial({ color: 0x1b3d6e, emissive: 0x0c2244 }));
-    screen.position.set(0, 0.045, 0.0185);
+    screen.position.set(-0.005, 0.04, 0.017);
     tp.add(screen);
-    box(0.13, 0.07, 0.002, 0x5b6068, 0, -0.05, 0.0185, tp);        // teclado
+    box(0.12, 0.06, 0.002, 0xb7bcc2, 0, -0.045, 0.017, tp);        // teclado
     const estop = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.012, 20),
         new THREE.MeshPhongMaterial({ color: 0xd01818, shininess: 80 }));
     estop.rotation.x = Math.PI / 2;
-    estop.position.set(0.065, 0.095, 0.02);
+    estop.position.set(0.058, 0.088, 0.018);
     tp.add(estop);
 
     // Cable del pendant (cuelga hasta el suelo)
     const pendCable = new THREE.CatmullRomCurve3([
-        new THREE.Vector3(W / 2 + 0.03, 0.29, 0.04),
-        new THREE.Vector3(W / 2 + 0.08, 0.12, 0.09),
-        new THREE.Vector3(W / 2 + 0.05, 0.01, 0.16),
-        new THREE.Vector3(W / 2 - 0.05, 0.008, D / 2 + 0.03)
+        new THREE.Vector3(0.05, 0.225, doorZ + 0.03),
+        new THREE.Vector3(0.09, 0.12, doorZ + 0.07),
+        new THREE.Vector3(0.06, 0.012, doorZ + 0.12),
+        new THREE.Vector3(-0.08, 0.008, doorZ + 0.08),
+        new THREE.Vector3(-0.16, 0.008, doorZ + 0.02)
     ]);
     const pc = new THREE.Mesh(new THREE.TubeGeometry(pendCable, 30, 0.006, 8, false), M(0x111111, 20));
     pc.castShadow = true;
