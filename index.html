@@ -1660,36 +1660,24 @@ function buildRobot() {
         joint2.add(rib);
     });
 
-    // Carcasa trasera (aloja los motores de muñeca R/B/T)
-    const uCase = roundedBox(0.10, 0.092, 0.082, 0.024, yBlue);
-    uCase.position.set(-0.055, 0.004, 0);
+    // Carcasa trasera grande (aloja los motores de muñeca R/B/T)
+    const uCase = roundedBox(0.12, 0.104, 0.09, 0.026, yBlue);
+    uCase.position.set(-0.06, 0.006, 0);
     joint2.add(uCase);
-    const rearCover = roundedBox(0.018, 0.07, 0.066, 0.008, yGrey);
-    rearCover.position.set(-0.108, 0.004, 0);
+    const rearCover = roundedBox(0.018, 0.08, 0.072, 0.008, yGrey);
+    rearCover.position.set(-0.122, 0.006, 0);
     joint2.add(rearCover);
-    const rearConn = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.016, 0.03), M(yDark));
-    rearConn.position.set(-0.075, 0.054, 0);
+    const rearConn = new THREE.Mesh(new THREE.BoxGeometry(0.022, 0.016, 0.032), M(yDark));
+    rearConn.position.set(-0.08, 0.062, 0);
     joint2.add(rearConn);
 
     // Motor del eje U (lado opuesto al brazo inferior)
-    servoMotor(joint2, 0, 0, -0.044, -1);
+    servoMotor(joint2, 0, 0, -0.045, -1);
 
-    // Antebrazo: viga larga, recta y que se estrecha hacia la muñeca (zona del logotipo)
-    const foreBeam = taperBeam(0.17, 0.047, 0.037, 0.074, 0.014, yBlue);
-    foreBeam.position.x = 0.005;
-    joint2.add(foreBeam);
-
-    // Cubierta lateral ligeramente rehundida (donde va el rótulo en el robot real)
-    [-1, 1].forEach(side => {
-        const panel = taperBeam(0.11, 0.03, 0.026, 0.004, 0.01, 0x1a5ab4, 0.0015);
-        panel.position.set(0.035, 0, side * 0.0375);
-        joint2.add(panel);
-    });
-
-    const wristBase = new THREE.Mesh(new THREE.SphereGeometry(0.036, 24, 16), M(yBlue));
-    wristBase.castShadow = true;
-    wristBase.position.x = 0.15;
-    joint2.add(wristBase);
+    // Collar fijo del codo: el eje R gira justo a la salida del codo, como en el Motoman
+    const foreCollar = taperBeam(0.045, 0.054, 0.052, 0.088, 0.016, yBlue, 0.009);
+    foreCollar.position.x = 0.002;
+    joint2.add(foreCollar);
 
     joints.push(joint2);
 
@@ -1698,25 +1686,54 @@ function buildRobot() {
     joint3.position.x = 0.15; // Pivote eje R (no cambiar)
     joint2.add(joint3);
 
-    // Junta giratoria del eje R
-    const rSeal = roundedBox(0.006, 0.07, 0.066, 0.012, yDark);
-    rSeal.position.x = 0.004;
-    joint3.add(rSeal);
+    // El eje R gira sobre la línea recta del antebrazo: este grupo deshace la inclinación
+    // de -23° del frame, así la parte delantera sigue recta y gira con R (cinemática intacta).
+    const rAligned = new THREE.Group();
+    rAligned.rotation.z = 23 * Math.PI / 180;
+    joint3.add(rAligned);
 
-    // Tramo delantero del antebrazo (gira con R)
-    const rBeam = taperBeam(0.075, 0.034, 0.028, 0.062, 0.012, yBlue, 0.008);
-    rBeam.position.x = 0.007;
-    joint3.add(rBeam);
+    // Junta giratoria del eje R, a la salida del codo (5 cm del eje U).
+    // Todo lo que va dentro de rAligned gira con R alrededor de la línea del antebrazo.
+    const R_SEAM_X = -0.10;   // en coordenadas de rAligned (origen en x = 0.15 del codo)
+    const rSeal = roundedBox(0.006, 0.1, 0.09, 0.016, yDark);
+    rSeal.position.x = R_SEAM_X + 0.001;
+    rAligned.add(rSeal);
 
-    // Cabeza de la muñeca: horquilla con dos placas que sujetan el eje B
+    // Antebrazo: viga grande, recta y de lados planos (zona del logotipo), gira con R.
+    // Termina antes de la muñeca: a partir de ahí sigue en dos placas separadas (horquilla).
+    const rBeam = taperBeam(0.151, 0.052, 0.044, 0.086, 0.016, yBlue, 0.009);
+    rBeam.position.x = R_SEAM_X + 0.004;
+    rAligned.add(rBeam);
+    // Paneles laterales planos (donde va el rótulo en el robot real)
     [-1, 1].forEach(side => {
-        const fork = linkPlate(0.05, 0.028, 0.027, 0.013, yBlue, 0.004);
-        fork.position.set(0.07, 0, side * 0.0295);
-        joint3.add(fork);
+        const panel = taperBeam(0.11, 0.036, 0.031, 0.004, 0.01, 0x1a5ab4, 0.0015);
+        panel.position.set(R_SEAM_X + 0.025, 0, side * 0.0435);
+        rAligned.add(panel);
     });
-    const forkBridge = roundedBox(0.02, 0.054, 0.072, 0.01, yBlue);
-    forkBridge.position.set(0.072, 0, 0);
-    joint3.add(forkBridge);
+    // Tapa superior
+    const topCover = roundedBox(0.09, 0.006, 0.06, 0.003, 0x1a5ab4);
+    topCover.position.set(R_SEAM_X + 0.075, 0.048, 0);
+    rAligned.add(topCover);
+
+    // Horquilla: dos placas separadas que bajan hasta el eje B (abiertas por arriba y por delante,
+    // para que la muñeca pueda girar hacia arriba y hacia abajo entre ellas)
+    const bX = 0.12 * Math.cos(23 * Math.PI / 180), bY = -0.12 * Math.sin(23 * Math.PI / 180);
+    const forkStart = new THREE.Vector2(0.03, 0);
+    const forkLen = Math.hypot(bX - forkStart.x, bY - forkStart.y);
+    const forkAng = Math.atan2(bY - forkStart.y, bX - forkStart.x);
+    [-1, 1].forEach(side => {
+        const fork = linkPlate(forkLen, 0.043, 0.03, 0.014, yBlue, 0.004);
+        fork.rotation.z = forkAng;
+        fork.position.set(forkStart.x, forkStart.y, side * 0.036);
+        rAligned.add(fork);
+        // Tapa redonda del eje B por fuera de cada placa
+        const bCover = cyl(0.026, 0.026, 0.005, 0x1a58b0, 'z', 32);
+        bCover.position.set(bX, bY, side * 0.0455);
+        rAligned.add(bCover);
+        const bCenter = cyl(0.011, 0.011, 0.003, yGrey, 'z', 20);
+        bCenter.position.set(bX, bY, side * 0.049);
+        rAligned.add(bCenter);
+    });
     joints.push(joint3);
 
     // ================= EJE B (cabeceo de muñeca) =================
@@ -1724,16 +1741,23 @@ function buildRobot() {
     joint4.position.x = 0.12; // Pivote eje B (no cambiar)
     joint3.add(joint4);
 
-    const bHub = cyl(0.022, 0.022, 0.046, yBlue, 'z');
+    // Cuerpo de la muñeca: gira con B entre las dos placas de la horquilla
+    const bHub = cyl(0.022, 0.022, 0.058, 0x174a94, 'z');
     joint4.add(bHub);
-    const bCapA = cyl(0.016, 0.016, 0.004, yGrey, 'z');
-    bCapA.position.z = 0.038;
-    joint4.add(bCapA);
-    const bCapB = cyl(0.016, 0.016, 0.004, yGrey, 'z');
-    bCapB.position.z = -0.038;
-    joint4.add(bCapB);
-    const bNose = cyl(0.019, 0.022, 0.03, yBlue, 'x');
-    bNose.position.x = 0.018;
+    const wristBody = roundedBox(0.062, 0.054, 0.046, 0.012, yBlue);
+    wristBody.position.x = -0.001;
+    joint4.add(wristBody);
+    // Tapa del motor del eje T (detrás, en el lado opuesto a la brida)
+    const tMotorCover = roundedBox(0.018, 0.046, 0.042, 0.006, 0x1a5ab4);
+    tMotorCover.position.x = -0.039;
+    joint4.add(tMotorCover);
+    // Etiqueta roja de sentido de giro
+    const tLabel = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.0015, 0.02), M(0xd02020, 30));
+    tLabel.position.set(0.006, 0.0275, 0);
+    joint4.add(tLabel);
+    // Salida hacia la brida
+    const bNose = cyl(0.021, 0.024, 0.014, yBlue, 'x');
+    bNose.position.x = 0.031;
     joint4.add(bNose);
     joints.push(joint4);
 
