@@ -4222,6 +4222,87 @@ let playMotion = null;
 // Pila de CALL JOB
 let callStack = [];
 
+// ============================================================
+// MOVIMIENTO MANUAL EN COORDENADAS (ROBOT / TOOL / CILINDRICO) — como en el DX200:
+// las teclas X/Y/Z desplazan la PUNTA de la herramienta (TCP) en línea recta y
+// mantienen su orientación; las teclas R/B/T giran la herramienta alrededor del TCP.
+// Ejes del robot: X adelante, Y izquierda, Z arriba (escena: x, -z, y).
+// ============================================================
+/** Inclinación de la herramienta respecto a la vertical (0° = apunta recta hacia abajo). */
+function toolTiltDeg(angles) {
+    const d = new THREE.Vector3(1, 0, 0).applyMatrix4(new THREE.Matrix4().extractRotation(tcpMatrix(angles || RobotState.angles)));
+    return Math.acos(Math.max(-1, Math.min(1, -d.y))) * 180 / Math.PI;
+}
+function tiltText(angles) {
+    const t = toolTiltDeg(angles);
+    return t < 0.05 ? ' | herramienta VERTICAL ✓' : ` | inclinación ${t.toFixed(1)}°`;
+}
+
+function jogCartesian(axis, dir) {
+    const stepMm = RobotState.speed * 0.5;      // mm por pulsación
+    const stepDeg = RobotState.speed * 0.3;     // grados por pulsación
+    const cur = tcpPose(RobotState.angles);
+    const p = cur.p.clone(), q = cur.q.clone();
+    const robotToScene = (x, y, z) => new THREE.Vector3(x, z, -y);
+    const isTrans = axis === 'x' || axis === 'y' || axis === 'z';
+    const mode = DxState.coordSystem;
+
+    // Ejes de la herramienta (TOOL): Z = dirección en la que apunta, X e Y perpendiculares
+    const m = new THREE.Matrix4().makeRotationFromQuaternion(q);
+    const toolZ = new THREE.Vector3().setFromMatrixColumn(m, 0);
+    const toolX = new THREE.Vector3().setFromMatrixColumn(m, 2).negate();
+    const toolY = new THREE.Vector3().crossVectors(toolZ, toolX);
+
+    if (isTrans) {
+        let d;
+        if (mode === 'TOOL') {
+            d = (axis === 'x' ? toolX : axis === 'y' ? toolY : toolZ).clone();
+        } else if (mode === 'CILINDRICO' && axis !== 'z') {
+            const radial = new THREE.Vector3(p.x, 0, p.z);
+            if (radial.length() < 1) radial.set(1, 0, 0);
+            radial.normalize();
+            if (axis === 'x') d = radial;                                   // R: alejar/acercar del eje S
+            else {                                                         // θ: girar alrededor del eje S
+                const ang = (stepDeg * 0.5 * dir) * Math.PI / 180;
+                const rot = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), ang);
+                p.applyQuaternion(rot); q.premultiply(rot); d = null;
+            }
+        } else {
+            d = axis === 'x' ? robotToScene(1, 0, 0) : axis === 'y' ? robotToScene(0, 1, 0) : robotToScene(0, 0, 1);
+        }
+        if (d) p.addScaledVector(d, stepMm * dir);
+    } else {
+        // Giro de la herramienta alrededor del TCP
+        const ang = stepDeg * dir * Math.PI / 180;
+        let ax;
+        if (mode === 'TOOL') ax = axis === 'r' ? toolX : axis === 'b' ? toolY : toolZ;
+        else ax = axis === 'r' ? robotToScene(1, 0, 0) : axis === 'b' ? robotToScene(0, 1, 0) : robotToScene(0, 0, 1);
+        q.premultiply(new THREE.Quaternion().setFromAxisAngle(ax.clone().normalize(), ang));
+    }
+
+    const sol = solveTcpIK(RobotState.angles, p, q, 60);
+    if (sol.posErr > 1 || sol.rotErr > 0.5) {
+        setInfoDisplay('⚠ LÍMITE: la herramienta no puede llegar ahí (fuera de alcance o en un límite de eje)');
+        logAlarm('ERROR', 'OUT OF RANGE (' + mode + ' JOG)');
+        return;
+    }
+    // Simulador: no dejar que la pinza atraviese la placa del suelo
+    if (tcpPose(sol.angles).p.y < 40) {
+        setInfoDisplay('⚠ La herramienta tocaría el suelo: movimiento no realizado');
+        return;
+    }
+    Object.assign(RobotState.angles, stepAngles(sol.angles));
+    const r = tcpPose(RobotState.angles).p;
+    const X = r.x, Y = -r.z, Z = r.y;
+    if (mode === 'CILINDRICO') {
+        setInfoDisplay(`CILINDRICO: R=${Math.hypot(X, Y).toFixed(1)} θ=${(Math.atan2(Y, X) * 180 / Math.PI).toFixed(1)}° Z=${Z.toFixed(1)} mm` + tiltText());
+    } else {
+        setInfoDisplay(`${mode}: X=${X.toFixed(1)} Y=${Y.toFixed(1)} Z=${Z.toFixed(1)} mm` + tiltText());
+    }
+    if (typeof updateDisplay === 'function') updateDisplay();
+    if (typeof updateGuideLines === 'function') updateGuideLines();
+}
+
 function moveAxis(axis, dir) {
     if (!checkTeachMode('Movimiento manual')) return;
     if (RobotState.programRunning) return;
@@ -4258,140 +4339,7 @@ function moveAxis(axis, dir) {
     const axisMap = { x: 's', y: 'l', z: 'u', r: 'r', b: 'b', t: 't' };
     
     if (DxState.coordSystem === 'ROBOT' || DxState.coordSystem === 'TOOL' || DxState.coordSystem === 'USER' || DxState.coordSystem === 'CILINDRICO') {
-        const stepSize = RobotState.speed * 0.5; // mm por click (posición)
-        const rotStep = RobotState.speed * 0.3;  // grados por click (orientación)
-        const d2r = Math.PI / 180;
-        
-        // Guardar orientación original del tool respecto al mundo
-        const oldPitch = RobotState.angles.l + RobotState.angles.u + RobotState.angles.b;
-        const oldYaw = RobotState.angles.s;
-        const oldR = RobotState.angles.r;
-        const oldT = RobotState.angles.t;
-        
-        // Obtener posición cartesiana actual del TCP
-        let pos = forwardKinematics(RobotState.angles);
-        
-        // Crear posición destino
-        let target = { ...pos };
-        const isTranslation = (axis === 'x' || axis === 'y' || axis === 'z');
-        
-        // Flag para saber si debemos compensar orientación
-        let compensateOrientation = isTranslation;
-        
-        if (isTranslation) {
-            if (DxState.coordSystem === 'CILINDRICO') {
-                // ================================================
-                // MODO CILÍNDRICO (R, θ, Z)
-                // X → R (radial in/out desde el eje base)
-                // Y → θ (rotación alrededor de la base = S)
-                // Z → altura vertical
-                // ================================================
-                if (axis === 'x') {
-                    // R (radial): mover en la dirección radial actual
-                    const sRad = oldYaw * d2r;
-                    target.x += stepSize * dir * Math.cos(sRad);
-                    target.y += stepSize * dir * Math.sin(sRad);
-                } else if (axis === 'y') {
-                    // θ (theta): rotar S directamente
-                    const thetaStep = rotStep * 0.5;
-                    RobotState.angles.s += thetaStep * dir;
-                    RobotState.angles.s = Math.max(-170, Math.min(170, RobotState.angles.s));
-                    // Compensar R para que no cambie la orientación del tool
-                    RobotState.angles.r = oldR - (thetaStep * dir);
-                    const rCyl = Math.sqrt(pos.x * pos.x + pos.y * pos.y);
-                    const newPos2 = forwardKinematics(RobotState.angles);
-                    setInfoDisplay(`CILINDRICO: R=${rCyl.toFixed(0)}mm θ=${RobotState.angles.s.toFixed(1)}° Z=${newPos2.z.toFixed(0)}mm`);
-                    updateDisplay();
-                    updateGuideLines();
-                    return; // θ es directo, no necesita IK
-                } else if (axis === 'z') {
-                    target.z += stepSize * dir;
-                }
-            } else if (DxState.coordSystem === 'TOOL') {
-                // ================================================
-                // MODO TOOL: Yaskawa Tool Frame
-                // Tool X+ = Approach (Avanzar, xAxis)
-                // Tool Y+ = Lateral (Lados, zAxis)
-                // Tool Z+ = Up/Down (Arriba/Abajo, yAxis)
-                // ================================================
-                const toolFrame = getToolRotationMatrix(RobotState.angles);
-                
-                let dx_global = 0, dy_global = 0, dz_global = 0;
-                
-                if (axis === 'x') { // X+ Avanzar
-                    dx_global = stepSize * dir * toolFrame.xAxis.x;
-                    dy_global = stepSize * dir * toolFrame.xAxis.y;
-                    dz_global = stepSize * dir * toolFrame.xAxis.z;
-                } else if (axis === 'y') { // Y+ Lados
-                    dx_global = stepSize * dir * toolFrame.zAxis.x;
-                    dy_global = stepSize * dir * toolFrame.zAxis.y;
-                    dz_global = stepSize * dir * toolFrame.zAxis.z;
-                } else if (axis === 'z') { // Z+ Arriba/Abajo
-                    dx_global = stepSize * dir * toolFrame.yAxis.x;
-                    dy_global = stepSize * dir * toolFrame.yAxis.y;
-                    dz_global = stepSize * dir * toolFrame.yAxis.z;
-                }
-                
-                target.x += dx_global;
-                target.y += dy_global;
-                target.z += dz_global;
-            } else {
-                // ================================================
-                // MODO ROBOT/USER: Mover en coordenadas del mundo
-                // ================================================
-                if (axis === 'x')      target.x += stepSize * dir;
-                else if (axis === 'y') target.y += stepSize * dir;
-                else if (axis === 'z') target.z += stepSize * dir;
-            }
-        } else {
-            // Rotación: misma lógica para todos los modos
-            if (axis === 'r') target.rx += rotStep * dir;
-            else if (axis === 'b') target.ry += rotStep * dir;
-            else if (axis === 't') target.rz += rotStep * dir;
-        }
-        
-        // Resolver IK con Jacobiano + DLS
-        const solved = inverseKinematicsDLS(RobotState.angles, target);
-        if (solved) {
-            RobotState.angles.s = solved.s;
-            RobotState.angles.l = solved.l;
-            RobotState.angles.u = solved.u;
-            RobotState.angles.r = solved.r;
-            RobotState.angles.b = solved.b;
-            RobotState.angles.t = solved.t;
-            
-            // ========================================================
-            // COMPENSACIÓN DE ORIENTACIÓN (solo al trasladar)
-            // El tool mantiene su ángulo respecto al suelo.
-            // ========================================================
-            if (compensateOrientation) {
-                const newPitch = RobotState.angles.l + RobotState.angles.u + RobotState.angles.b;
-                const pitchDrift = newPitch - oldPitch;
-                RobotState.angles.b -= pitchDrift;
-                
-                // Yaw no se compensa mecánicamente con R porque tuerce la herramienta
-                // Se mantiene R y T fijos respecto al brazo
-                RobotState.angles.r = oldR;
-                RobotState.angles.t = oldT;
-                
-                RobotState.angles.b = Math.max(-120, Math.min(120, RobotState.angles.b));
-                RobotState.angles.r = Math.max(-190, Math.min(190, RobotState.angles.r));
-                RobotState.angles.t = Math.max(-360, Math.min(360, RobotState.angles.t));
-            }
-            
-            // Mostrar posición actualizada
-            const newPos = forwardKinematics(RobotState.angles);
-            if (DxState.coordSystem === 'CILINDRICO' && isTranslation) {
-                const rCyl = Math.sqrt(newPos.x * newPos.x + newPos.y * newPos.y);
-                setInfoDisplay(`CILINDRICO: R=${rCyl.toFixed(0)}mm θ=${RobotState.angles.s.toFixed(1)}° Z=${newPos.z.toFixed(0)}mm`);
-            } else if (isTranslation) {
-                setInfoDisplay(`${DxState.coordSystem}: X=${newPos.x.toFixed(1)} Y=${newPos.y.toFixed(1)} Z=${newPos.z.toFixed(1)} mm`);
-            } else {
-                setInfoDisplay(`${DxState.coordSystem}: Rx=${newPos.rx.toFixed(1)}° Ry=${newPos.ry.toFixed(1)}° Rz=${newPos.rz.toFixed(1)}°`);
-            }
-        } else {
-            setInfoDisplay('⚠ LÍMITE: Posición fuera del espacio de trabajo');
-        }
+        jogCartesian(axis, dir);
     } else {
         // Modo JOINT - directo
         const sAxis = axisMap[axis];
@@ -4405,7 +4353,8 @@ function moveAxis(axis, dir) {
                 logAlarm('ERROR', (DxState.softLimitRelease ? 'MECHANICAL LIMIT' : 'SOFT LIMIT') + ' R1 ' + sAxis.toUpperCase() + (dir > 0 ? '+' : '-'));
                 return;
             }
-            setInfoDisplay(`✓ MOVIENDO ${sAxis.toUpperCase()} ${dir > 0 ? '+' : '−'}`);
+            setInfoDisplay(`✓ JOINT: ${sAxis.toUpperCase()} ${dir > 0 ? '+' : '−'} ${RobotState.angles[sAxis].toFixed(1)}°` + tiltText() +
+                (sAxis === 'u' ? ' (en JOINT, U gira el codo; para bajar recto use COORD: ROBOT)' : ''));
             console.log('axis:', sAxis);
             function createGlow(x, y, z, color, size) {
     const canvas = document.createElement('canvas');
