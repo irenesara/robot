@@ -294,6 +294,7 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                         <span id="lcd-status" style="color:#0f0;">READY</span>
                         <span>MODE:<span id="lcd-mode" style="color:#ff0;">TEACH</span></span>
                         <span>SPD:<span id="lcd-speed" style="color:#ff0;">LOW</span></span>
+                        <span title="Modo de ciclo en PLAY (clic para cambiar)" style="cursor:pointer;" onclick="nextCycleMode()">CYC:<span id="lcd-cycle" style="color:#ff0;">AUTO</span></span>
                         <span>SEC:<span id="lcd-security" style="color:#f0f;">OPER</span></span>
                         <span>COORD:<span id="lcd-coord" style="color:#0ff;">JOINT</span><small id="lcd-tool-no" style="font-size:7px; color:#fff; display:none;">(00)</small></span>
                         <span>CYL1:<span id="og1-status" style="color:#666;">OFF</span></span>
@@ -972,15 +973,15 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                         </div>
 
                         <div class="kb-bot-col">
-                            <div class="kb-bot-btn purple-text pink-bg" onclick="startProgram()">TEST<br>START</div>
-                            <div class="kb-bot-btn purple-text pink-bg" onclick="stepProgram('BWD')">BWD</div>
+                            <div class="kb-bot-btn purple-text pink-bg" id="test-start-btn" style="touch-action:none;user-select:none;" onpointerdown="testStartDown(event)" onpointerup="testStartUp()" onpointercancel="testStartUp()">TEST<br>START</div>
+                            <div class="kb-bot-btn purple-text pink-bg" style="touch-action:none;user-select:none;" onpointerdown="fwdBwdDown(event,'BWD')" onpointerup="fwdBwdUp()" onpointercancel="fwdBwdUp()">BWD</div>
                             <div class="kb-bot-btn" id="delete-btn" onclick="pressDelete()">DELETE</div>
                             <div class="kb-bot-btn" id="modify-btn" onclick="pressModify()">MODIFY</div>
                         </div>
                         
                         <div class="kb-bot-col">
                             <div class="kb-bot-btn" onclick="toggleShift()"><span></span><span>SHIFT</span></div>
-                            <div class="kb-bot-btn purple-text pink-bg" onclick="stepProgram('FWD')">FWD</div>
+                            <div class="kb-bot-btn purple-text pink-bg" style="touch-action:none;user-select:none;" onpointerdown="fwdBwdDown(event,'FWD')" onpointerup="fwdBwdUp()" onpointercancel="fwdBwdUp()">FWD</div>
                             <div class="kb-bot-btn" id="insert-btn" onclick="pressInsert()">INSERT</div>
                             <div class="kb-bot-btn" onclick="pressEnter()" style="flex:1;">ENTER</div>
                         </div>
@@ -1036,21 +1037,37 @@ const DxState = {
     isSimpleMenu: false,
     language: 'en',
     coordSystem: 'JOINT',
-    softLimitRelease: false
+    softLimitRelease: false,
+    cycleMode: 'AUTO',
+    runKind: null
 };
 
 let robotJobs = {
     "JOB_ALAMBRE": [
         { s: 0, l: -30, u: 60, r: 0, b: -97, t: 0, code: 'NOP', desc: 'INICIO' },
         { s: 0, l: -30, u: 60, r: 0, b: -97, t: 0, code: 'CALL JOB:SUB_PROG', desc: 'LLAMADA A SUBRUTINA' },
-        { s: 30, l: -20, u: 50, r: 0, b: -97, t: 0, code: 'MOVJ VJ=50.00 PL=0', desc: 'IR A ROLLO HILO' },
-        { s: 30, l: -40, u: 70, r: 0, b: -97, t: 0, code: 'MOVL V=25.00 PL=0', desc: 'BAJAR A HILO (LINEAL)' },
-        { s: 30, l: -40, u: 70, r: 0, b: -97, t: 0, code: 'DOUT OG#(1) ON', desc: 'CERRAR PINZA 1 (COGER)' },
-        { s: 30, l: -40, u: 70, r: 0, b: -97, t: 0, code: 'TIMER T=0.5', desc: 'ESPERAR CIERRE' },
+        { s: 0, l: -30, u: 60, r: 0, b: -97, t: 0, code: 'DOUT OG#(2) OFF', desc: 'ABRIR PINZA 1' },
+        { s: 0, l: -30, u: 60, r: 0, b: -97, t: 0, code: 'DOUT OG#(4) OFF', desc: 'ABRIR PINZA 2' },
+        { s: 30, l: -20, u: 50, r: 0, b: -97, t: 0, code: 'MOVJ VJ=50.00 PL=0', desc: 'IR SOBRE EL ROLLO DE HILO' },
+        { s: 30, l: -40, u: 70, r: 0, b: -97, t: 0, code: 'MOVL V=25.00 PL=0', desc: 'BAJAR AL HILO (LINEAL)' },
+        { s: 30, l: -40, u: 70, r: 0, b: -97, t: 0, code: 'DOUT OG#(1) ON', desc: 'BAJAR CILINDRO 1' },
+        { s: 30, l: -40, u: 70, r: 0, b: -97, t: 0, code: 'TIMER T=0.50', desc: 'ESPERAR CILINDRO ABAJO' },
+        { s: 30, l: -40, u: 70, r: 0, b: -97, t: 0, code: 'DOUT OG#(2) ON', desc: 'CERRAR PINZA 1 (COGER HILO)' },
+        { s: 30, l: -40, u: 70, r: 0, b: -97, t: 0, code: 'TIMER T=0.50', desc: 'ESPERAR CIERRE' },
+        { s: 30, l: -40, u: 70, r: 0, b: -97, t: 0, code: 'DOUT OG#(1) OFF', desc: 'SUBIR CILINDRO 1' },
+        { s: 30, l: -40, u: 70, r: 0, b: -97, t: 0, code: 'TIMER T=0.50', desc: 'ESPERAR CILINDRO ARRIBA' },
         { s: 30, l: -20, u: 50, r: 0, b: -97, t: 0, code: 'MOVL V=10.00 PL=0', desc: 'TENSAR SUAVE (LINEAL)' },
         { s: 0, l: -20, u: 50, r: 0, b: -97, t: -90, code: 'MOVJ VJ=50.00 PL=0', desc: 'TIRAR Y ENROLLAR' },
-        { s: -45, l: -10, u: 40, r: 0, b: -97, t: -180, code: 'MOVL V=50.00 PL=0', desc: 'ARRASTRAR LINEAL' },
-        { s: -45, l: -10, u: 40, r: 0, b: -97, t: -180, code: 'DOUT OG#(1) OFF', desc: 'SOLTAR ALAMBRE' },
+        { s: -45, l: -10, u: 40, r: 0, b: -97, t: -180, code: 'MOVL V=50.00 PL=0', desc: 'LLEVAR AL DESTINO (LINEAL)' },
+        { s: -45, l: -10, u: 40, r: 0, b: -97, t: -180, code: 'DOUT OG#(3) ON', desc: 'BAJAR CILINDRO 2' },
+        { s: -45, l: -10, u: 40, r: 0, b: -97, t: -180, code: 'TIMER T=0.50', desc: 'ESPERAR CILINDRO 2 ABAJO' },
+        { s: -45, l: -10, u: 40, r: 0, b: -97, t: -180, code: 'DOUT OG#(4) ON', desc: 'CERRAR PINZA 2 (SUJETAR)' },
+        { s: -45, l: -10, u: 40, r: 0, b: -97, t: -180, code: 'TIMER T=0.50', desc: 'ESPERAR CIERRE PINZA 2' },
+        { s: -45, l: -10, u: 40, r: 0, b: -97, t: -180, code: 'DOUT OG#(2) OFF', desc: 'ABRIR PINZA 1 (SOLTAR HILO)' },
+        { s: -45, l: -10, u: 40, r: 0, b: -97, t: -180, code: 'TIMER T=0.50', desc: 'ESPERAR APERTURA' },
+        { s: -45, l: -10, u: 40, r: 0, b: -97, t: -180, code: 'DOUT OG#(4) OFF', desc: 'ABRIR PINZA 2' },
+        { s: -45, l: -10, u: 40, r: 0, b: -97, t: -180, code: 'DOUT OG#(3) OFF', desc: 'SUBIR CILINDRO 2' },
+        { s: -45, l: -10, u: 40, r: 0, b: -97, t: -180, code: 'TIMER T=0.50', desc: 'ESPERAR CILINDRO 2 ARRIBA' },
         { s: -45, l: -30, u: 60, r: 0, b: -97, t: 0, code: 'MOVJ VJ=100.00 PL=0', desc: 'RETORNO SEGURO' },
         { s: 0, l: -30, u: 60, r: 0, b: -97, t: 0, code: 'END', desc: 'FIN BUCLE' }
     ],
@@ -1075,7 +1092,7 @@ let wgravCompleted = [false, false, false, false, false];
 let isShiftPressed = false;
 let isInterlockPressed = false;
 let isServoOn = false;
-let keyPosition = 0;
+let keyPosition = 2;   // 0 PLAY, 1 REMOTE, 2 TEACH (arranca en TEACH)
 const keyPositions = ['PLAY', 'REMOTE', 'TEACH'];
 const keyRotations = [0, -120, 120];
 let gripperAngle = 0;
@@ -1334,17 +1351,17 @@ function loadJobsLocally() {
             if (!deleted.includes('MOVL_DEMO') && (!parsed['MOVL_DEMO'] || !parsed['MOVL_DEMO'].some(l => l.code && l.code.includes('PL=')))) {
                 parsed['MOVL_DEMO'] = robotJobs['MOVL_DEMO'];
             }
-            // Ejemplos v2: herramienta en línea con la brida y pinza hacia abajo
+            // Ejemplos v3: pinza hacia abajo + secuencia de abrir/cerrar pinzas
             let exVer = null;
             try { exVer = localStorage.getItem('dx200_examplesVersion'); } catch (e) {}
-            if (exVer !== '2') {
+            if (exVer !== '3') {
                 ['JOB_ALAMBRE', 'SUB_PROG', 'MOVL_DEMO'].forEach(name => {
                     if (!deleted.includes(name)) parsed[name] = JSON.parse(JSON.stringify(robotJobs[name]));
                 });
             }
             robotJobs = parsed;
         }
-        try { localStorage.setItem('dx200_examplesVersion', '2'); } catch (e) {}
+        try { localStorage.setItem('dx200_examplesVersion', '3'); } catch (e) {}
         if (!robotJobs[DxState.currentJobId]) {
             const keys = Object.keys(robotJobs);
             DxState.currentJobId = keys.length > 0 ? keys[0] : 'JOB_ALAMBRE';
@@ -2670,6 +2687,7 @@ function robotSubFwd() {
     const target = isWork ? robotData.workHome : robotData.secondHome;
     teachMotion = planJoint(stepAngles(RobotState.angles), stepAngles(target), TEACH_MAX_VJ);
     teachMotion.type = 'MOVJ';
+    pendingStep = null;
     setInfoDisplay('▶ FWD: moviendo a ' + (isWork ? 'WORK HOME POSITION' : 'SECOND HOME POSITION'));
 }
 
@@ -3544,7 +3562,28 @@ function setSpeed(speed) {
 function rotateKeySwitch() {
     keyPosition = (keyPosition + 1) % 3;
     updateKeySwitchDisplay();
-    setInfoDisplay(`Llave: ${keyPositions[keyPosition]}`);
+    applyModeFromKey(true);
+}
+
+/** Aplica el modo de la llave: al cambiar de modo se para el robot y se desconectan los servos (como en el DX200). */
+function applyModeFromKey(announce) {
+    const mode = keyPositions[keyPosition];
+    const changed = RobotState.mode !== mode;
+    RobotState.mode = mode;
+    const el = document.getElementById('lcd-mode');
+    if (el) el.textContent = mode;
+    if (!announce || !changed) return;
+    if (RobotState.programRunning) stopRun('Programa parado por cambio de modo');
+    teachMotion = null;
+    if (isServoOn) {
+        isServoOn = false;
+        const sBtn = document.getElementById('servo-btn');
+        if (sBtn) { sBtn.style.background = '#ccc'; sBtn.style.color = '#222'; sBtn.style.boxShadow = 'none'; }
+    }
+    setInfoDisplay('Modo ' + mode + ' — servos desconectados. ' +
+        (mode === 'PLAY' ? 'Pulse SERVO ON READY y después START.' :
+         mode === 'TEACH' ? 'DEADMAN + SERVO ON para mover; INTERLOCK + TEST START para probar.' :
+         'REMOTE: el arranque se hace desde señales externas.'));
 }
 
 function updateKeySwitchDisplay() {
@@ -3574,6 +3613,7 @@ function emergencyStop() {
 function handleFunc(func) {
     if (func === 'hold') {
         RobotState.programRunning = false;
+        DxState.runKind = null;
         // Sync cursor to the step where robot stopped (current step)
         DxState.selectedLineIndex = RobotState.programStep;
         document.getElementById('lcd-status').textContent = 'HOLD';
@@ -5392,9 +5432,19 @@ function renderJob() {
     updateJobStatusIndicator();
 
     const selectedElem = container.querySelector('.selected');
-    if (selectedElem) {
-        try { selectedElem.scrollIntoView({ block: 'nearest' }); } catch (e) { selectedElem.scrollIntoView(); }
-    }
+    if (selectedElem) scrollWithin(container, selectedElem);
+}
+
+/**
+ * Hace visible 'el' desplazando SOLO su contenedor 'box' (la lista del programa).
+ * scrollIntoView movía también la consola y la página, y el botón que se estaba
+ * pulsando (FWD, TEST START...) se escapaba de debajo del dedo.
+ */
+function scrollWithin(box, el) {
+    if (!box || !el) return;
+    const b = box.getBoundingClientRect(), e = el.getBoundingClientRect();
+    if (e.top < b.top) box.scrollTop -= (b.top - e.top);
+    else if (e.bottom > b.bottom) box.scrollTop += (e.bottom - b.bottom);
 }
 
 function updateJobDetail() {
@@ -6133,7 +6183,7 @@ function updateMultiLayout() {
             }).join('');
             const lines = mlArea.querySelectorAll('div');
             if (lines[DxState.selectedLineIndex]) {
-                try { lines[DxState.selectedLineIndex].scrollIntoView({ block: 'nearest' }); } catch(e) {}
+                scrollWithin(mlArea, lines[DxState.selectedLineIndex]);
             }
         }
     }
@@ -6685,33 +6735,118 @@ function toggleStepMode() {
 
 // Función eliminada por duplicidad (ver abajo)
 
-function startProgram() {
-    if (!RobotState.programRunning) {
-        // SEGURIDAD: En modo TEACH se requiere INTERLOCK + START
-        if (RobotState.mode === 'TEACH' && !isInterlockPressed) {
-            setInfoDisplay('⚠️ SEGURIDAD: Mantenga [INTERLOCK] + [START]');
-            const btn = document.getElementById('interlock-btn');
-            if (btn) {
-                btn.style.background = '#a00';
-                setTimeout(() => btn.style.background = isInterlockPressed ? '#555' : '', 300);
-            }
-            return;
-        }
+// ============================================================
+// EJECUCIÓN COMO EN EL DX200
+// - PLAY: SERVO ON + [START]; HOLD para; START reanuda. Modo de ciclo STEP / 1 CYCLE / AUTO.
+// - TEACH: [INTERLOCK] + [TEST START] mantenidos, con DEADMAN y SERVO ON; se para al soltar.
+// ============================================================
+const CYCLE_MODES = ['STEP', '1 CYCLE', 'AUTO'];
 
-        RobotState.programRunning = true;
-        const currentProgram = robotJobs[DxState.currentJobId];
-        if (currentProgram && RobotState.programStep >= currentProgram.length) {
-            RobotState.programStep = 0;
-        }
-        document.getElementById('lcd-status').textContent = 'RUNNING';
-        setInfoDisplay('▶️ EJECUTANDO PROGRAMA');
-    } else {
-        RobotState.programRunning = false;
-        DxState.selectedLineIndex = RobotState.programStep;
-        document.getElementById('lcd-status').textContent = 'STOPPED';
-        setInfoDisplay('⏹️ DETENIDO en paso ' + RobotState.programStep);
-        if (DxState.view === 'JOB') renderJob();
+function nextCycleMode() {
+    const i = CYCLE_MODES.indexOf(DxState.cycleMode || 'AUTO');
+    DxState.cycleMode = CYCLE_MODES[(i + 1) % CYCLE_MODES.length];
+    const el = document.getElementById('lcd-cycle');
+    if (el) el.textContent = DxState.cycleMode;
+    setInfoDisplay('CYCLE: ' + DxState.cycleMode + ' (' + ({ STEP: 'una línea por START', '1 CYCLE': 'una vuelta y para en END', AUTO: 'continuo' })[DxState.cycleMode] + ')');
+}
+
+function beginRun(kind) {
+    const prog = robotJobs[DxState.currentJobId];
+    if (!prog || !prog.length) { setInfoDisplay('⚠ No hay programa'); return false; }
+    // La ejecución empieza en la línea donde está el cursor (como en el DX200)
+    if (DxState.selectedLineIndex >= 0 && DxState.selectedLineIndex < prog.length) RobotState.programStep = DxState.selectedLineIndex;
+    if (RobotState.programStep >= prog.length || RobotState.programStep < 0) RobotState.programStep = 0;
+    teachMotion = null;
+    playMotion = null;
+    DxState.runKind = kind;
+    RobotState.programRunning = true;
+    document.getElementById('lcd-status').textContent = kind === 'TEST' ? 'TEST RUN' : 'RUNNING';
+    return true;
+}
+
+function stopRun(msg, status) {
+    RobotState.programRunning = false;
+    DxState.runKind = null;
+    DxState.selectedLineIndex = RobotState.programStep;
+    document.getElementById('lcd-status').textContent = status || 'STOPPED';
+    if (msg) setInfoDisplay(msg);
+    if (DxState.view === 'JOB') renderJob();
+}
+
+function startProgram() {
+    if (RobotState.programRunning) { setInfoDisplay('▶ El programa ya se está ejecutando (HOLD para parar)'); return; }
+    if (RobotState.mode === 'TEACH') { setInfoDisplay('⚠ En TEACH el botón START no funciona: mantenga INTERLOCK + TEST START'); return; }
+    if (RobotState.mode === 'REMOTE') { setInfoDisplay('⚠ Modo REMOTE: el arranque se hace desde una señal externa'); return; }
+    if (!isServoOn) { setInfoDisplay('⚠ PLAY: pulse SERVO ON READY antes de START'); return; }
+    if (beginRun('PLAY')) setInfoDisplay('▶ PLAY (' + (DxState.cycleMode || 'AUTO') + '): ejecutando ' + DxState.currentJobId);
+}
+
+function testStartDown(e) {
+    if (e) { e.preventDefault(); try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) { /* sin captura */ } }
+    DxState.testStartHeld = true;
+    if (RobotState.mode !== 'TEACH') { setInfoDisplay('⚠ TEST START solo funciona en modo TEACH'); return; }
+    if (!isInterlockPressed) { setInfoDisplay('⚠ Mantenga INTERLOCK y pulse TEST START'); return; }
+    if (!RobotState.deadman) { setInfoDisplay('⚠ TEST START: active el DEADMAN (barra espaciadora)'); return; }
+    if (!isServoOn) { setInfoDisplay('⚠ TEST START: pulse SERVO ON READY'); return; }
+    if (beginRun('TEST')) setInfoDisplay('▶ TEST RUN: el robot se mueve mientras mantiene INTERLOCK + TEST START');
+}
+
+function testStartUp() {
+    if (!DxState.testStartHeld) return;
+    DxState.testStartHeld = false;
+    if (DxState.runKind === 'TEST' && RobotState.programRunning) stopRun('⏸ TEST START soltado: robot parado en la línea ' + RobotState.programStep);
+}
+
+/** Cada frame: en TEST RUN, si se suelta algo de lo necesario, el robot se para. */
+function checkTestRunConditions() {
+    if (DxState.runKind !== 'TEST' || !RobotState.programRunning) return;
+    if (!DxState.testStartHeld) stopRun('⏸ TEST START soltado: robot parado');
+    else if (!isInterlockPressed) stopRun('⏸ INTERLOCK soltado: robot parado');
+    else if (!RobotState.deadman) stopRun('⏸ DEADMAN soltado: robot parado');
+    else if (!isServoOn) stopRun('⏸ Servos desconectados: robot parado');
+}
+
+// ---------- FWD / BWD mantenidos ----------
+let pendingStep = null;   // { dir, index, jobId, reached }
+
+function fwdBwdDown(e, dir) {
+    if (e) { e.preventDefault(); try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) { /* sin captura */ } }
+    DxState.fwdHeld = dir;
+    stepProgram(dir);
+}
+
+function fwdBwdUp() {
+    if (!DxState.fwdHeld) return;
+    const dir = DxState.fwdHeld;
+    DxState.fwdHeld = null;
+    if (teachMotion) {
+        teachMotion = null;
+        setInfoDisplay('⏸ ' + dir + ' soltado: robot parado antes de llegar al punto (vuelva a pulsar ' + dir + ' para continuar)');
     }
+}
+
+/** Tras ejecutar una línea con FWD, el cursor (y el punto de arranque) pasan a la siguiente. */
+function advanceCursorAfterFwd(index) {
+    const prog = robotJobs[DxState.currentJobId] || [];
+    const next = Math.min(index + 1, prog.length - 1);
+    DxState.selectedLineIndex = next;
+    RobotState.programStep = next;
+    if (DxState.view === 'JOB') renderJob();
+}
+
+/** INTERLOCK + FWD: ejecuta también las instrucciones que no son de movimiento. */
+function executeInstructionManually(code) {
+    const on = code.match(/DOUT\s+OG#\((\d+)\)\s+(ON|OFF)/i);
+    if (on) {
+        const port = parseInt(on[1], 10);
+        digitalOutputs[port] = on[2].toUpperCase() === 'ON';
+        syncOutputState(port);
+        if (typeof renderInout === 'function') renderInout();
+        if (typeof renderGeneralScreen === 'function') renderGeneralScreen();
+        return 'ejecutado';
+    }
+    if (/^\s*(TIMER|WAIT|NOP|END)\b/i.test(code)) return 'ejecutado';
+    return 'no se ejecuta con FWD';
 }
 
 async function runWgravMacro() {
@@ -6793,9 +6928,11 @@ function stepProgram(direction) {
     }
     
     if (!RobotState.deadman) {
-        setInfoDisplay('⚠ Active DEADMAN (ESPACIO) para FWD/BWD'); 
+        setInfoDisplay('⚠ Active DEADMAN (ESPACIO) para FWD/BWD');
         return;
     }
+    if (RobotState.mode !== 'TEACH') { setInfoDisplay('⚠ FWD/BWD solo funcionan en modo TEACH'); return; }
+    if (!isServoOn) { setInfoDisplay('⚠ FWD/BWD: pulse SERVO ON READY'); return; }
     
     const currentProgram = robotJobs[DxState.currentJobId];
     if (!currentProgram || currentProgram.length === 0) {
@@ -6804,14 +6941,19 @@ function stepProgram(direction) {
     }
 
     let targetIndex = DxState.selectedLineIndex;
-    if (direction === 'FWD' && targetIndex < currentProgram.length - 1) {
-        targetIndex++;
+    const resume = pendingStep && !pendingStep.reached && pendingStep.dir === direction &&
+        pendingStep.jobId === DxState.currentJobId && pendingStep.index === DxState.selectedLineIndex;
+    if (resume) {
+        targetIndex = pendingStep.index;          // seguir hacia el mismo punto
+    } else if (direction === 'FWD' && targetIndex < currentProgram.length - 1) {
+        // FWD ejecuta la línea del cursor; al terminarla, el cursor pasa a la siguiente
     } else if (direction === 'BWD' && targetIndex > 0) {
         targetIndex--;
     } else {
-        setInfoDisplay(direction === 'FWD' ? '⚠ Fin del programa' : '⚠ Inicio del programa');
+        setInfoDisplay(direction === 'FWD' ? '⚠ Fin del programa (END)' : '⚠ Inicio del programa');
         return;
     }
+    pendingStep = { dir: direction, index: targetIndex, jobId: DxState.currentJobId, reached: false };
 
     DxState.selectedLineIndex = targetIndex;
     DxState.selectedTokenIndex = 0;
@@ -6822,7 +6964,14 @@ function stepProgram(direction) {
     const bwdMotion = direction === 'BWD' && leavingLine && isMotionCode(leavingLine.code);
     if (!isMotionCode(targetCode) && !bwdMotion) {
         teachMotion = null;
-        setInfoDisplay((direction === 'FWD' ? '✅ FWD' : '✅ BWD') + ': Paso ' + targetIndex + ' - ' + targetCode + ' (sin movimiento)');
+        pendingStep.reached = true;
+        if (direction === 'FWD') advanceCursorAfterFwd(targetIndex);
+        if (direction === 'FWD' && isInterlockPressed) {
+            setInfoDisplay('✅ INTERLOCK + FWD: Paso ' + targetIndex + ' - ' + targetCode + ' (' + executeInstructionManually(targetCode) + ')');
+        } else {
+            setInfoDisplay((direction === 'FWD' ? '✅ FWD' : '✅ BWD') + ': Paso ' + targetIndex + ' - ' + targetCode +
+                (direction === 'FWD' ? ' (no se ejecuta; use INTERLOCK + FWD)' : ''));
+        }
     } else {
         // En BWD se recorre hacia atrás el tramo de la línea que se abandona
         let prog = currentProgram, idx = targetIndex;
@@ -6844,13 +6993,20 @@ function stepProgram(direction) {
 function finishProgramStep() {
     const prog = robotJobs[DxState.currentJobId] || [];
     RobotState.programStep++;
+    let wrapped = false;
     if (RobotState.programStep >= prog.length) {
         RobotState.programStep = 0;
+        wrapped = true;
         systemInfo.cycleCount++;
         document.getElementById('infoDisplay').textContent = '🔄 CICLO ' + systemInfo.cycleCount;
     }
     DxState.selectedLineIndex = RobotState.programStep;
     if (DxState.view === 'JOB') renderJob();
+    if (RobotState.programRunning && DxState.runKind === 'PLAY') {
+        const cyc = DxState.cycleMode || 'AUTO';
+        if (cyc === 'STEP') stopRun('STEP: línea ejecutada. Pulse START para la siguiente');
+        else if (cyc === '1 CYCLE' && wrapped && callStack.length === 0) stopRun('1 CYCLE completado: el programa ha llegado a END');
+    }
 }
 
 loadJobsLocally();
@@ -6912,8 +7068,16 @@ window.addEventListener('load', () => {
                 teachMotion = null;
             } else if (runPlanFrame(teachMotion, dt)) {
                 teachMotion = null;
+                if (pendingStep) {
+                    pendingStep.reached = true;
+                    if (pendingStep.dir === 'FWD') advanceCursorAfterFwd(pendingStep.index);
+                    else { RobotState.programStep = pendingStep.index; }
+                    setInfoDisplay('✓ ' + pendingStep.dir + ': punto de la línea ' + pendingStep.index + ' alcanzado');
+                    if (DxState.view === 'JOB') renderJob();
+                }
             }
         }
+        checkTestRunConditions();
 
         // Actualizar luces de botones superiores
         const startBtn = document.querySelector('.op-start');
@@ -7011,7 +7175,6 @@ window.addEventListener('load', () => {
                 gripperAngle += (targetPinza1 - gripperAngle) * 0.06;
                 gripper2Angle += (targetPinza2 - gripper2Angle) * 0.06;
 
-                document.getElementById('lcd-mode').textContent = (RobotState.programStep + 1) + '/' + currentProgram.length;
 
                 if (!playMotion || playMotion.stepIndex !== RobotState.programStep ||
                     playMotion.jobId !== DxState.currentJobId || motionInterrupted(playMotion)) {
@@ -7153,6 +7316,11 @@ window.executeNewJob = executeNewJob;
 window.editNewJobField = editNewJobField;
 window.softKbTab = softKbTab;
 window.closeLcdConfirm = closeLcdConfirm;
+window.testStartDown = testStartDown;
+window.testStartUp = testStartUp;
+window.fwdBwdDown = fwdBwdDown;
+window.fwdBwdUp = fwdBwdUp;
+window.nextCycleMode = nextCycleMode;
 window.openSetup = openSetup;
 window.changeUserId = changeUserId;
 window.editSpeedLevel = editSpeedLevel;
