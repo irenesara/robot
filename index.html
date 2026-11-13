@@ -154,6 +154,7 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
 .rs-lamp { color: #888; font-weight: bold; } .rs-lamp.on { color: #0a0; }
 .rs-edit { background: #fff; border: 1px solid #1a3a6a; padding: 0 3px; cursor: pointer; }
 .rs-edit.rs-on { background: #ffe8a0; color: #a00; font-weight: bold; }
+.al-alarm { color: #c00; font-weight: bold; } .al-error { color: #c60; font-weight: bold; } .al-stop { color: #a00; font-weight: bold; } .al-message { color: #246; }
 .rs-link { color: #1a3a6a; cursor: pointer; text-decoration: underline; }
 .r-menu-icon { width: 10px; height: 10px; margin-right: 2px; background: #fff; border: 1px solid #999; border-radius: 1px; flex-shrink: 0; }
 
@@ -781,11 +782,11 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                             </div>
                             <div id="system-info-menu-screen" style="display: none; flex-direction: column; height: 100%; padding: 2px; background: #e0e0e0;">
                                 <div style="display: flex; flex-direction: column; gap: 2px; padding: 2px; background: #2b4b9b; width: 160px;">
-                                    <button class="r-menu-btn" onclick="showSystemVersion()"><div class="r-menu-icon" style="border-radius:2px;background:#333;"></div>VERSION</button>
-                                    <button class="r-menu-btn" onclick="showMonitoringTime()"><div class="r-menu-icon" style="border-radius:50%;background:#ccc;"></div>MONITORING TIME</button>
-                                    <button class="r-menu-btn" onclick="showAlarmHistory()"><div class="r-menu-icon" style="background:#fcc;"></div>ALARM HISTORY</button>
-                                    <button class="r-menu-btn" onclick="showMsg('I/O MSG HISTORY')"><div class="r-menu-icon"></div>I/O MSG HISTORY</button>
-                                    <button class="r-menu-btn" onclick="showMsg('USER DEFINITION MENU')"><div class="r-menu-icon"></div>USER DEFINITION<br>MENU</button>
+                                    <button class="r-menu-btn" onclick="setView('SYSTEM-INFO-VERSION')"><div class="r-menu-icon" style="border-radius:2px;background:#333;"></div>VERSION</button>
+                                    <button class="r-menu-btn" onclick="setView('SYSTEM-INFO-MONITOR')"><div class="r-menu-icon" style="border-radius:50%;background:#ccc;"></div>MONITORING TIME</button>
+                                    <button class="r-menu-btn" onclick="setView('SYSTEM-INFO-ALARMS')"><div class="r-menu-icon" style="background:#fcc;"></div>ALARM HISTORY</button>
+                                    <button class="r-menu-btn" onclick="setView('SYSTEM-INFO-IOMSG')"><div class="r-menu-icon"></div>I/O MSG HISTORY</button>
+                                    <button class="r-menu-btn r-menu-off" onclick="robotNotSimulated('USER DEFINITION MENU')"><div class="r-menu-icon"></div>USER DEFINITION<br>MENU</button>
                                     <button class="r-menu-btn" onclick="setView('SECURITY')" style="margin-top:2px;"><div class="r-menu-icon" style="background:transparent;border-color:transparent;font-size:10px;">🗝️</div>SECURITY</button>
                                 </div>
                             </div>
@@ -794,10 +795,10 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                                 <div class="sec-screen-inner">
                                     <div style="font-size: 10px; margin-top: 2px;">MODE</div>
                                     <div class="sec-mode-box">
-                                        <div class="sec-mode" onclick="setSecurityMode('OPERATION', this)">OPERATION MODE</div>
-                                        <div class="sec-mode selected" onclick="setSecurityMode('EDITING', this)">EDITING MODE</div>
-                                        <div class="sec-mode" onclick="setSecurityMode('MANAGEMENT', this)">MANAGEMENT MODE</div>
-                                        <div class="sec-mode" onclick="setSecurityMode('SAFETY', this)">SAFETY MODE</div>
+                                        <div class="sec-mode" onclick="requestSecurityMode('OPERATION', this)">OPERATION MODE</div>
+                                        <div class="sec-mode selected" onclick="requestSecurityMode('EDITING', this)">EDITING MODE</div>
+                                        <div class="sec-mode" onclick="requestSecurityMode('MANAGEMENT', this)">MANAGEMENT MODE</div>
+                                        <div class="sec-mode" onclick="requestSecurityMode('SAFETY', this)">SAFETY MODE</div>
                                     </div>
                                 </div>
                             </div>
@@ -2387,7 +2388,7 @@ function setView(viewName) {
     document.querySelectorAll('.lcd-sidebar-btn').forEach(b => b.classList.remove('active'));
     let baseView = viewName.startsWith('ROBOT') ? 'ROBOT' : viewName;
     if (baseView === 'SECURITY') baseView = 'SYSINFO';
-    if (baseView === 'SYSTEM-INFO') baseView = 'SYSINFO';
+    if (baseView === 'SYSTEM-INFO' || baseView.startsWith('SYSTEM-INFO-')) baseView = 'SYSINFO';
     if (baseView === 'INFORM.SISTEMA') baseView = 'SYSINFO';
     if (baseView === 'EX.SISTEMA') baseView = 'UTILITY';
 
@@ -2416,6 +2417,10 @@ function setView(viewName) {
         'ROBOT-LIMITREL': ['robot-sub-screen', renderRobotSub],
         'ROBOT-MANIP': ['robot-sub-screen', renderRobotSub],
         'ROBOT-POWERPOS': ['robot-sub-screen', renderRobotSub],
+        'SYSTEM-INFO-VERSION': ['robot-sub-screen', renderSysSub],
+        'SYSTEM-INFO-MONITOR': ['robot-sub-screen', renderSysSub],
+        'SYSTEM-INFO-ALARMS': ['robot-sub-screen', renderSysSub],
+        'SYSTEM-INFO-IOMSG': ['robot-sub-screen', renderSysSub],
         'LIST': ['list-screen', renderList],
         'SECURITY': ['security-screen', null],
         'HOME-POSITION': ['home-position-screen', null],
@@ -2641,6 +2646,7 @@ function toggleLimitRelease() {
     DxState.softLimitRelease = !DxState.softLimitRelease;
     renderRobotSub();
     setInfoDisplay(DxState.softLimitRelease ? '⚠ SOFT LIMIT RELEASE: VALID — mueva con precaución' : '✓ SOFT LIMIT RELEASE: INVALID');
+    logAlarm('MESSAGE', 'SOFT LIMIT RELEASE ' + (DxState.softLimitRelease ? 'VALID' : 'INVALID'));
 }
 
 /** [FWD] en WORK HOME / SECOND HOME: mover a la posición (MOVJ a velocidad de TEACH). */
@@ -2676,6 +2682,150 @@ function robotSubEnter() {
 /** Opciones del menú ROBOT que dependen del hardware real. */
 function robotNotSimulated(name) {
     setInfoDisplay('ℹ️ ' + name + ': función del controlador real (hardware o ajuste de fábrica). No disponible en el simulador.');
+}
+
+// ============================================================
+// SYSTEM INFO: VERSION, MONITORING TIME, ALARM HISTORY, I/O MSG HISTORY
+// ============================================================
+const SIM_VERSION = '2026.11';
+const HISTORY_MAX = 100;
+const SECURITY_LEVELS = ['OPERATION', 'EDITING', 'MANAGEMENT', 'SAFETY'];
+// Contraseñas (USER ID) de fábrica según el manual del DX200
+const SECURITY_USER_ID = { EDITING: '00000000', MANAGEMENT: '99999999', SAFETY: '5555555555555555' };
+
+function loadJson(key, fallback) {
+    try { const v = JSON.parse(localStorage.getItem(key) || 'null'); return v == null ? fallback : v; }
+    catch (e) { return fallback; }
+}
+function saveJson(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* sin almacenamiento */ }
+}
+
+const sysData = {
+    monitor: loadJson('dx200_monitorTime', null) || {
+        since: new Date().toLocaleString(),
+        power: 0, servo: 0, playback: 0, moving: 0      // segundos acumulados
+    },
+    alarmHistory: loadJson('dx200_alarmHistory', []),
+    ioHistory: loadJson('dx200_ioHistory', []),
+    prevIO: null,
+    saveTimer: 0,
+    lastEvent: {}
+};
+
+function nowStamp() {
+    const d = new Date(), p = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}/${p(d.getMonth() + 1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+}
+
+/** Registra un evento en ALARM HISTORY (sin repetir el mismo en menos de 2 s). */
+function logAlarm(type, text) {
+    const key = type + text, t = Date.now();
+    if (sysData.lastEvent[key] && t - sysData.lastEvent[key] < 2000) return;
+    sysData.lastEvent[key] = t;
+    sysData.alarmHistory = [{ date: nowStamp(), type, text }, ...sysData.alarmHistory].slice(0, HISTORY_MAX);
+    saveJson('dx200_alarmHistory', sysData.alarmHistory);
+}
+
+function formatHours(sec) {
+    const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = Math.floor(sec % 60);
+    return `${String(h).padStart(5, ' ')}:${String(m).padStart(2, '0')}'${String(s).padStart(2, '0')}`;
+}
+
+/** Cada frame: contadores de tiempo y detección de cambios de E/S. */
+function updateSystemMonitor(dt) {
+    const mon = sysData.monitor;
+    mon.power += dt;
+    if (isServoOn) mon.servo += dt;
+    if (RobotState.programRunning) mon.playback += dt;
+    if (AXES.some(k => Math.abs(robotData.speed[k]) > 0.2)) mon.moving += dt;
+
+    const io = { out: { ...digitalOutputs }, inp: { ...digitalInputs } };
+    if (sysData.prevIO) {
+        const changes = [];
+        Object.keys(io.out).forEach(n => { if (io.out[n] !== sysData.prevIO.out[n]) changes.push(`OUT#${String(n).padStart(4, '0')} (OG#${n}) ${io.out[n] ? 'ON' : 'OFF'}`); });
+        Object.keys(io.inp).forEach(n => { if (io.inp[n] !== sysData.prevIO.inp[n]) changes.push(`IN#${String(n).padStart(4, '0')} ${io.inp[n] ? 'ON' : 'OFF'}`); });
+        if (changes.length) {
+            const src = RobotState.programRunning ? `${DxState.currentJobId} L${String(RobotState.programStep).padStart(4, '0')}` : 'MANUAL';
+            sysData.ioHistory = [...changes.map(c => ({ date: nowStamp(), text: c, src })), ...sysData.ioHistory].slice(0, HISTORY_MAX);
+            saveJson('dx200_ioHistory', sysData.ioHistory);
+        }
+    }
+    sysData.prevIO = io;
+
+    sysData.saveTimer += dt;
+    if (sysData.saveTimer > 5) { sysData.saveTimer = 0; saveJson('dx200_monitorTime', mon); }
+}
+
+const SYS_SUB_TITLES = {
+    'SYSTEM-INFO-VERSION': 'VERSION',
+    'SYSTEM-INFO-MONITOR': 'MONITORING TIME',
+    'SYSTEM-INFO-ALARMS': 'ALARM HISTORY',
+    'SYSTEM-INFO-IOMSG': 'I/O MSG HISTORY'
+};
+
+function renderSysSub() {
+    const view = DxState.view, title = SYS_SUB_TITLES[view];
+    const el = document.getElementById('robot-sub-screen');
+    if (!el || !title) return;
+    let body = '', foot = '';
+    if (view === 'SYSTEM-INFO-VERSION') {
+        body = rsTable(['ITEM', 'VERSION / DATA'], [
+            ['SYSTEM', systemInfo.version],
+            ['CONTROLLER', 'DX200'],
+            ['APPLICATION', 'HANDLING (GENERAL)'],
+            ['LANGUAGE', DxState.language === 'es' ? 'SPANISH' : 'ENGLISH'],
+            ['R1 MANIPULATOR', 'MH12 (modelo de simulación)'],
+            ['SIMULATOR', SIM_VERSION]
+        ]);
+        foot = 'En el DX200 real esta pantalla lista también las versiones de cada placa del controlador.';
+    } else if (view === 'SYSTEM-INFO-MONITOR') {
+        const m = sysData.monitor;
+        body = rsTable(['', 'TOTAL TIME (h:m\'s)'], [
+            ['CONTROL POWER ON', formatHours(m.power)],
+            ['SERVO POWER ON', formatHours(m.servo)],
+            ['PLAYBACK TIME', formatHours(m.playback)],
+            ['MOVING TIME', formatHours(m.moving)]
+        ]);
+        foot = `Contando desde ${m.since}. <span class="rs-link" onclick="resetMonitoringTime()">[RESET]</span> (requiere MANAGEMENT MODE)`;
+    } else if (view === 'SYSTEM-INFO-ALARMS') {
+        const rows = sysData.alarmHistory.slice(0, 40).map(a => [a.date, `<span class="al-${a.type.toLowerCase()}">${a.type}</span>`, a.text]);
+        body = rows.length ? rsTable(['DATE', 'TYPE', 'MESSAGE'], rows) : '<div class="rs-status">NO ALARM HISTORY</div>';
+        foot = 'Últimos eventos del simulador (los más recientes arriba). Los códigos numéricos de alarma del DX200 no se simulan.';
+    } else if (view === 'SYSTEM-INFO-IOMSG') {
+        const rows = sysData.ioHistory.slice(0, 40).map(a => [a.date, a.text, a.src]);
+        body = rows.length ? rsTable(['DATE', 'SIGNAL', 'SOURCE'], rows) : '<div class="rs-status">NO I/O MESSAGE</div>';
+        foot = 'Cambios de las salidas (pinzas y cilindros) y de las entradas de los sensores.';
+    }
+    el.innerHTML = `<div class="lcd-header rs-head">${title}</div><div class="rs-body">${body}</div><div class="rs-foot">${foot}</div>`;
+}
+
+function resetMonitoringTime() {
+    if (DxState.securityMode !== 'MANAGEMENT' && DxState.securityMode !== 'SAFETY') { setInfoDisplay('❌ RESET: requiere MANAGEMENT MODE'); return; }
+    showLcdConfirm('Reset monitoring time ?', () => {
+        sysData.monitor = { since: new Date().toLocaleString(), power: 0, servo: 0, playback: 0, moving: 0 };
+        saveJson('dx200_monitorTime', sysData.monitor);
+        renderSysSub();
+        setInfoDisplay('✓ MONITORING TIME a cero');
+    });
+}
+
+/** SECURITY: subir de nivel pide el USER ID (contraseña); bajar no. */
+function requestSecurityMode(mode, element) {
+    const cur = SECURITY_LEVELS.indexOf(DxState.securityMode), next = SECURITY_LEVELS.indexOf(mode);
+    if (next <= cur) { setSecurityMode(mode, element); return; }
+    openSoftKeyboard({
+        title: mode + ' MODE: USER ID', value: '', maxLen: 16, upper: true, mask: true,
+        onEnter: (val) => {
+            if (val !== SECURITY_USER_ID[mode]) {
+                setInfoDisplay('❌ USER ID incorrecto');
+                logAlarm('ERROR', 'SECURITY: USER ID INCORRECT (' + mode + ')');
+                return true;
+            }
+            setSecurityMode(mode, element);
+            return true;
+        }
+    });
 }
 
 function selectHomeAxis(element) {
@@ -2844,6 +2994,7 @@ function emergencyStop() {
     }
     document.getElementById('lcd-status').textContent = 'E-STOP';
     setInfoDisplay('🚨 PARO EMERGENCIA');
+    logAlarm('STOP', 'EMERGENCY STOP (PP)');
 }
 
 function handleFunc(func) {
@@ -3369,6 +3520,7 @@ function advanceMotion(m, dt) {
         m.lastAngles = { ...angles };
         if (sol.posErr > 3 && !m.reachWarned) {
             m.reachWarned = true;
+            logAlarm('ALARM', 'OUT OF RANGE (' + (m.type || 'MOVL') + ') ' + DxState.currentJobId);
             setInfoDisplay('⚠ ' + (m.type || 'MOVL') + ': parte de la trayectoria está fuera del alcance del robot (se aproxima)');
         }
     }
@@ -3636,6 +3788,7 @@ function moveAxis(axis, dir) {
             RobotState.angles[sAxis] = Math.max(jl.min, Math.min(jl.max, wanted));
             if (wanted !== RobotState.angles[sAxis]) {
                 setInfoDisplay('⚠ ' + (DxState.softLimitRelease ? 'TOPE MECÁNICO' : 'SOFT LIMIT') + ': R1 ' + sAxis.toUpperCase() + (dir > 0 ? '+' : '-'));
+                logAlarm('ERROR', (DxState.softLimitRelease ? 'MECHANICAL LIMIT' : 'SOFT LIMIT') + ' R1 ' + sAxis.toUpperCase() + (dir > 0 ? '+' : '-'));
                 return;
             }
             setInfoDisplay(`✓ MOVIENDO ${sAxis.toUpperCase()} ${dir > 0 ? '+' : '−'}`);
@@ -5725,8 +5878,9 @@ function renderSoftKeyboard() {
     const o = skb.opts, max = o.maxLen || 32;
     document.getElementById('skb-title').textContent = o.title || 'CHARACTER INPUT';
     document.getElementById('skb-count').textContent = skb.value.length + '/' + max;
+    const shown = o.mask ? '*'.repeat(skb.value.length) : skb.value;
     document.getElementById('skb-result').innerHTML =
-        skb.value.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '<span class="cursor-blink">_</span>';
+        shown.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '<span class="cursor-blink">_</span>';
     const tabs = o.upper ? ['CAPITAL', 'SYMBOL'] : ['CAPITAL', 'SMALL', 'SYMBOL'];
     document.getElementById('skb-tabs').innerHTML = tabs.map(t =>
         `<div class="skb-tab${t === skb.tab ? ' on' : ''}" onclick="softKbTab('${t}')">${t}</div>`).join('');
@@ -6130,6 +6284,14 @@ function finishProgramStep() {
 
 loadJobsLocally();
 startClockInterval();
+setTimeout(() => {
+    const secEl = document.getElementById('lcd-security');
+    if (secEl) {
+        const m = DxState.securityMode;
+        secEl.textContent = m === 'OPERATION' ? 'OPER' : (m === 'EDITING' ? 'EDIT' : (m === 'MANAGEMENT' ? 'MGMT' : 'SAFE'));
+        secEl.style.color = m === 'OPERATION' ? '#f0f' : (m === 'EDITING' ? '#ff3300' : '#ffea00');
+    }
+}, 0);
 
 window.addEventListener('load', () => {
     const canvas = document.getElementById('canvas');
@@ -6145,9 +6307,15 @@ window.addEventListener('load', () => {
         lastFrameTime = nowT;
 
         updateServoData(dt);
+        updateSystemMonitor(dt);
+        if (SYS_SUB_TITLES[DxState.view] && !isSoftKeyboardOpen() && !isLcdConfirmOpen() && nowT - robotData.lastRender > 500) {
+            robotData.lastRender = nowT;
+            renderSysSub();
+        }
         if (DxState.softLimitRelease && RobotState.mode !== 'TEACH') {
             DxState.softLimitRelease = false;
             setInfoDisplay('SOFT LIMIT RELEASE anulado (fuera de TEACH)');
+            logAlarm('MESSAGE', 'SOFT LIMIT RELEASE CANCELLED');
         }
         if (ROBOT_SUB_TITLES[DxState.view] && !isSoftKeyboardOpen() && nowT - robotData.lastRender > 150) {
             robotData.lastRender = nowT;
@@ -6401,6 +6569,8 @@ window.executeNewJob = executeNewJob;
 window.editNewJobField = editNewJobField;
 window.softKbTab = softKbTab;
 window.closeLcdConfirm = closeLcdConfirm;
+window.requestSecurityMode = requestSecurityMode;
+window.resetMonitoringTime = resetMonitoringTime;
 window.robotNotSimulated = robotNotSimulated;
 window.editSoftLimit = editSoftLimit;
 window.toggleLimitRelease = toggleLimitRelease;
