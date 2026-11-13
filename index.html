@@ -140,6 +140,21 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
 .r-menu-btn:hover { background: #e0e0e0; }
 .r-menu-btn:active { background: #b0b0b0; box-shadow: inset 1px 1px 2px #555; }
 .r-menu-btn.active { background: #2b4b9b; color: white; border-color: #000; box-shadow: none; }
+.r-menu-btn.r-menu-off { color: #777; }
+#robot-sub-screen { display: none; flex-direction: column; height: 100%; background: #eaeff2; }
+.rs-head { background: #1a3a6a !important; color: #fff !important; font-size: 7px !important; padding: 2px 8px !important; }
+.rs-body { padding: 4px 6px; flex: 1; overflow: auto; }
+.rs-table { width: 100%; border-collapse: collapse; font-family: 'Courier New', monospace; font-size: 8px; color: #000; margin-bottom: 4px; }
+.rs-table th { background: #c9d3de; font-size: 6px; text-align: right; padding: 1px 4px; border-bottom: 1px solid #889; }
+.rs-table th:first-child, .rs-table td:first-child { text-align: left; font-weight: bold; width: 40px; }
+.rs-table td { text-align: right; padding: 1px 4px; border-bottom: 1px dotted #bbb; }
+.rs-foot { font-size: 6px; color: #333; padding: 3px 6px; border-top: 1px solid #aab; background: #dde3ea; font-family: Arial, sans-serif; }
+.rs-status, .rs-row { font-family: 'Courier New', monospace; font-size: 8px; color: #000; padding: 3px 2px; display: flex; gap: 10px; align-items: center; }
+.rs-row span:first-child { width: 120px; font-weight: bold; }
+.rs-lamp { color: #888; font-weight: bold; } .rs-lamp.on { color: #0a0; }
+.rs-edit { background: #fff; border: 1px solid #1a3a6a; padding: 0 3px; cursor: pointer; }
+.rs-edit.rs-on { background: #ffe8a0; color: #a00; font-weight: bold; }
+.rs-link { color: #1a3a6a; cursor: pointer; text-decoration: underline; }
 .r-menu-icon { width: 10px; height: 10px; margin-right: 2px; background: #fff; border: 1px solid #999; border-radius: 1px; flex-shrink: 0; }
 
 .robot-coords-screen { display: none; padding: 10px; flex: 1; flex-direction: column; gap: 6px; font-size: 10px; background: #222; color: #0f0; font-weight: bold; }
@@ -463,26 +478,26 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                             <div id="robot-menu-screen" style="display: none; flex-direction: column; height: 100%; padding: 2px; background: #e0e0e0;">
                                 <div class="robot-menu-grid">
                                     <button class="r-menu-btn" onclick="setView('ROBOT-CURRENT')"><div class="r-menu-icon"></div>CURRENT<br>POSITION</button>
-                                    <button class="r-menu-btn active" onclick="setView('TOOL')"><div class="r-menu-icon" style="background:#2b4b9b;border-color:#fff;"></div>TOOL</button>
-                                    <button class="r-menu-btn" onclick="showMsg('OVERRUN & S-SENSOR')"><div class="r-menu-icon"></div>OVERRUN<br>& S-SENSOR</button>
-                                    <button class="r-menu-btn" onclick="showMsg('COMMAND POSITION')"><div class="r-menu-icon"></div>COMMAND<br>POSITION</button>
-                                    <button class="r-menu-btn" onclick="showMsg('INTERFERENCE')"><div class="r-menu-icon"></div>INTERFERENCE</button>
-                                    <button class="r-menu-btn" onclick="showMsg('LIMIT RELEASE')"><div class="r-menu-icon"></div>LIMIT RELEASE</button>
-                                    <button class="r-menu-btn" onclick="showMsg('SERVO MONITOR')"><div class="r-menu-icon"></div>SERVO MONITOR</button>
-                                    <button class="r-menu-btn" onclick="showMsg('SHOCK SENS LEVEL')"><div class="r-menu-icon"></div>SHOCK SENS<br>LEVEL</button>
-                                    <button class="r-menu-btn" onclick="showMsg('ARM CONTROL')"><div class="r-menu-icon"></div>ARM CONTROL</button>
-                                    <button class="r-menu-btn" onclick="showMsg('WORK HOME POS')"><div class="r-menu-icon"></div>WORK HOME POS</button>
-                                    <button class="r-menu-btn" onclick="showMsg('USER COORDINATE')"><div class="r-menu-icon"></div>USER COORDINATE</button>
-                                    <button class="r-menu-btn" onclick="showMsg('SHIFT VALUE')"><div class="r-menu-icon"></div>SHIFT VALUE</button>
-                                    <button class="r-menu-btn" onclick="showMsg('SECOND HOME POS')"><div class="r-menu-icon"></div>SECOND HOME POS</button>
-                                    <button class="r-menu-btn active" onclick="setView('HOME-POSITION')"><div class="r-menu-icon" style="background:#2b4b9b;border-color:#fff;"></div>HOME POSITION</button>
-                                    <button class="r-menu-btn" onclick="showMsg('MANUAL BRAKE RELEASE')"><div class="r-menu-icon"></div>MANUAL BRAKE<br>RELEASE</button>
-                                    <button class="r-menu-btn" onclick="showMsg('DROP AMOUNT')"><div class="r-menu-icon"></div>DROP AMOUNT</button>
-                                    <button class="r-menu-btn" onclick="showMsg('MANIPULATOR TYPE')"><div class="r-menu-icon"></div>MANIPULATOR<br>TYPE</button>
-                                    <button class="r-menu-btn" onclick="showMsg('SOFTLIMIT SETTING')"><div class="r-menu-icon"></div>SOFTLIMIT<br>SETTING</button>
-                                    <button class="r-menu-btn" onclick="showMsg('POWER ON/OFF POS')"><div class="r-menu-icon"></div>POWER ON/OFF<br>POS</button>
-                                    <button class="r-menu-btn" onclick="showMsg('ANALOG MONITOR')"><div class="r-menu-icon"></div>ANALOG MONITOR</button>
-                                    <button class="r-menu-btn" onclick="showMsg('SHOCK SENS LV. %')"><div class="r-menu-icon"></div>SHOCK SENS LV.<br>% (CURRENT)</button>
+                                    <button class="r-menu-btn" onclick="setView('TOOL')"><div class="r-menu-icon"></div>TOOL</button>
+                                    <button class="r-menu-btn r-menu-off" onclick="robotNotSimulated('OVERRUN & S-SENSOR')"><div class="r-menu-icon"></div>OVERRUN<br>& S-SENSOR</button>
+                                    <button class="r-menu-btn" onclick="setView('ROBOT-CMDPOS')"><div class="r-menu-icon"></div>COMMAND<br>POSITION</button>
+                                    <button class="r-menu-btn r-menu-off" onclick="robotNotSimulated('INTERFERENCE')"><div class="r-menu-icon"></div>INTERFERENCE</button>
+                                    <button class="r-menu-btn" onclick="setView('ROBOT-LIMITREL')"><div class="r-menu-icon"></div>LIMIT RELEASE</button>
+                                    <button class="r-menu-btn" onclick="setView('ROBOT-SERVOMON')"><div class="r-menu-icon"></div>SERVO MONITOR</button>
+                                    <button class="r-menu-btn r-menu-off" onclick="robotNotSimulated('SHOCK SENS LEVEL')"><div class="r-menu-icon"></div>SHOCK SENS<br>LEVEL</button>
+                                    <button class="r-menu-btn r-menu-off" onclick="robotNotSimulated('ARM CONTROL')"><div class="r-menu-icon"></div>ARM CONTROL</button>
+                                    <button class="r-menu-btn" onclick="setView('ROBOT-WORKHOME')"><div class="r-menu-icon"></div>WORK HOME POS</button>
+                                    <button class="r-menu-btn r-menu-off" onclick="robotNotSimulated('USER COORDINATE')"><div class="r-menu-icon"></div>USER COORDINATE</button>
+                                    <button class="r-menu-btn r-menu-off" onclick="robotNotSimulated('SHIFT VALUE')"><div class="r-menu-icon"></div>SHIFT VALUE</button>
+                                    <button class="r-menu-btn" onclick="setView('ROBOT-SECONDHOME')"><div class="r-menu-icon"></div>SECOND HOME POS</button>
+                                    <button class="r-menu-btn" onclick="setView('HOME-POSITION')"><div class="r-menu-icon"></div>HOME POSITION</button>
+                                    <button class="r-menu-btn r-menu-off" onclick="robotNotSimulated('MANUAL BRAKE RELEASE')"><div class="r-menu-icon"></div>MANUAL BRAKE<br>RELEASE</button>
+                                    <button class="r-menu-btn r-menu-off" onclick="robotNotSimulated('DROP AMOUNT')"><div class="r-menu-icon"></div>DROP AMOUNT</button>
+                                    <button class="r-menu-btn" onclick="setView('ROBOT-MANIP')"><div class="r-menu-icon"></div>MANIPULATOR<br>TYPE</button>
+                                    <button class="r-menu-btn" onclick="setView('ROBOT-SOFTLIMIT')"><div class="r-menu-icon"></div>SOFTLIMIT<br>SETTING</button>
+                                    <button class="r-menu-btn" onclick="setView('ROBOT-POWERPOS')"><div class="r-menu-icon"></div>POWER ON/OFF<br>POS</button>
+                                    <button class="r-menu-btn r-menu-off" onclick="robotNotSimulated('ANALOG MONITOR')"><div class="r-menu-icon"></div>ANALOG MONITOR</button>
+                                    <button class="r-menu-btn r-menu-off" onclick="robotNotSimulated('SHOCK SENS LV. %')"><div class="r-menu-icon"></div>SHOCK SENS LV.<br>% (CURRENT)</button>
                                 </div>
                             </div>
                             <div id="robot-screen" class="robot-coords-screen">
@@ -494,6 +509,7 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                                 <div class="coord-row"><span>B:</span> <span id="lcd-b">0.000 °</span></div>
                                 <div class="coord-row"><span>T:</span> <span id="lcd-t">0.000 °</span></div>
                             </div>
+                            <div id="robot-sub-screen"></div>
                             <div id="tool-screen" style="display: none; flex-direction: column; height: 100%; background: #eaeff2;">
                                 <div class="lcd-header" style="background: #1a3a6a; color: white; border-bottom: 2px solid #000; padding: 2px 8px; flex-direction: column; align-items: flex-start; gap: 2px;">
                                     <div>TOOL</div>
@@ -1034,7 +1050,8 @@ const DxState = {
     focusedWindowIndex: 0,
     isSimpleMenu: false,
     language: 'en',
-    coordSystem: 'JOINT'
+    coordSystem: 'JOINT',
+    softLimitRelease: false
 };
 
 let robotJobs = {
@@ -2380,7 +2397,7 @@ function setView(viewName) {
     const screens = ['job-screen', 'robot-menu-screen', 'robot-screen', 'list-screen',
         'security-screen', 'home-position-screen', 'system-info-menu-screen',
         'tool-screen', 'wgrav-screen', 'variable-screen', 'inout-screen', 
-        'alarm-screen', 'utility-screen', 'amplitude-screen', 'general-screen', 'data-screen', 'calibration-screen', 'master-rezero-screen', 'parameter-screen', 'clock-screen', 'file-screen', 'new-job-screen'];
+        'alarm-screen', 'utility-screen', 'amplitude-screen', 'general-screen', 'data-screen', 'calibration-screen', 'master-rezero-screen', 'parameter-screen', 'clock-screen', 'file-screen', 'new-job-screen', 'robot-sub-screen'];
     screens.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
@@ -2391,6 +2408,14 @@ function setView(viewName) {
         'NEW-JOB': ['new-job-screen', null],
         'ROBOT': ['robot-menu-screen', null],
         'ROBOT-CURRENT': ['robot-screen', null],
+        'ROBOT-CMDPOS': ['robot-sub-screen', renderRobotSub],
+        'ROBOT-SERVOMON': ['robot-sub-screen', renderRobotSub],
+        'ROBOT-WORKHOME': ['robot-sub-screen', renderRobotSub],
+        'ROBOT-SECONDHOME': ['robot-sub-screen', renderRobotSub],
+        'ROBOT-SOFTLIMIT': ['robot-sub-screen', renderRobotSub],
+        'ROBOT-LIMITREL': ['robot-sub-screen', renderRobotSub],
+        'ROBOT-MANIP': ['robot-sub-screen', renderRobotSub],
+        'ROBOT-POWERPOS': ['robot-sub-screen', renderRobotSub],
         'LIST': ['list-screen', renderList],
         'SECURITY': ['security-screen', null],
         'HOME-POSITION': ['home-position-screen', null],
@@ -2414,6 +2439,243 @@ function setView(viewName) {
         }
         if (mapping[1]) mapping[1]();
     }
+}
+
+// ============================================================
+// MENÚ ROBOT: pantallas adicionales (como en el DX200)
+// ============================================================
+const AXES = ['s', 'l', 'u', 'r', 'b', 't'];
+const AXIS_LABEL = { s: 'S', l: 'L', u: 'U', r: 'R', b: 'B', t: 'T' };
+// Pulsos de encoder por grado de cada eje (valores de simulación)
+const PULSE_PER_DEG = { s: 1160.5, l: 1160.5, u: 1160.5, r: 655.4, b: 655.4, t: 409.6 };
+// Relación de reducción motor/eje (para pasar grados/s del eje a rpm del motor)
+const GEAR_RATIO = { s: 120, l: 120, u: 120, r: 80, b: 80, t: 50 };
+const SERVO_LAG_S = 0.012;            // retardo de seguimiento del servo (s)
+const WORK_HOME_CUBE_PULSE = 2000;    // tamaño del cubo de posición de trabajo (± pulsos)
+const MECH_MARGIN_DEG = 5;            // topes mecánicos más allá del límite software
+
+const toPulse = (k, deg) => Math.round(deg * PULSE_PER_DEG[k]);
+const toDeg = (k, pulse) => pulse / PULSE_PER_DEG[k];
+
+function loadStoredPose(key, fallback) {
+    try {
+        const v = JSON.parse(localStorage.getItem(key) || 'null');
+        if (v && AXES.every(k => typeof v[k] === 'number')) return v;
+    } catch (e) { /* almacenamiento no disponible */ }
+    return { ...fallback };
+}
+function storePose(key, pose) {
+    try { localStorage.setItem(key, JSON.stringify(pose)); } catch (e) { /* sin almacenamiento */ }
+}
+
+const robotData = {
+    workHome: loadStoredPose('dx200_workHome', { s: 0, l: 0, u: 0, r: 0, b: -67, t: 0 }),
+    secondHome: loadStoredPose('dx200_secondHome', { s: 0, l: 0, u: 0, r: 0, b: 0, t: 0 }),
+    powerOff: loadStoredPose('dx200_powerOffPos', { s: 0, l: 0, u: 0, r: 0, b: -67, t: 0 }),
+    powerOn: null,
+    speed: { s: 0, l: 0, u: 0, r: 0, b: 0, t: 0 },     // grados/s del eje
+    torque: { s: 0, l: 0, u: 0, r: 0, b: 0, t: 0 },    // % del par nominal
+    maxTorque: { s: 0, l: 0, u: 0, r: 0, b: 0, t: 0 },
+    prevAngles: null,
+    prevSpeed: { s: 0, l: 0, u: 0, r: 0, b: 0, t: 0 },
+    lastRender: 0
+};
+
+// Límites software guardados (SOFTLIMIT SETTING)
+(function loadSoftLimits() {
+    try {
+        const v = JSON.parse(localStorage.getItem('dx200_softLimits') || 'null');
+        if (v) AXES.forEach(k => { if (v[k] && typeof v[k].min === 'number' && typeof v[k].max === 'number') RobotState.limits[k] = { min: v[k].min, max: v[k].max }; });
+    } catch (e) { /* sin almacenamiento */ }
+})();
+
+/** Límites aplicables al mover a mano: los software, o los topes mecánicos con LIMIT RELEASE. */
+function getJogLimits(k) {
+    const lim = RobotState.limits[k];
+    if (DxState.softLimitRelease) return { min: lim.min - MECH_MARGIN_DEG, max: lim.max + MECH_MARGIN_DEG };
+    return lim;
+}
+
+/** Se llama en cada frame: velocidad, par estimado, posición de apagado. */
+function updateServoData(dt) {
+    if (!robotData.powerOn) robotData.powerOn = { ...RobotState.angles };
+    if (!robotData.prevAngles || dt <= 0) { robotData.prevAngles = { ...RobotState.angles }; return; }
+    const a = RobotState.angles, d2r = Math.PI / 180;
+    AXES.forEach(k => {
+        const v = (a[k] - robotData.prevAngles[k]) / dt;
+        robotData.speed[k] = robotData.speed[k] * 0.7 + v * 0.3;   // filtrado
+    });
+    // Par: gravedad (L, U, B) + aceleración + rozamiento
+    const pitchL = (a.l + 80) * d2r, pitchU = (a.l + a.u) * d2r, pitchB = (a.l + a.u - 23 + a.b) * d2r;
+    const grav = { s: 0, l: 38 * Math.cos(pitchL) + 22 * Math.cos(pitchU), u: 22 * Math.cos(pitchU) + 4 * Math.cos(pitchB), r: 0, b: 6 * Math.cos(pitchB), t: 0 };
+    AXES.forEach(k => {
+        const acc = (robotData.speed[k] - robotData.prevSpeed[k]) / dt;
+        const fric = Math.sign(robotData.speed[k]) * (Math.abs(robotData.speed[k]) > 0.5 ? 3 : 0);
+        const tq = Math.max(-300, Math.min(300, grav[k] + acc * 0.04 + fric));
+        robotData.torque[k] = robotData.torque[k] * 0.8 + tq * 0.2;
+        robotData.maxTorque[k] = Math.max(robotData.maxTorque[k], Math.abs(robotData.torque[k]));
+    });
+    robotData.prevSpeed = { ...robotData.speed };
+    robotData.prevAngles = { ...a };
+    // Guardar la posición de "apagado" de vez en cuando
+    robotData.saveTimer = (robotData.saveTimer || 0) + dt;
+    if (robotData.saveTimer > 2) { robotData.saveTimer = 0; storePose('dx200_powerOffPos', a); }
+}
+
+const ROBOT_SUB_TITLES = {
+    'ROBOT-CMDPOS': 'COMMAND POSITION',
+    'ROBOT-SERVOMON': 'SERVO MONITOR',
+    'ROBOT-WORKHOME': 'WORK HOME POSITION',
+    'ROBOT-SECONDHOME': 'SECOND HOME POSITION',
+    'ROBOT-SOFTLIMIT': 'SOFTLIMIT SETTING',
+    'ROBOT-LIMITREL': 'LIMIT RELEASE',
+    'ROBOT-MANIP': 'MANIPULATOR TYPE',
+    'ROBOT-POWERPOS': 'POWER ON/OFF POSITION'
+};
+
+function rsTable(headers, rows) {
+    const th = headers.map(h => `<th>${h}</th>`).join('');
+    const tr = rows.map(r => '<tr>' + r.map(c => `<td>${c}</td>`).join('') + '</tr>').join('');
+    return `<table class="rs-table"><tr>${th}</tr>${tr}</table>`;
+}
+const axisCell = (k, i) => (i === 0 ? 'R1 :' : '') + AXIS_LABEL[k];
+
+/** Dibuja la pantalla del menú ROBOT que esté abierta. */
+function renderRobotSub() {
+    const view = DxState.view;
+    const title = ROBOT_SUB_TITLES[view];
+    const el = document.getElementById('robot-sub-screen');
+    if (!el || !title) return;
+    const a = RobotState.angles;
+    let body = '', foot = '';
+
+    if (view === 'ROBOT-CMDPOS') {
+        body = rsTable(['', 'COMMAND', 'FEEDBACK', 'DEVIATION'], AXES.map((k, i) => {
+            const cmd = toPulse(k, a[k] + robotData.speed[k] * SERVO_LAG_S), fb = toPulse(k, a[k]);
+            return [axisCell(k, i), cmd, fb, cmd - fb];
+        }));
+        foot = 'Posición ordenada por el controlador frente a la leída del encoder (pulsos). La desviación solo aparece mientras el eje se mueve.';
+    } else if (view === 'ROBOT-SERVOMON') {
+        body = rsTable(['', 'FEEDBACK PULSE', 'SPEED (rpm)', 'TORQUE (%)', 'MAX TORQUE (%)'], AXES.map((k, i) => [
+            axisCell(k, i), toPulse(k, a[k]),
+            Math.round(robotData.speed[k] * GEAR_RATIO[k] / 6),
+            robotData.torque[k].toFixed(1), robotData.maxTorque[k].toFixed(1)
+        ]));
+        foot = 'Valores estimados del simulador. <span class="rs-link" onclick="clearMaxTorque()">[CLEAR MAX TORQUE]</span>';
+    } else if (view === 'ROBOT-WORKHOME' || view === 'ROBOT-SECONDHOME') {
+        const isWork = view === 'ROBOT-WORKHOME';
+        const target = isWork ? robotData.workHome : robotData.secondHome;
+        if (isWork) {
+            const inCube = AXES.every(k => Math.abs(toPulse(k, a[k]) - toPulse(k, target[k])) <= WORK_HOME_CUBE_PULSE);
+            body = rsTable(['', 'HOME POS', 'CURRENT', ''], AXES.map((k, i) => [axisCell(k, i), toPulse(k, target[k]), toPulse(k, a[k]), '']))
+                + `<div class="rs-status">IN CUBE (±${WORK_HOME_CUBE_PULSE} pulse): <span class="rs-lamp ${inCube ? 'on' : ''}">${inCube ? '● ON' : '○ OFF'}</span></div>`;
+        } else {
+            body = rsTable(['', 'SECOND HOME', 'CURRENT', 'DIFFERENCE'], AXES.map((k, i) => {
+                const t = toPulse(k, target[k]), c = toPulse(k, a[k]);
+                return [axisCell(k, i), t, c, c - t];
+            }));
+        }
+        foot = '[FWD] (con DEADMAN y SERVO ON): ir a la posición. [MODIFY] + [ENTER]: registrar la posición actual.';
+        if (DxState.activeEditAction === 'MODIFY-HOME') foot = '<span style="color:#c00;font-weight:bold;">MODIFY: pulse [ENTER] para registrar la posición actual</span>';
+    } else if (view === 'ROBOT-SOFTLIMIT') {
+        const canEdit = DxState.securityMode === 'MANAGEMENT';
+        const cell = (k, side) => {
+            const v = RobotState.limits[k][side];
+            const txt = toPulse(k, v) + ` <small>(${v.toFixed(1)}°)</small>`;
+            return canEdit ? `<span class="rs-edit" onclick="editSoftLimit('${k}','${side}')">${txt}</span>` : txt;
+        };
+        body = rsTable(['', '+ (pulse)', '- (pulse)', 'CURRENT'], AXES.map((k, i) => [axisCell(k, i), cell(k, 'max'), cell(k, 'min'), toPulse(k, a[k])]));
+        foot = canEdit ? 'Toque un valor para cambiarlo (en grados). Afecta al movimiento manual y a los programas.'
+                       : 'Solo se puede modificar en MANAGEMENT MODE (SYSTEM INFO → SECURITY).';
+    } else if (view === 'ROBOT-LIMITREL') {
+        const canEdit = DxState.securityMode === 'MANAGEMENT';
+        const v = DxState.softLimitRelease;
+        body = `<div class="rs-row"><span>SOFT LIMIT RELEASE</span><span class="rs-edit ${v ? 'rs-on' : ''}" onclick="toggleLimitRelease()">${v ? 'VALID' : 'INVALID'}</span></div>`;
+        foot = canEdit
+            ? 'Con VALID, en TEACH los ejes pueden pasar el límite software hasta el tope mecánico. Se anula al salir de TEACH.'
+            : 'Solo se puede cambiar en MANAGEMENT MODE.';
+    } else if (view === 'ROBOT-MANIP') {
+        body = rsTable(['GROUP', 'MANIPULATOR TYPE', 'AXES'], [['R1', 'MH12 (modelo de simulación)', '6 (S L U R B T)']])
+            + rsTable(['', 'TOOL', 'TCP (mm)'], [['R1', '00', 'X 160.0  Y 0.0  Z 0.0 (en línea con la brida)']]);
+        foot = 'Pantalla informativa: el tipo de manipulador lo fija el fabricante.';
+    } else if (view === 'ROBOT-POWERPOS') {
+        const on = robotData.powerOn || a, off = robotData.powerOff;
+        body = rsTable(['', 'POWER OFF', 'POWER ON', 'DIFFERENCE'], AXES.map((k, i) => {
+            const p0 = toPulse(k, off[k]), p1 = toPulse(k, on[k]);
+            return [axisCell(k, i), p0, p1, p1 - p0];
+        }));
+        foot = 'Posición al apagar y al encender. En el simulador, al recargar la página el robot arranca en HOME, por eso puede haber diferencia.';
+    }
+
+    el.innerHTML = `<div class="lcd-header rs-head">${title}</div><div class="rs-body">${body}</div><div class="rs-foot">${foot}</div>`;
+}
+
+function clearMaxTorque() {
+    AXES.forEach(k => { robotData.maxTorque[k] = 0; });
+    renderRobotSub();
+    setInfoDisplay('✓ MAX TORQUE borrado');
+}
+
+function editSoftLimit(k, side) {
+    if (DxState.securityMode !== 'MANAGEMENT') { setInfoDisplay('❌ SOFTLIMIT: requiere MANAGEMENT MODE'); return; }
+    openSoftKeyboard({
+        title: `SOFT LIMIT ${AXIS_LABEL[k]}${side === 'max' ? '+' : '-'} (grados)`,
+        value: RobotState.limits[k][side].toFixed(1), maxLen: 8, upper: true,
+        onEnter: (val) => {
+            const v = parseFloat(val.replace(',', '.'));
+            if (!isFinite(v)) { setInfoDisplay('❌ Valor no válido'); return false; }
+            const lim = { ...RobotState.limits[k], [side]: v };
+            if (lim.min >= lim.max) { setInfoDisplay('❌ El límite - debe ser menor que el +'); return false; }
+            RobotState.limits = { ...RobotState.limits, [k]: lim };
+            try { localStorage.setItem('dx200_softLimits', JSON.stringify(RobotState.limits)); } catch (e) { /* sin almacenamiento */ }
+            renderRobotSub();
+            setInfoDisplay(`✓ SOFT LIMIT ${AXIS_LABEL[k]}${side === 'max' ? '+' : '-'} = ${v.toFixed(1)}° (${toPulse(k, v)} pulsos)`);
+            return true;
+        }
+    });
+}
+
+function toggleLimitRelease() {
+    if (DxState.securityMode !== 'MANAGEMENT') { setInfoDisplay('❌ LIMIT RELEASE: requiere MANAGEMENT MODE'); return; }
+    if (!checkTeachMode('LIMIT RELEASE')) return;
+    DxState.softLimitRelease = !DxState.softLimitRelease;
+    renderRobotSub();
+    setInfoDisplay(DxState.softLimitRelease ? '⚠ SOFT LIMIT RELEASE: VALID — mueva con precaución' : '✓ SOFT LIMIT RELEASE: INVALID');
+}
+
+/** [FWD] en WORK HOME / SECOND HOME: mover a la posición (MOVJ a velocidad de TEACH). */
+function robotSubFwd() {
+    const isWork = DxState.view === 'ROBOT-WORKHOME';
+    if (!RobotState.deadman) { setInfoDisplay('⚠ Mantenga DEADMAN (ESPACIO) + FWD'); return; }
+    if (!isServoOn) { setInfoDisplay('⚠ Conecte los servos (SERVO ON)'); return; }
+    if (!checkTeachMode('FWD')) return;
+    const target = isWork ? robotData.workHome : robotData.secondHome;
+    teachMotion = planJoint(stepAngles(RobotState.angles), stepAngles(target), TEACH_MAX_VJ);
+    teachMotion.type = 'MOVJ';
+    setInfoDisplay('▶ FWD: moviendo a ' + (isWork ? 'WORK HOME POSITION' : 'SECOND HOME POSITION'));
+}
+
+/** [MODIFY] / [ENTER] en WORK HOME / SECOND HOME: registrar la posición actual. */
+function robotSubModify() {
+    if (!checkTeachMode('MODIFY')) return;
+    DxState.activeEditAction = DxState.activeEditAction === 'MODIFY-HOME' ? null : 'MODIFY-HOME';
+    renderRobotSub();
+    setInfoDisplay(DxState.activeEditAction ? 'MODIFY: pulse [ENTER] para registrar la posición actual' : 'MODIFY cancelado');
+}
+function robotSubEnter() {
+    if (DxState.activeEditAction !== 'MODIFY-HOME') { setInfoDisplay('Pulse [MODIFY] y después [ENTER] para registrar'); return; }
+    const isWork = DxState.view === 'ROBOT-WORKHOME';
+    const pose = stepAngles(RobotState.angles);
+    if (isWork) robotData.workHome = pose; else robotData.secondHome = pose;
+    storePose(isWork ? 'dx200_workHome' : 'dx200_secondHome', pose);
+    DxState.activeEditAction = null;
+    renderRobotSub();
+    setInfoDisplay('✓ ' + (isWork ? 'WORK HOME' : 'SECOND HOME') + ' POSITION registrada');
+}
+
+/** Opciones del menú ROBOT que dependen del hardware real. */
+function robotNotSimulated(name) {
+    setInfoDisplay('ℹ️ ' + name + ': función del controlador real (hardware o ajuste de fábrica). No disponible en el simulador.');
 }
 
 function selectHomeAxis(element) {
@@ -3369,10 +3631,13 @@ function moveAxis(axis, dir) {
         const sAxis = axisMap[axis];
         if (sAxis && RobotState.angles[sAxis] !== undefined) {
             const inc = (RobotState.speed * 0.15) * dir;
-            RobotState.angles[sAxis] = Math.max(
-                RobotState.limits[sAxis].min,
-                Math.min(RobotState.limits[sAxis].max, RobotState.angles[sAxis] + inc)
-            );
+            const jl = getJogLimits(sAxis);
+            const wanted = RobotState.angles[sAxis] + inc;
+            RobotState.angles[sAxis] = Math.max(jl.min, Math.min(jl.max, wanted));
+            if (wanted !== RobotState.angles[sAxis]) {
+                setInfoDisplay('⚠ ' + (DxState.softLimitRelease ? 'TOPE MECÁNICO' : 'SOFT LIMIT') + ': R1 ' + sAxis.toUpperCase() + (dir > 0 ? '+' : '-'));
+                return;
+            }
             setInfoDisplay(`✓ MOVIENDO ${sAxis.toUpperCase()} ${dir > 0 ? '+' : '−'}`);
             console.log('axis:', sAxis);
             function createGlow(x, y, z, color, size) {
@@ -4167,6 +4432,7 @@ function cancelEdit() {
 }
 
 function pressModify() {
+    if (DxState.view === 'ROBOT-WORKHOME' || DxState.view === 'ROBOT-SECONDHOME') { robotSubModify(); return; }
     if (DxState.view === 'WGRAV') {
         setInfoDisplay('⚠ MANTENGA PULSADO [FWD] PARA MEDICIÓN'); return;
     }
@@ -5591,6 +5857,7 @@ function pressEnter() {
     if (isSoftKeyboardOpen()) { softKbEnter(); return; }
     if (isLcdConfirmOpen()) { closeLcdConfirm(lcdConfirmYes); return; }
     if (DxState.view === 'NEW-JOB') { executeNewJob(); return; }
+    if (DxState.view === 'ROBOT-WORKHOME' || DxState.view === 'ROBOT-SECONDHOME') { robotSubEnter(); return; }
     if (DxState.view === 'WGRAV') {
         const wInput = document.getElementById('wgrav-val-w');
         if (wInput && wInput.textContent !== '*.*** kg') {
@@ -5780,6 +6047,11 @@ function stepProgram(direction) {
         return;
     }
 
+    if (DxState.view === 'ROBOT-WORKHOME' || DxState.view === 'ROBOT-SECONDHOME') {
+        if (direction === 'FWD') robotSubFwd();
+        return;
+    }
+
     if (DxState.view === 'HOME-POSITION') {
         if (direction === 'FWD') {
             if (!RobotState.deadman) {
@@ -5871,6 +6143,16 @@ window.addEventListener('load', () => {
         const nowT = performance.now();
         const dt = Math.min(0.1, (nowT - lastFrameTime) / 1000);   // segundos reales
         lastFrameTime = nowT;
+
+        updateServoData(dt);
+        if (DxState.softLimitRelease && RobotState.mode !== 'TEACH') {
+            DxState.softLimitRelease = false;
+            setInfoDisplay('SOFT LIMIT RELEASE anulado (fuera de TEACH)');
+        }
+        if (ROBOT_SUB_TITLES[DxState.view] && !isSoftKeyboardOpen() && nowT - robotData.lastRender > 150) {
+            robotData.lastRender = nowT;
+            renderRobotSub();
+        }
 
         // Movimiento FWD/BWD en TEACH (se detiene al soltar DEADMAN)
         if (teachMotion && !RobotState.programRunning) {
@@ -6119,6 +6401,10 @@ window.executeNewJob = executeNewJob;
 window.editNewJobField = editNewJobField;
 window.softKbTab = softKbTab;
 window.closeLcdConfirm = closeLcdConfirm;
+window.robotNotSimulated = robotNotSimulated;
+window.editSoftLimit = editSoftLimit;
+window.toggleLimitRelease = toggleLimitRelease;
+window.clearMaxTorque = clearMaxTorque;
 </script>
 </body>
 </html>
