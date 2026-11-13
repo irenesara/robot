@@ -155,6 +155,15 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
 .rs-edit { background: #fff; border: 1px solid #1a3a6a; padding: 0 3px; cursor: pointer; }
 .rs-edit.rs-on { background: #ffe8a0; color: #a00; font-weight: bold; }
 .al-alarm { color: #c00; font-weight: bold; } .al-error { color: #c60; font-weight: bold; } .al-stop { color: #a00; font-weight: bold; } .al-message { color: #246; }
+.exm-menu { font-family: Arial, sans-serif; font-size: 8px; font-weight: bold; color: #000; background: #dcdcdc; border: 1px solid #777; box-shadow: inset 1px 1px 1px #fff, inset -1px -1px 1px #aaa; padding: 4px 8px; margin: 2px 0; cursor: pointer; width: 160px; }
+.setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 6px; }
+.setup-grid .exm-menu { width: auto; }
+.exm-menu:hover { background: #2b4b9b; color: #fff; }
+.exm-item { font-family: 'Courier New', monospace; font-size: 8px; padding: 2px 4px; border-bottom: 1px dotted #bbb; cursor: pointer; color: #000; }
+.exm-item.on { background: #2b4b9b; color: #fff; }
+.exm-actions { display: flex; gap: 4px; margin-top: 6px; }
+.exm-btn { font-family: Arial, sans-serif; font-size: 7px; font-weight: bold; color: #000; background: #dcdcdc; border: 1px solid #777; padding: 3px 8px; cursor: pointer; }
+.exm-btn.go { background: #2b8a3e; color: #fff; }
 .rs-link { color: #1a3a6a; cursor: pointer; text-decoration: underline; }
 .r-menu-icon { width: 10px; height: 10px; margin-right: 2px; background: #fff; border: 1px solid #999; border-radius: 1px; flex-shrink: 0; }
 
@@ -354,9 +363,9 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                             <div class="lcd-sidebar-btn" id="btn-view-inout" onclick="setView('INOUT')"><div class="sidebar-icon" style="background:#4a4a8a;"></div>IN/OUT</div>
                             <div class="lcd-sidebar-btn" id="btn-view-robot" onclick="setView('ROBOT')"><div class="sidebar-icon" style="background:#8a2be2;"></div>ROBOT</div>
                             <div class="lcd-sidebar-btn" id="btn-view-sysinfo" onclick="setView('SYSTEM-INFO')"><div class="sidebar-icon" style="background:#555;"></div>SYSTEM INFO</div>
-                            <div class="lcd-sidebar-btn" id="btn-view-exmemory" onclick="showMsg('EX. MEMORY')"><div class="sidebar-icon" style="background:#008b8b;"></div>EX. MEMORY</div>
-                            <div class="lcd-sidebar-btn" id="btn-view-parameter" onclick="showMsg('PARAMETER')"><div class="sidebar-icon" style="background:#daa520;"></div>PARAMETER</div>
-                            <div class="lcd-sidebar-btn" id="btn-view-setup" onclick="showMsg('SETUP')"><div class="sidebar-icon" style="background:#cd5c5c;"></div>SETUP</div>
+                            <div class="lcd-sidebar-btn" id="btn-view-exmemory" onclick="setView('EXMEMORY')"><div class="sidebar-icon" style="background:#008b8b;"></div>EX. MEMORY</div>
+                            <div class="lcd-sidebar-btn" id="btn-view-parameter" onclick="setView('PARAMETER')"><div class="sidebar-icon" style="background:#daa520;"></div>PARAMETER</div>
+                            <div class="lcd-sidebar-btn" id="btn-view-setup" onclick="setView('SETUP')"><div class="sidebar-icon" style="background:#cd5c5c;"></div>SETUP</div>
                         </div>
                         <div id="main-submenu-job" class="main-submenu dropdown-menu">
                             <div class="sub-title">JOB</div>
@@ -713,31 +722,6 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
                                     <div style="flex: 1; text-align: center; padding: 5px; font-size: 7px; cursor: pointer;" onclick="setView('UTILITY')">CLOSE</div>
                                 </div>
                             </div>
-                            <div id="parameter-screen" style="display: none; flex-direction: column; height: 100%; background: #eaeff2;">
-                                <div style="background: #1a3a6a; color: white; padding: 2px 6px; font-size: 7px; font-weight: bold;">PARAMETER</div>
-                                <div style="display: flex; flex-direction: column; flex: 1; overflow: hidden; font-family: 'Courier New', monospace; font-size: 7px; color: #000; padding: 3px;">
-                                    <div style="background: #fff; border: 1px solid #888; padding: 4px; margin-bottom: 4px; flex: 1;">
-                                        <div style="font-weight: bold; margin-bottom: 3px;">SYSTEM PARAMETERS</div>
-                                        <div style="display: flex; flex-direction: column; gap: 2px;">
-                                            <div style="display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding-bottom: 2px;"><span>S1SGA068</span><span>0.0</span></div>
-                                            <div style="display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding-bottom: 2px;"><span>S2VX001</span><span>100</span></div>
-                                            <div style="display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding-bottom: 2px;"><span>S2VX002</span><span>100</span></div>
-                                            <div style="display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding-bottom: 2px;"><span>S3VX001</span><span>0</span></div>
-                                            <div style="display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding-bottom: 2px;"><span>S3VX002</span><span>0</span></div>
-                                            <div style="display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding-bottom: 2px;"><span>UTXTYP</span><span>DX200</span></div>
-                                            <div style="display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding-bottom: 2px;"><span>ROBTYP</span><span>ES200N</span></div>
-                                            <div style="display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding-bottom: 2px;"><span>AXMNUM</span><span>6</span></div>
-                                            <div style="display: flex; justify-content: space-between;"><span>CMTYPE</span><span>0</span></div>
-                                        </div>
-                                    </div>
-                                    <div style="background:#f0f8ff; border:1px solid #888; padding:4px;">
-                                        <div style="font-size:6px; color:#666;">Solo lectura. Cambie en MODO GESTION.</div>
-                                    </div>
-                                </div>
-                                <div style="display: flex; border-top: 2px solid #1a3a6a; background: #ccc; flex-shrink: 0;">
-                                    <div style="flex: 1; text-align: center; padding: 5px; font-size: 7px; cursor: pointer;" onclick="setView('UTILITY')">CLOSE</div>
-                                </div>
-                            </div>
                             <div id="clock-screen" style="display: none; flex-direction: column; height: 100%; background: #eaeff2;">
                                 <div style="background: #1a3a6a; color: white; padding: 2px 6px; font-size: 7px; font-weight: bold;">CLOCK / DATE/TIME</div>
                                 <div style="display: flex; flex-direction: column; flex: 1; overflow: hidden; font-family: 'Courier New', monospace; font-size: 7px; color: #000; padding: 3px;">
@@ -940,9 +924,9 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
 
                         <div class="kb-speed-col">
                             <div class="kb-speed-btn" onclick="setSpeed(100)">HIGH<br>SPEED</div>
-                            <div class="kb-speed-btn" onclick="setSpeed(50)">FAST</div>
+                            <div class="kb-speed-btn" onclick="stepManualSpeed(1)">FAST</div>
                             <div style="font-size: 5px; font-weight: bold; color: #eee;">MANUAL SPEED</div>
-                            <div class="kb-speed-btn" onclick="setSpeed(10)">SLOW<br>▼</div>
+                            <div class="kb-speed-btn" onclick="stepManualSpeed(-1)">SLOW<br>▼</div>
                         </div>
 
                         <div class="kb-axes-grid red">
@@ -1011,7 +995,7 @@ body { font-family: Arial, sans-serif; background: #000000; color: #fff; overflo
 <script>
 const RobotState = {
     deadman: false,
-    speed: 50,
+    speed: 10,          // velocidad manual LOW (coincide con SPD: LOW)
     angles: { s: 0, l: 0, u: 0, r: 0, b: -67, t: 0 },   // B=-67: herramienta vertical hacia abajo
     limits: {
         s: { min: -170, max: 170 },
@@ -2398,7 +2382,7 @@ function setView(viewName) {
     const screens = ['job-screen', 'robot-menu-screen', 'robot-screen', 'list-screen',
         'security-screen', 'home-position-screen', 'system-info-menu-screen',
         'tool-screen', 'wgrav-screen', 'variable-screen', 'inout-screen', 
-        'alarm-screen', 'utility-screen', 'amplitude-screen', 'general-screen', 'data-screen', 'calibration-screen', 'master-rezero-screen', 'parameter-screen', 'clock-screen', 'file-screen', 'new-job-screen', 'robot-sub-screen'];
+        'alarm-screen', 'utility-screen', 'amplitude-screen', 'general-screen', 'data-screen', 'calibration-screen', 'master-rezero-screen', 'clock-screen', 'file-screen', 'new-job-screen', 'robot-sub-screen'];
     screens.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
@@ -2417,6 +2401,10 @@ function setView(viewName) {
         'ROBOT-LIMITREL': ['robot-sub-screen', renderRobotSub],
         'ROBOT-MANIP': ['robot-sub-screen', renderRobotSub],
         'ROBOT-POWERPOS': ['robot-sub-screen', renderRobotSub],
+        'SETUP': ['robot-sub-screen', () => { setupPage = 'MENU'; renderSetup(); }],
+        'CLOCK': ['clock-screen', () => { if (typeof updateClockScreen === 'function') updateClockScreen(); }],
+        'PARAMETER': ['robot-sub-screen', () => { paramGroup = null; renderParameter(); }],
+        'EXMEMORY': ['robot-sub-screen', () => { exm.page = 'MENU'; exm.result = ''; renderExMem(); }],
         'SYSTEM-INFO-VERSION': ['robot-sub-screen', renderSysSub],
         'SYSTEM-INFO-MONITOR': ['robot-sub-screen', renderSysSub],
         'SYSTEM-INFO-ALARMS': ['robot-sub-screen', renderSysSub],
@@ -2828,6 +2816,566 @@ function requestSecurityMode(mode, element) {
     });
 }
 
+// ============================================================
+// EX. MEMORY: guardar / cargar programas (archivos .JBI) en una carpeta del PC
+// - Chrome/Edge: carpeta elegida con DEVICE/FOLDER (File System Access API)
+// - Otros navegadores: descarga de archivos y "abrir archivo"
+// ============================================================
+const JBI_POS_RE = /^C(\d{5})=(.+)$/;
+const MOTION_RE = /^(MOVJ|MOVL|MOVC|IMOV)\b/;
+const exm = {
+    page: 'MENU',          // MENU | SAVE | LOAD | VERIFY | DELETE
+    dir: null,             // FileSystemDirectoryHandle
+    dirName: '',
+    files: [],             // nombres .JBI de la carpeta
+    sel: new Set(),
+    busy: false,
+    result: ''
+};
+const exmFolderSupported = typeof window.showDirectoryPicker === 'function';
+
+// ---------- Convertir JOB <-> texto .JBI (formato del DX200) ----------
+function jobToJBI(name, lines) {
+    const p = n => String(n).padStart(2, '0'), d = new Date();
+    const date = `${d.getFullYear()}/${p(d.getMonth() + 1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+    const pos = [], inst = [];
+    lines.forEach(line => {
+        const code = (line.code || '').trim();
+        const m = code.match(MOTION_RE);
+        if (m) {
+            const id = 'C' + String(pos.length).padStart(5, '0');
+            pos.push(id + '=' + AXES.map(k => toPulse(k, +line[k] || 0)).join(','));
+            inst.push(m[1] + ' ' + id + code.slice(m[1].length));
+        } else {
+            inst.push(code);
+        }
+    });
+    const comment = (lines[0] && lines[0].comment) || '';
+    const out = ['/JOB', '//NAME ' + name, '//POS', `///NPOS ${pos.length},0,0,0,0,0`, '///TOOL 0', '///POSTYPE PULSE', '///PULSE',
+        ...pos, '//INST', '///DATE ' + date];
+    if (comment) out.push('///COMMENT ' + comment);
+    out.push('///ATTR SC,RW', '///GROUP1 RB1', ...inst);
+    return out.join('\r\n') + '\r\n';
+}
+
+/** Devuelve { name, lines } o lanza un Error con el motivo. */
+function parseJBI(text) {
+    const rows = text.replace(/\r/g, '').split('\n').map(r => r.trim()).filter(r => r.length);
+    if (rows[0] !== '/JOB') throw new Error('no es un archivo JOB (.JBI)');
+    const nameRow = rows.find(r => r.startsWith('//NAME '));
+    const name = nameRow ? nameRow.slice(7).trim().toUpperCase() : '';
+    if (!/^[A-Z0-9_\-]{1,32}$/.test(name)) throw new Error('nombre de JOB no válido');
+    const positions = {};
+    rows.forEach(r => {
+        const m = r.match(JBI_POS_RE);
+        if (m) {
+            const v = m[2].split(',').map(Number);
+            if (v.length < 6 || v.some(x => !isFinite(x))) throw new Error('posición ' + m[1] + ' no válida');
+            positions['C' + m[1]] = Object.fromEntries(AXES.map((k, i) => [k, +toDeg(k, v[i]).toFixed(3)]));
+        }
+    });
+    const instStart = rows.indexOf('//INST');
+    if (instStart < 0) throw new Error('falta la sección //INST');
+    const commentRow = rows.slice(instStart).find(r => r.startsWith('///COMMENT '));
+    let last = { s: 0, l: 0, u: 0, r: 0, b: -67, t: 0 };
+    const lines = [];
+    rows.slice(instStart + 1).filter(r => !r.startsWith('///')).forEach(r => {
+        const m = r.match(/^(MOVJ|MOVL|MOVC|IMOV)\s+(C\d{5})\b(.*)$/);
+        if (m) {
+            if (!positions[m[2]]) throw new Error('falta la posición ' + m[2]);
+            last = positions[m[2]];
+            lines.push({ ...last, code: (m[1] + m[3]).trim(), desc: 'PUNTO' });
+        } else {
+            lines.push({ ...last, code: r, desc: '' });
+        }
+    });
+    if (!lines.length || lines[0].code !== 'NOP') lines.unshift({ ...last, code: 'NOP', desc: 'INICIO' });
+    if (lines[lines.length - 1].code !== 'END') lines.push({ ...last, code: 'END', desc: 'FIN' });
+    if (commentRow) lines[0].comment = commentRow.slice(11);
+    return { name, lines };
+}
+
+// ---------- Recordar la carpeta entre sesiones (IndexedDB) ----------
+function idbOpen() {
+    return new Promise((res, rej) => {
+        const rq = indexedDB.open('dx200-sim', 1);
+        rq.onupgradeneeded = () => rq.result.createObjectStore('kv');
+        rq.onsuccess = () => res(rq.result);
+        rq.onerror = () => rej(rq.error);
+    });
+}
+async function idbSet(key, val) {
+    const db = await idbOpen();
+    return new Promise((res, rej) => { const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(val, key); tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
+}
+async function idbGet(key) {
+    const db = await idbOpen();
+    return new Promise((res, rej) => { const rq = db.transaction('kv').objectStore('kv').get(key); rq.onsuccess = () => res(rq.result); rq.onerror = () => rej(rq.error); });
+}
+(async () => {
+    if (!exmFolderSupported) return;
+    try { const h = await idbGet('exmemDir'); if (h) { exm.dir = h; exm.dirName = h.name; } } catch (e) { console.warn('EX.MEMORY: no se pudo recuperar la carpeta', e); }
+})();
+
+async function ensureDirPermission() {
+    if (!exm.dir) return false;
+    const opts = { mode: 'readwrite' };
+    if ((await exm.dir.queryPermission(opts)) === 'granted') return true;
+    return (await exm.dir.requestPermission(opts)) === 'granted';
+}
+
+async function exmChooseFolder() {
+    if (!exmFolderSupported) {
+        exm.result = 'Este navegador no permite elegir carpeta: SAVE descargará los archivos y LOAD abrirá el selector de archivos.';
+        renderExMem();
+        return;
+    }
+    try {
+        exm.dir = await window.showDirectoryPicker({ mode: 'readwrite', id: 'dx200-exmem' });
+        exm.dirName = exm.dir.name;
+        try { await idbSet('exmemDir', exm.dir); } catch (e) { console.warn('EX.MEMORY: no se pudo recordar la carpeta', e); }
+        exm.result = '✓ DEVICE: carpeta "' + exm.dirName + '"';
+        setInfoDisplay('✓ EX. MEMORY: carpeta seleccionada');
+    } catch (e) {
+        exm.result = e.name === 'AbortError' ? 'Selección de carpeta cancelada' : '❌ No se pudo abrir la carpeta: ' + e.message;
+    }
+    renderExMem();
+}
+
+async function exmListFiles() {
+    exm.files = [];
+    if (!exm.dir || !(await ensureDirPermission())) return false;
+    for await (const [name, h] of exm.dir.entries()) {
+        if (h.kind === 'file' && name.toUpperCase().endsWith('.JBI')) exm.files.push(name);
+    }
+    exm.files.sort();
+    return true;
+}
+
+function downloadText(fileName, text) {
+    const url = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
+    const a = document.createElement('a');
+    a.href = url; a.download = fileName;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+/** Selector de archivos del navegador (modo sin carpeta). */
+function pickFiles() {
+    return new Promise(res => {
+        const inp = document.createElement('input');
+        inp.type = 'file'; inp.accept = '.jbi,.JBI'; inp.multiple = true;
+        inp.onchange = () => res([...inp.files]);
+        inp.click();
+    });
+}
+
+// ---------- Pantallas ----------
+function exmOpen(page) {
+    if ((page === 'LOAD' || page === 'DELETE') && DxState.securityMode === 'OPERATION') {
+        setInfoDisplay('❌ ' + page + ': requiere EDITING MODE'); return;
+    }
+    if (page === 'DELETE' && !exm.dir) {
+        exm.result = 'DELETE solo funciona con una carpeta elegida en DEVICE/FOLDER.'; renderExMem(); return;
+    }
+    exm.page = page; exm.sel = new Set(); exm.result = '';
+    if ((page === 'LOAD' || page === 'VERIFY' || page === 'DELETE') && exm.dir) {
+        exm.busy = true; renderExMem();
+        exmListFiles().then(ok => {
+            exm.busy = false;
+            if (!ok) exm.result = '❌ Sin permiso para leer la carpeta';
+            renderExMem();
+        }).catch(e => { exm.busy = false; exm.result = '❌ ' + e.message; renderExMem(); });
+    } else {
+        renderExMem();
+    }
+}
+
+function exmToggle(name) {
+    if (exm.sel.has(name)) exm.sel.delete(name); else exm.sel.add(name);
+    renderExMem();
+}
+function exmSelectAll() {
+    const items = exm.page === 'SAVE' ? Object.keys(robotJobs) : exm.files;
+    exm.sel = exm.sel.size === items.length ? new Set() : new Set(items);
+    renderExMem();
+}
+
+function renderExMem() {
+    if (DxState.view !== 'EXMEMORY') return;
+    const el = document.getElementById('robot-sub-screen');
+    if (!el) return;
+    const device = exm.dir ? 'FOLDER: ' + exm.dirName : (exmFolderSupported ? 'SIN CARPETA (elija DEVICE/FOLDER)' : 'DESCARGAS DEL NAVEGADOR');
+    const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/'/g, '&#39;');
+    let body = '', title = 'EXTERNAL MEMORY';
+    const checkList = (items, label) => items.length
+        ? items.map(n => `<div class="exm-item ${exm.sel.has(n) ? 'on' : ''}" onclick="exmToggle('${esc(n)}')">${exm.sel.has(n) ? '■' : '□'} ${esc(n)}</div>`).join('')
+          + `<div class="exm-actions"><span class="exm-btn" onclick="exmSelectAll()">SELECT ALL</span>`
+          + `<span class="exm-btn go" onclick="exmExecute()">EXECUTE</span><span class="exm-btn" onclick="exmOpen('MENU')">BACK</span></div>`
+        : `<div class="rs-status">${label}</div><div class="exm-actions"><span class="exm-btn" onclick="exmOpen('MENU')">BACK</span></div>`;
+
+    if (exm.busy) {
+        body = '<div class="rs-status">ACCESSING DEVICE...</div>';
+    } else if (exm.page === 'MENU') {
+        body = ['LOAD', 'SAVE', 'VERIFY', 'DELETE'].map(p => `<div class="exm-menu" onclick="exmOpen('${p}')">${p}</div>`).join('')
+            + `<div class="exm-menu" onclick="exmChooseFolder()">DEVICE / FOLDER</div>`;
+    } else if (exm.page === 'SAVE') {
+        title = 'SAVE  (JOB → ' + (exm.dir ? 'FOLDER' : 'DESCARGA') + ')';
+        body = checkList(Object.keys(robotJobs), 'NO JOB');
+    } else if (exm.dir) {
+        title = exm.page + '  (FOLDER → ' + (exm.page === 'DELETE' ? 'DELETE' : 'JOB') + ')';
+        body = checkList(exm.files, 'NO FILE (.JBI) IN FOLDER');
+    } else {
+        title = exm.page;
+        body = `<div class="exm-menu" onclick="exmExecute()">ELEGIR ARCHIVO(S) .JBI…</div><div class="exm-actions"><span class="exm-btn" onclick="exmOpen('MENU')">BACK</span></div>`;
+    }
+    el.innerHTML = `<div class="lcd-header rs-head">${title}</div>`
+        + `<div class="rs-status" style="background:#dde3ea;">DEVICE: ${esc(device)}</div>`
+        + `<div class="rs-body">${body}</div>`
+        + `<div class="rs-foot">${exm.result ? esc(exm.result) : 'Los programas se guardan como archivos JOB del DX200 (.JBI), con las posiciones en pulsos.'}</div>`;
+}
+
+async function readJbiSources() {
+    if (exm.dir) {
+        if (!(await ensureDirPermission())) throw new Error('sin permiso para leer la carpeta');
+        const out = [];
+        for (const n of exm.sel) out.push({ file: n, text: await (await (await exm.dir.getFileHandle(n)).getFile()).text() });
+        return out;
+    }
+    const files = await pickFiles();
+    return Promise.all(files.map(async f => ({ file: f.name, text: await f.text() })));
+}
+
+async function exmExecute() {
+    if ((exm.page === 'SAVE' || exm.dir) && exm.sel.size === 0) { exm.result = 'Seleccione al menos un elemento'; renderExMem(); return; }
+    try {
+        if (exm.page === 'SAVE') await exmSave();
+        else if (exm.page === 'LOAD') await exmLoad();
+        else if (exm.page === 'VERIFY') await exmVerify();
+        else if (exm.page === 'DELETE') exmDelete();
+    } catch (e) {
+        exm.result = '❌ ' + e.message;
+        logAlarm('ERROR', 'EX.MEMORY ' + exm.page + ' ERROR');
+        renderExMem();
+    }
+}
+
+async function exmSave() {
+    const jobs = [...exm.sel];
+    if (exm.dir && !(await ensureDirPermission())) throw new Error('sin permiso para escribir en la carpeta');
+    for (const name of jobs) {
+        const text = jobToJBI(name, robotJobs[name]);
+        if (exm.dir) {
+            const w = await (await exm.dir.getFileHandle(name + '.JBI', { create: true })).createWritable();
+            await w.write(text); await w.close();
+        } else {
+            downloadText(name + '.JBI', text);
+        }
+    }
+    exm.result = `✓ SAVE: ${jobs.length} JOB(s) guardado(s)` + (exm.dir ? ' en "' + exm.dirName + '"' : ' (descargas)');
+    setInfoDisplay(exm.result);
+    exm.sel = new Set();
+    renderExMem();
+}
+
+async function exmLoad() {
+    const sources = await readJbiSources();
+    if (!sources.length) return;
+    const parsed = [], errors = [];
+    sources.forEach(s => { try { parsed.push(parseJBI(s.text)); } catch (e) { errors.push(s.file + ': ' + e.message); } });
+    const apply = () => {
+        parsed.forEach(p => { robotJobs[p.name] = p.lines; unmarkJobDeleted(p.name); });
+        saveJobsLocally();
+        exm.result = `✓ LOAD: ${parsed.length} JOB(s) cargado(s)` + (errors.length ? ' | ❌ ' + errors.join(' | ') : '');
+        setInfoDisplay(exm.result);
+        exm.sel = new Set();
+        renderExMem();
+    };
+    const existing = parsed.filter(p => robotJobs[p.name]).map(p => p.name);
+    if (existing.length) showLcdConfirm('Overwrite ' + existing.join(', ') + ' ?', apply);
+    else apply();
+}
+
+async function exmVerify() {
+    const sources = await readJbiSources();
+    const res = sources.map(s => {
+        try {
+            const p = parseJBI(s.text);
+            const cur = robotJobs[p.name];
+            if (!cur) return p.name + ': NO EXISTE EN EL CONTROLADOR';
+            const same = cur.length === p.lines.length && cur.every((l, i) =>
+                (l.code || '').trim() === p.lines[i].code &&
+                (!MOTION_RE.test(p.lines[i].code) || AXES.every(k => Math.abs(toPulse(k, +l[k] || 0) - toPulse(k, p.lines[i][k])) <= 1)));
+            return p.name + (same ? ': VERIFY OK' : ': DIFERENTE');
+        } catch (e) { return s.file + ': ' + e.message; }
+    });
+    exm.result = res.join(' | ') || 'Ningún archivo';
+    setInfoDisplay(exm.result);
+    renderExMem();
+}
+
+function exmDelete() {
+    const files = [...exm.sel];
+    showLcdConfirm('Delete ' + files.length + ' file(s) ?', async () => {
+        try {
+            if (!(await ensureDirPermission())) throw new Error('sin permiso para borrar en la carpeta');
+            for (const n of files) await exm.dir.removeEntry(n);
+            await exmListFiles();
+            exm.sel = new Set();
+            exm.result = '✓ DELETE: ' + files.length + ' archivo(s) borrado(s)';
+        } catch (e) { exm.result = '❌ ' + e.message; }
+        setInfoDisplay(exm.result);
+        renderExMem();
+    });
+}
+
+// ============================================================
+// PARAMETER (como en el DX200: menú principal → PARAMETER → tipo → número)
+// Solo se incluyen parámetros comprobados en la documentación pública.
+// ============================================================
+const PARAM_GROUPS = ['S1CxG', 'S2C', 'S3C', 'S4C', 'A1P', 'RS', 'S1E'];
+const PARAM_DEFS = {
+    S2C: [
+        { no: 737, def: 0, values: [0, 1],
+          info: 'Copia de seguridad automática: 1 = habilitada. Después se configura en SETUP → AUTO BACKUP SET (manual de instrucciones DX200, 9.3).' }
+    ]
+};
+const paramValues = loadJson('dx200_params', {});
+let paramGroup = null;
+
+const paramKey = (g, no) => g + String(no).padStart(3, '0');
+const paramValue = (g, p) => (paramKey(g, p.no) in paramValues ? paramValues[paramKey(g, p.no)] : p.def);
+
+function renderParameter() {
+    if (DxState.view !== 'PARAMETER') return;
+    const el = document.getElementById('robot-sub-screen');
+    if (!el) return;
+    let body, foot;
+    if (!paramGroup) {
+        body = PARAM_GROUPS.map(g => `<div class="exm-menu" onclick="openParamGroup('${g}')">${g}</div>`).join('');
+        foot = 'Seleccione el tipo de parámetro. Para modificar valores se necesita MANAGEMENT MODE.';
+    } else {
+        const defs = PARAM_DEFS[paramGroup] || [];
+        const canEdit = DxState.securityMode === 'MANAGEMENT' || DxState.securityMode === 'SAFETY';
+        body = defs.length
+            ? rsTable(['NO.', 'VALUE', 'CONTENT'], defs.map(p => {
+                const v = paramValue(paramGroup, p);
+                return [paramKey(paramGroup, p.no), canEdit ? `<span class="rs-edit" onclick="editParam(${p.no})">${v}</span>` : v,
+                        `<span style="font-family:Arial,sans-serif;font-size:6px;">${p.info}</span>`];
+            }))
+            : '<div class="rs-status">Los parámetros de este tipo no se simulan.</div>';
+        body += `<div class="exm-actions"><span class="exm-btn" onclick="openParamGroup(null)">BACK</span></div>`;
+        foot = defs.length
+            ? (canEdit ? 'Toque un valor para cambiarlo.' : 'Solo lectura: cambie a MANAGEMENT MODE para modificar.')
+            : 'Consulte el manual de parámetros del DX200 que acompaña al robot.';
+    }
+    el.innerHTML = `<div class="lcd-header rs-head">PARAMETER${paramGroup ? ' : ' + paramGroup : ''}</div><div class="rs-body">${body}</div><div class="rs-foot">${foot}</div>`;
+}
+
+function openParamGroup(g) {
+    paramGroup = g;
+    renderParameter();
+}
+
+function editParam(no) {
+    if (DxState.securityMode !== 'MANAGEMENT' && DxState.securityMode !== 'SAFETY') { setInfoDisplay('❌ PARAMETER: requiere MANAGEMENT MODE'); return; }
+    const p = (PARAM_DEFS[paramGroup] || []).find(d => d.no === no);
+    if (!p) return;
+    openSoftKeyboard({
+        title: paramKey(paramGroup, no) + ' (' + p.values.join('/') + ')', value: String(paramValue(paramGroup, p)), maxLen: 6, upper: true,
+        onEnter: (val) => {
+            const v = Number(val);
+            if (!p.values.includes(v)) { setInfoDisplay('❌ Valor no permitido: ' + p.values.join(', ')); return false; }
+            paramValues[paramKey(paramGroup, no)] = v;
+            saveJson('dx200_params', paramValues);
+            renderParameter();
+            setInfoDisplay('✓ ' + paramKey(paramGroup, no) + ' = ' + v);
+            logAlarm('MESSAGE', 'PARAMETER ' + paramKey(paramGroup, no) + ' CHANGED TO ' + v);
+            return true;
+        }
+    });
+}
+
+// ============================================================
+// SETUP: USER ID, SET SPEED, DATE/TIME, AUTO BACKUP SET
+// ============================================================
+const SETUP_ITEMS = [
+    { id: 'TEACHING COND.', off: true }, { id: 'OPERATE COND.', off: true },
+    { id: 'DATE/TIME' }, { id: 'GRP COMBINATION', off: true },
+    { id: 'RESERVE JOB NAME', off: true }, { id: 'USER ID' },
+    { id: 'SET SPEED' }, { id: 'KEY ALLOCATION', off: true },
+    { id: 'RES. START (JOB)', off: true }, { id: 'AUTO BACKUP SET' },
+    { id: 'ENERGY SAVING FUNCTION', off: true }
+];
+const MANUAL_SPEEDS = [{ v: 2, name: 'INCH' }, { v: 10, name: 'LOW' }, { v: 25, name: 'MED' }, { v: 50, name: 'HIGH' }];
+let setupPage = 'MENU';
+const autoBackup = Object.assign({ valid: false, minutes: 30, last: '' }, loadJson('dx200_autoBackup', {}));
+let autoBackupTimer = 0;
+
+/** Se llama al cargar la página (cuando ya existen VJ_LEVELS / V_LEVELS). */
+function applySetupStored() {
+    const ids = loadJson('dx200_userIds', null);
+    if (ids) ['EDITING', 'MANAGEMENT', 'SAFETY'].forEach(m => { if (/^\d{4,16}$/.test(ids[m] || '')) SECURITY_USER_ID[m] = ids[m]; });
+    const sp = loadJson('dx200_setSpeed', null);
+    if (sp && Array.isArray(sp.vj) && sp.vj.length === VJ_LEVELS.length) sp.vj.forEach((v, i) => { VJ_LEVELS[i] = v; });
+    if (sp && Array.isArray(sp.v) && sp.v.length === V_LEVELS.length) sp.v.forEach((v, i) => { V_LEVELS[i] = v; });
+}
+
+function openSetup(page) {
+    if (page === 'DATE/TIME') { setView('CLOCK'); return; }
+    setupPage = page;
+    renderSetup();
+}
+
+function renderSetup() {
+    if (DxState.view !== 'SETUP') return;
+    const el = document.getElementById('robot-sub-screen');
+    if (!el) return;
+    let body = '', foot = '', title = 'SETUP';
+    const back = `<div class="exm-actions"><span class="exm-btn" onclick="openSetup('MENU')">BACK</span></div>`;
+    if (setupPage === 'MENU') {
+        body = '<div class="setup-grid">' + SETUP_ITEMS.map(it => it.off
+            ? `<div class="exm-menu" style="color:#777;" onclick="robotNotSimulated('${it.id}')">${it.id}</div>`
+            : `<div class="exm-menu" onclick="openSetup('${it.id}')">${it.id}</div>`).join('') + '</div>';
+        foot = 'Las opciones en gris dependen de funciones u opciones del controlador real.';
+    } else if (setupPage === 'USER ID') {
+        title = 'USER ID';
+        body = rsTable(['MODE', 'USER ID'], ['EDITING', 'MANAGEMENT', 'SAFETY'].map(m =>
+            [m, `<span class="rs-edit" onclick="changeUserId('${m}')">${'*'.repeat(SECURITY_USER_ID[m].length)}</span>`])) + back;
+        foot = 'Toque un modo para cambiar su USER ID (4 a 16 dígitos). Hay que estar en ese modo o en uno superior.';
+    } else if (setupPage === 'SET SPEED') {
+        title = 'SET SPEED';
+        body = rsTable(['LEVEL', 'JOINT (VJ %)', 'LINEAR (V mm/s)'], VJ_LEVELS.map((vj, i) => [i + 1,
+            `<span class="rs-edit" onclick="editSpeedLevel('vj',${i})">${vj.toFixed(2)}</span>`,
+            V_LEVELS[i] != null ? `<span class="rs-edit" onclick="editSpeedLevel('v',${i})">${V_LEVELS[i].toFixed(1)}</span>` : '-'])) + back;
+        foot = 'Niveles de velocidad que se eligen con ←/→ al enseñar puntos (INSERT). Requiere EDITING MODE o superior.';
+    } else if (setupPage === 'AUTO BACKUP SET') {
+        title = 'AUTO BACKUP SET';
+        const enabled = Number(paramValue('S2C', PARAM_DEFS.S2C[0])) === 1;
+        body = `<div class="rs-row"><span>FUNCTION (S2C737)</span><span>${enabled ? 'ENABLED' : 'DISABLED'}</span></div>`
+            + `<div class="rs-row"><span>CYCLIC BACKUP</span><span class="rs-edit ${autoBackup.valid ? 'rs-on' : ''}" onclick="toggleAutoBackup()">${autoBackup.valid ? 'VALID' : 'INVALID'}</span></div>`
+            + `<div class="rs-row"><span>CYCLE (min)</span><span class="rs-edit" onclick="editBackupCycle()">${autoBackup.minutes}</span></div>`
+            + `<div class="rs-row"><span>DEVICE</span><span>${exm.dir ? 'FOLDER: ' + exm.dirName : 'SIN CARPETA (EX. MEMORY → DEVICE/FOLDER)'}</span></div>`
+            + `<div class="rs-row"><span>LAST BACKUP</span><span>${autoBackup.last || '----'}</span></div>`
+            + `<div class="exm-actions"><span class="exm-btn go" onclick="runAutoBackup(true)">EXECUTE NOW</span><span class="exm-btn" onclick="openSetup('MENU')">BACK</span></div>`;
+        foot = 'Guarda todos los JOB (.JBI) en la subcarpeta AUTOBKUP de la carpeta de EX. MEMORY. Requiere S2C737 = 1 (PARAMETER).';
+    }
+    el.innerHTML = `<div class="lcd-header rs-head">${title}</div><div class="rs-body">${body}</div><div class="rs-foot">${foot}</div>`;
+}
+
+function setupSecurityAtLeast(mode) {
+    return SECURITY_LEVELS.indexOf(DxState.securityMode) >= SECURITY_LEVELS.indexOf(mode);
+}
+
+function changeUserId(mode) {
+    if (!setupSecurityAtLeast(mode)) { setInfoDisplay('❌ USER ID: entre primero en ' + mode + ' MODE'); return; }
+    openSoftKeyboard({
+        title: mode + ': NEW USER ID', value: '', maxLen: 16, upper: true, mask: true,
+        onEnter: (first) => {
+            if (!/^\d{4,16}$/.test(first)) { setInfoDisplay('❌ El USER ID debe tener de 4 a 16 dígitos'); return false; }
+            setTimeout(() => openSoftKeyboard({
+                title: mode + ': CONFIRM USER ID', value: '', maxLen: 16, upper: true, mask: true,
+                onEnter: (second) => {
+                    if (second !== first) { setInfoDisplay('❌ Los USER ID no coinciden'); return true; }
+                    SECURITY_USER_ID[mode] = first;
+                    saveJson('dx200_userIds', { EDITING: SECURITY_USER_ID.EDITING, MANAGEMENT: SECURITY_USER_ID.MANAGEMENT, SAFETY: SECURITY_USER_ID.SAFETY });
+                    logAlarm('MESSAGE', 'USER ID CHANGED (' + mode + ')');
+                    setInfoDisplay('✓ USER ID de ' + mode + ' cambiado');
+                    renderSetup();
+                    return true;
+                }
+            }), 0);
+            return true;
+        }
+    });
+}
+
+function editSpeedLevel(kind, i) {
+    if (!setupSecurityAtLeast('EDITING')) { setInfoDisplay('❌ SET SPEED: requiere EDITING MODE'); return; }
+    const arr = kind === 'vj' ? VJ_LEVELS : V_LEVELS;
+    const max = kind === 'vj' ? 100 : 1500;
+    openSoftKeyboard({
+        title: `SET SPEED ${kind === 'vj' ? 'VJ (%)' : 'V (mm/s)'} LEVEL ${i + 1}`, value: String(arr[i]), maxLen: 7, upper: true,
+        onEnter: (val) => {
+            const v = Number(val.replace(',', '.'));
+            if (!(v > 0 && v <= max)) { setInfoDisplay(`❌ Valor entre 0 y ${max}`); return false; }
+            if ((i > 0 && v <= arr[i - 1]) || (i < arr.length - 1 && v >= arr[i + 1])) { setInfoDisplay('❌ Cada nivel debe ser mayor que el anterior y menor que el siguiente'); return false; }
+            arr[i] = Math.round(v * 100) / 100;
+            saveJson('dx200_setSpeed', { vj: [...VJ_LEVELS], v: [...V_LEVELS] });
+            renderSetup();
+            setInfoDisplay(`✓ Nivel ${i + 1}: ${kind === 'vj' ? 'VJ=' + arr[i].toFixed(2) : 'V=' + arr[i].toFixed(1)}`);
+            return true;
+        }
+    });
+}
+
+function toggleAutoBackup() {
+    if (!setupSecurityAtLeast('MANAGEMENT')) { setInfoDisplay('❌ AUTO BACKUP SET: requiere MANAGEMENT MODE'); return; }
+    autoBackup.valid = !autoBackup.valid;
+    autoBackupTimer = 0;
+    saveJson('dx200_autoBackup', autoBackup);
+    renderSetup();
+}
+
+function editBackupCycle() {
+    if (!setupSecurityAtLeast('MANAGEMENT')) { setInfoDisplay('❌ AUTO BACKUP SET: requiere MANAGEMENT MODE'); return; }
+    openSoftKeyboard({
+        title: 'BACKUP CYCLE (min, 1-1440)', value: String(autoBackup.minutes), maxLen: 4, upper: true,
+        onEnter: (val) => {
+            const v = parseInt(val, 10);
+            if (!(v >= 1 && v <= 1440)) { setInfoDisplay('❌ Entre 1 y 1440 minutos'); return false; }
+            autoBackup.minutes = v;
+            saveJson('dx200_autoBackup', autoBackup);
+            renderSetup();
+            return true;
+        }
+    });
+}
+
+/** Copia de seguridad: todos los JOB en <carpeta EX. MEMORY>/AUTOBKUP. */
+async function runAutoBackup(manual) {
+    const enabled = Number(paramValue('S2C', PARAM_DEFS.S2C[0])) === 1;
+    if (!enabled) { if (manual) setInfoDisplay('❌ AUTO BACKUP: ponga S2C737 = 1 en PARAMETER'); return; }
+    if (!exm.dir) { if (manual) setInfoDisplay('❌ AUTO BACKUP: elija una carpeta en EX. MEMORY → DEVICE/FOLDER'); return; }
+    try {
+        const opts = { mode: 'readwrite' };
+        let perm = await exm.dir.queryPermission(opts);
+        if (perm !== 'granted' && manual) perm = await exm.dir.requestPermission(opts);
+        if (perm !== 'granted') { logAlarm('ERROR', 'AUTO BACKUP: NO PERMISSION'); return; }
+        const sub = await exm.dir.getDirectoryHandle('AUTOBKUP', { create: true });
+        for (const name of Object.keys(robotJobs)) {
+            const w = await (await sub.getFileHandle(name + '.JBI', { create: true })).createWritable();
+            await w.write(jobToJBI(name, robotJobs[name])); await w.close();
+        }
+        autoBackup.last = nowStamp();
+        saveJson('dx200_autoBackup', autoBackup);
+        logAlarm('MESSAGE', 'AUTO BACKUP COMPLETE (' + Object.keys(robotJobs).length + ' JOB)');
+        if (manual) setInfoDisplay('✓ AUTO BACKUP: ' + Object.keys(robotJobs).length + ' JOB guardados en AUTOBKUP');
+        renderSetup();
+    } catch (e) {
+        logAlarm('ERROR', 'AUTO BACKUP FAILED');
+        if (manual) setInfoDisplay('❌ AUTO BACKUP: ' + e.message);
+    }
+}
+
+/** Cada frame: copia cíclica si está activada. */
+function updateAutoBackup(dt) {
+    if (!autoBackup.valid) return;
+    autoBackupTimer += dt;
+    if (autoBackupTimer >= autoBackup.minutes * 60) {
+        autoBackupTimer = 0;
+        runAutoBackup(false);
+    }
+}
+
+/** Velocidad manual: INCHING → LOW → MEDIUM → HIGH con [FAST] / [SLOW]. */
+function stepManualSpeed(dir) {
+    let i = MANUAL_SPEEDS.findIndex(s => s.v === RobotState.speed);
+    if (i < 0) i = 1;
+    i = Math.max(0, Math.min(MANUAL_SPEEDS.length - 1, i + dir));
+    setSpeed(MANUAL_SPEEDS[i].v);
+}
+
 function selectHomeAxis(element) {
     document.querySelectorAll('.hp-select').forEach(el => {
         el.classList.remove('active');
@@ -2963,8 +3511,10 @@ function setMode(mode) {
 function setSpeed(speed) {
     RobotState.speed = speed;
     const speedEl = document.getElementById('lcd-speed');
-    if (speedEl) speedEl.textContent = speed + '%';
-    setInfoDisplay(`⚡ Velocidad Manual: ${speed}%`);
+    const lvl = (typeof MANUAL_SPEEDS !== 'undefined' && MANUAL_SPEEDS.find(sp => sp.v === speed));
+    const label = lvl ? lvl.name : (speed >= 100 ? 'HIGH SPD' : speed + '%');
+    if (speedEl) speedEl.textContent = label;
+    setInfoDisplay(`⚡ Velocidad manual: ${label}`);
 }
 
 function rotateKeySwitch() {
@@ -4198,9 +4748,9 @@ function updateSidebarUI() {
             <div class="lcd-sidebar-btn" id="btn-view-inout" onclick="setView('INOUT')"><div class="sidebar-icon" style="background:#4a4a8a;"></div>IN/OUT</div>
             <div class="lcd-sidebar-btn" id="btn-view-robot" onclick="setView('ROBOT')"><div class="sidebar-icon" style="background:#8a2be2;"></div>ROBOT</div>
             <div class="lcd-sidebar-btn" id="btn-view-sysinfo" onclick="setView('SYSTEM-INFO')"><div class="sidebar-icon" style="background:#555;"></div>SYSTEM INFO</div>
-            <div class="lcd-sidebar-btn" id="btn-view-exmemory" onclick="showMsg('EX. MEMORY')"><div class="sidebar-icon" style="background:#008b8b;"></div>EX. MEMORY</div>
-            <div class="lcd-sidebar-btn" id="btn-view-parameter" onclick="showMsg('PARAMETER')"><div class="sidebar-icon" style="background:#daa520;"></div>PARAMETER</div>
-            <div class="lcd-sidebar-btn" id="btn-view-setup" onclick="showMsg('SETUP')"><div class="sidebar-icon" style="background:#cd5c5c;"></div>SETUP</div>
+            <div class="lcd-sidebar-btn" id="btn-view-exmemory" onclick="setView('EXMEMORY')"><div class="sidebar-icon" style="background:#008b8b;"></div>EX. MEMORY</div>
+            <div class="lcd-sidebar-btn" id="btn-view-parameter" onclick="setView('PARAMETER')"><div class="sidebar-icon" style="background:#daa520;"></div>PARAMETER</div>
+            <div class="lcd-sidebar-btn" id="btn-view-setup" onclick="setView('SETUP')"><div class="sidebar-icon" style="background:#cd5c5c;"></div>SETUP</div>
         `;
     }
     // Re-aplicar clases active si corresponde
@@ -5137,9 +5687,8 @@ function showMasterRezero() {
 }
 
 function showParameter() {
-    document.querySelectorAll('#job-screen, #general-screen, #variable-screen, #inout-screen, #data-screen').forEach(el => el.style.display = 'none');
-    document.getElementById('parameter-screen').style.display = 'flex';
-    toggleDropdown('utility-dropdown');
+    closeTopMenus();
+    setView('PARAMETER');
 }
 
 function showFile() {
@@ -5372,10 +5921,8 @@ function resetCalibration() {
 }
 
 function showClock() {
-    document.querySelectorAll('#job-screen, #general-screen, #variable-screen, #inout-screen, #data-screen').forEach(el => el.style.display = 'none');
-    document.getElementById('clock-screen').style.display = 'flex';
-    updateClockScreen();
-    toggleDropdown('utility-dropdown');
+    closeTopMenus();
+    setView('CLOCK');
 }
 
 let clockFormat = 'YYYY/MM/DD';
@@ -5586,7 +6133,7 @@ function updateMultiLayout() {
 // ============================================================
 const MOTION_TYPES = ['MOVJ', 'MOVL', 'MOVC'];
 const VJ_LEVELS = [0.78, 1.56, 3.12, 6.25, 12.50, 25.00, 50.00, 100.00];   // % (MOVJ)
-const V_LEVELS = [10.0, 25.0, 50.0, 100.0, 250.0, 500.0, 1000.0];          // mm/s (MOVL/MOVC)
+const V_LEVELS = [10.0, 25.0, 50.0, 100.0, 250.0, 500.0, 1000.0, 1500.0];          // mm/s (MOVL/MOVC)
 
 function getBufferInstruction() {
     const type = DxState.motionType || 'MOVJ';
@@ -6284,6 +6831,18 @@ function finishProgramStep() {
 
 loadJobsLocally();
 startClockInterval();
+applySetupStored();
+// Algunas pantallas estaban al lado del área principal (lcd-main) en vez de dentro: se mueven dentro
+(function moveScreensIntoMain() {
+    const main = document.querySelector('.lcd-main');
+    if (!main) return;
+    ['utility-screen', 'amplitude-screen', 'calibration-screen', 'master-rezero-screen', 'clock-screen',
+     'file-screen', 'system-info-menu-screen', 'security-screen', 'home-position-screen', 'home-confirm-dialog']
+        .forEach(id => {
+            const el = document.getElementById(id);
+            if (el && !el.closest('.lcd-main')) main.appendChild(el);
+        });
+})();
 setTimeout(() => {
     const secEl = document.getElementById('lcd-security');
     if (secEl) {
@@ -6308,6 +6867,7 @@ window.addEventListener('load', () => {
 
         updateServoData(dt);
         updateSystemMonitor(dt);
+        updateAutoBackup(dt);
         if (SYS_SUB_TITLES[DxState.view] && !isSoftKeyboardOpen() && !isLcdConfirmOpen() && nowT - robotData.lastRender > 500) {
             robotData.lastRender = nowT;
             renderSysSub();
@@ -6569,6 +7129,20 @@ window.executeNewJob = executeNewJob;
 window.editNewJobField = editNewJobField;
 window.softKbTab = softKbTab;
 window.closeLcdConfirm = closeLcdConfirm;
+window.openSetup = openSetup;
+window.changeUserId = changeUserId;
+window.editSpeedLevel = editSpeedLevel;
+window.toggleAutoBackup = toggleAutoBackup;
+window.editBackupCycle = editBackupCycle;
+window.runAutoBackup = runAutoBackup;
+window.stepManualSpeed = stepManualSpeed;
+window.openParamGroup = openParamGroup;
+window.editParam = editParam;
+window.exmOpen = exmOpen;
+window.exmToggle = exmToggle;
+window.exmSelectAll = exmSelectAll;
+window.exmExecute = exmExecute;
+window.exmChooseFolder = exmChooseFolder;
 window.requestSecurityMode = requestSecurityMode;
 window.resetMonitoringTime = resetMonitoringTime;
 window.robotNotSimulated = robotNotSimulated;
